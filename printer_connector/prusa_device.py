@@ -28,6 +28,7 @@ class PrusaDevice:
             resp = str(self._device.readline().decode('utf-8'))
 
 
+import keyboard
 if __name__ == "__main__":
     printer = PrusaDevice.connect_on_port("COM9", 115200)
 
@@ -45,6 +46,36 @@ if __name__ == "__main__":
     ]
     for command in commands:
         printer.send_and_await(command=command)
-        
-    printer.send_and_await("G1 Z40 Y60")
+    x = 0.0
+    y = 0.0
+    z = 0.0
+    
+    change = 1
+    
+    while(True):
+        try:
+            if keyboard.is_pressed('a'): 
+                x-=change
+            if keyboard.is_pressed('d'): 
+                x+=change
+                
+            if keyboard.is_pressed('w'): 
+                z+=change
+            if keyboard.is_pressed('s'): 
+                z-=change
+                
+            if keyboard.is_pressed('q'): 
+                y+=change
+            if keyboard.is_pressed('e'): 
+                y-=change
+                
+            if keyboard.is_pressed('r'): 
+                change+= 1
+            if keyboard.is_pressed('f'): 
+                if change>1:
+                    change-=1
+                
+        except:
+            pass 
+        printer.send_and_await(command=f"G1 X{x} Y{y} Z{z}")
         
