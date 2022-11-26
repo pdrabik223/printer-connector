@@ -1,17 +1,5 @@
 import time
-from typing import Any, Tuple
 from serial import Serial
-import logging
-from exceptions import ConnectionFailed
-
-# def send_and_await_resp(device: Serial, message: str) -> str:
-#     if message[-1] != '\n':
-#         message += '\n'
-        
-#     device.write(bytearray(message, 'utf-8'))
-#     raw_resp = str(device.readline())     
-#     return (raw_resp,raw_resp[2:-3]) 
-
 
 class PrusaDevice:
     _device: Serial = None  # pyserial connector device
@@ -28,8 +16,6 @@ class PrusaDevice:
         while(resp != ''):
             print(resp)
             resp = dev._device.readline().decode('utf-8')
-
-        
         return dev
     
     def send_and_await(self, command) -> str:
@@ -40,27 +26,25 @@ class PrusaDevice:
         resp = ""
         while('ok' not in resp):
             resp = str(self._device.readline().decode('utf-8'))
-            print(resp)
-             
-    
-    # @staticmethod
-    # def checksum(line):
-    #     cs = 0
-    #     for i in range(0,len(line)):
-    #         cs ^= ord(line[i]) & 0xff
-    #     cs &= 0xff
-    #     return str(cs)
-    
-    # @staticmethod
-    # def csline(line):
-    #     return line+"*"+PrusaDevice.checksum(line)
-    
+
+
 if __name__ == "__main__":
     printer = PrusaDevice.connect_on_port("COM9", 115200)
 
-    print("sending message")
-    while(True):
-        print(printer.send_and_await('G28 W'))
-        print("sleep")
-        time.sleep(4)
-        print("re sending")
+    commands  = [
+    'M201 X1000 Y1000 Z200 E5000' ,
+    'M203 X200 Y200 Z12 E120',
+    'M204 P1250 R1250 T1250',
+    'M205 X8.00 Y8.00 Z0.40 E4.50',
+    'M205 S0 T0',
+    'M107',
+    'M862.3 P "MK3S"',
+    'M862.1 P0.4',
+    'G90',
+    'G28 W',
+    ]
+    for command in commands:
+        printer.send_and_await(command=command)
+        
+    printer.send_and_await("G1 Z40 Y60")
+        
