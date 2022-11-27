@@ -6,7 +6,25 @@ class PrusaDevice:
 
     def __init__(self, device) -> None:
         self._device = device
-
+    
+    def __del__(self)->None:
+        commands = ["G1 Z4 F720", #"Move print head up
+                    "G1 X0 Y200 F3600", # park
+                    "G1 Z52 F720",# Move print head further up
+                    "G4", # wait
+                    "M221 S100", # reset flow
+                    "M900 K0", # reset LA
+                    "M907 E538", # reset extruder motor current
+                    "M104 S0",# turn off temperature
+                    "M140 S0", #turn off heatbed
+                    "M107" # turn off fan
+                    "M84" # disable motors
+        ]
+        for command in commands:
+            printer.send_and_await(command=command)
+            
+        self._device.close()
+        
     @staticmethod
     def connect_on_port(port: str, baudrate: int = 115200, timeout = 5) -> "PrusaDevice":
         """
@@ -25,7 +43,7 @@ class PrusaDevice:
         resp = dev._device.readline().decode('utf-8')
         
         while(resp != ''):
-            print(resp)
+            print(resp.strip())
             resp = dev._device.readline().decode('utf-8')
         
         return dev
@@ -106,6 +124,8 @@ if __name__ == "__main__":
             elif keyboard.is_pressed('f'): 
                 if change>1:
                     change-=1
+            if keyboard.is_pressed('z'):
+                break
         except:
             pass 
         printer.send_and_await(command=f"G1 X{x} Y{y} Z{z}")
