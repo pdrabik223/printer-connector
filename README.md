@@ -1,3 +1,3 @@
 # printer-connector
-Hndles connecting to different printers
+Handles connecting to different printers
 
