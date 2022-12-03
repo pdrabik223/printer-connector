@@ -1,7 +1,7 @@
 import copy
 from pydantic import StrictInt, StrictStr, StrictFloat, Field, BaseModel
-from configs import PrintConfig, SlicerVendor
-from exceptions import (
+from configs.configs import PrintConfig, SlicerVendor
+from configs.exceptions import (
     UnsupportedSlicerVendor,
     InvalidGCodeFileExtension,
     EndofFile,

@@ -1,0 +1,22 @@
+[build-system]
+requires = ["hatchling", "pyserial==3.5"]
+build-backend = "hatchling.build"
+
+[project]
+name = "pd_printer_connector"
+version = "0.0.1"
+authors = [
+  { name="Piotr Drabik", email="pdrabik223@gmail.com" },
+]
+description = "Connector for varius 3d printer devices"
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/pdrabik223/material-defect-analyzer"
+"Bug Tracker" = "https://github.com/pdrabik223/material-defect-analyzer/issues"
