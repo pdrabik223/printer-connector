@@ -1,10 +1,10 @@
 import pytest
-from printer_connector.exceptions import (
+from exceptions import (
     InvalidGCodeFileExtension,
     UnsupportedSlicerVendor,
 )
-from printer_connector.g_code_file import GCodeFile
-from printer_connector.configs import SlicerVendor
+from g_code_file import GCodeFile
+from configs import SlicerVendor
 
 
 class TestGCodeFile:

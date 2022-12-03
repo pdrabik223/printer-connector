@@ -1,5 +1,5 @@
-from printer_connector.g_code_file import GCodeFile
-from printer_connector.exceptions import EndofFile
+from g_code_file import GCodeFile
+from exceptions import EndofFile
 from printer_connector.prusa_device import AnycubicDevice
 import time
 
