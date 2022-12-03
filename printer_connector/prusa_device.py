@@ -8,7 +8,7 @@ class PrusaDevice:
         self._device = device
     
     def __del__(self)->None:
-        commands = ["G1 Z4 F720", #"Move print head up
+        commands = ["G1 Z4 F720", # Move print head up
                     "G1 X0 Y200 F3600", # park
                     "G1 Z52 F720",# Move print head further up
                     "G4", # wait
@@ -82,12 +82,11 @@ class PrusaDevice:
         'M205 S0 T0',
         'M107',
         'M862.3 P "MK3S"',
-        # 'M862.1 P0.4',
         'G90',
         'G28 W',
         ]
         for command in commands:
-            printer.send_and_await(command=command)
+            self._device.send_and_await(command=command)
             
 import keyboard
 if __name__ == "__main__":
