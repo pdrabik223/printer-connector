@@ -1,10 +1,10 @@
 import pytest
-from exceptions import (
+from configs.exceptions import (
     InvalidGCodeFileExtension,
     UnsupportedSlicerVendor,
 )
-from g_code_file import GCodeFile
-from configs import SlicerVendor
+from g_code_file_handler.g_code_file import GCodeFile
+from configs.configs import SlicerVendor
 
 
 class TestGCodeFile:

@@ -3,7 +3,7 @@ import time
 from typing import Any, Tuple
 from serial import Serial
 import logging
-from exceptions import ConnectionFailed
+from configs.exceptions import ConnectionFailed
 
 class AnycubicSDevice:
     _device: Serial = None  # pyserial connector device
