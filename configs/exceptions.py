@@ -9,5 +9,6 @@ class InvalidGCodeFileExtension(ValueError):
 class EndofFile(ValueError):
     pass
 
+
 class ConnectionFailed(ValueError):
     pass
