@@ -23,34 +23,31 @@ import serial
 
 
 if __name__ == "__main__":
-    ser = serial.Serial("COM3", 115200)
-    print("await")
-    time.sleep(20)
-    print("zero axis")
-    ser.write(str.encode("G28 W\r\n"))
-    print("written")
-    time.sleep(20)
+    # ser = serial.Serial("COM3", 115200)
+    # print("await")
+    # time.sleep(20)
+    # print("zero axis")
+    # ser.write(str.encode("N0 M110 N0*125"))
+    # print("written")
+    # time.sleep(20)
 
-    ser.close()
+    # ser.close()
 
-    # for i in range(1, 14):
-    #     print(f"COM{i}")
+    for i in range(1, 14):
+        print(f"COM{i}")
+        try:
+            printer = AnycubicSDevice.connect_on_port(f"COM{i}", 250000)
+            break
 
-    #     try:
-    #         printer = AnycubicSDevice.connect_on_port(f"COM{i}", 115200)
-    #         break
+        except SerialException:
+            continue
 
-    #     except SerialException:
-    #         continue
-    # print("great, back to conncetor")
-    # time.sleep(2)
-    # print("temp1")
-    # print(printer.send_and_await("G28 W"))
+    print("great, back to connector")
+    time.sleep(2)
+    print(printer.send_and_await(AnycubicSDevice.csline("N0 M110 N0")))
 
-    # time.sleep(2)
-    # print("temp2")
-    # print(printer.send_and_await("M104 S30"))
+    time.sleep(2)
+    print(printer.send_and_await(AnycubicSDevice.csline("N1 M104 S30 N1")))
 
     # time.sleep(2)
-    # print("temp3")
-    # print(printer.send_and_await("M104 S185"))
+    # print(printer.send_and_await(AnycubicSDevice.csline("N2 M104 S185 N2")))

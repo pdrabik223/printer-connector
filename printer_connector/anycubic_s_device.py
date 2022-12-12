@@ -42,8 +42,8 @@ class AnycubicSDevice:
         if command[-1] != "\n":
             command += "\n"
 
-        print(bytearray(command, "utf-8"))
-        self._device.write(bytearray(command, "utf-8"))
+        print(bytearray(command, "ascii"))
+        self._device.write(bytearray(command, "ascii"))
 
         resp = ""
 
@@ -53,12 +53,14 @@ class AnycubicSDevice:
                 break
         return resp
 
-    def checksum(self, line):
+    @staticmethod
+    def checksum(line):
         cs = 0
         for i in range(0, len(line)):
             cs ^= ord(line[i]) & 0xFF
         cs &= 0xFF
         return str(cs)
 
-    def csline(self, line):
-        return line + "*" + self.checksum(line)
+    @staticmethod
+    def csline(line):
+        return line + "*" + AnycubicSDevice.checksum(line)
