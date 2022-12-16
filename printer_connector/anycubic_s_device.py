@@ -2,6 +2,7 @@ import time
 from typing import Tuple
 from serial import Serial
 from serial import SerialException
+from printer_connector.device import Device
 
 
 def static_vars(**kwargs):
@@ -12,7 +13,7 @@ def static_vars(**kwargs):
 
     return decorate
 
-from printer_connector.device import Device
+
 
 
 class AnycubicSDevice(Device):
