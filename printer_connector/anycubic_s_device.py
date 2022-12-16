@@ -1,5 +1,16 @@
 import time
+from typing import Tuple
 from serial import Serial
+from serial import SerialException
+
+
+def static_vars(**kwargs):
+    def decorate(func):
+        for k in kwargs:
+            setattr(func, k, kwargs[k])
+        return func
+
+    return decorate
 
 from printer_connector.device import Device
 
@@ -15,7 +26,7 @@ class AnycubicSDevice(Device):
 
     @staticmethod
     def connect_on_port(
-        port: str, baudrate: int = 115200, timeout=5
+        port: str, baudrate: int = 250000, timeout=5
     ) -> "AnycubicSDevice":
         dev = AnycubicSDevice(
             device=Serial(port=port, baudrate=baudrate, timeout=timeout)
@@ -30,7 +41,33 @@ class AnycubicSDevice(Device):
 
         return dev
 
-    def send_and_await(self, command: str) -> str:
+    @staticmethod
+    def connect() -> "AnycubicSDevice":
+        baudrate: int = 250000
+        timeout = 5
+
+        for i in range(1, 14):
+            try:
+                port: str = f"COM{i}"
+                device = Serial(port=port, baudrate=baudrate, timeout=timeout)
+
+                resp = device.readline()
+                if resp != "b'start\n'":
+                    raise SerialException()
+
+                print(f"connected on port '{port}'")
+                break
+
+            except SerialException:
+                continue
+
+        while str(resp) != "b''":
+            print(resp)
+            resp = device.readline()
+
+        return AnycubicSDevice(device=device)
+
+    def send_and_await(self, command: str) -> Tuple[str, str]:
         """
         send command to Anycubic S device, than await response
 
@@ -40,27 +77,41 @@ class AnycubicSDevice(Device):
         Returns:
             str: response from device
         """
+        command = AnycubicSDevice.no_line(command)
+        command = AnycubicSDevice.cs_line(command)
 
         if command[-1] != "\n":
             command += "\n"
 
-        print(bytearray(command, "utf-8"))
-        self._device.write(bytearray(command, "utf-8"))
+        self._device.write(bytearray(command, "ascii"))
 
-        resp = ""
+        resp = str(self._device.readline())
+        return (resp, resp[2:-3])
 
-        for _ in range(10):
-            resp = str(self._device.readline())
-            if resp != "":
-                break
-        return resp
-
-    def checksum(self, line):
+    @staticmethod
+    def checksum(line: str):
         cs = 0
         for i in range(0, len(line)):
             cs ^= ord(line[i]) & 0xFF
         cs &= 0xFF
         return str(cs)
 
-    def csline(self, line):
-        return line + "*" + self.checksum(line)
+    @staticmethod
+    def cs_line(line: str):
+        return line + "*" + AnycubicSDevice.checksum(line)
+
+    @staticmethod
+    def no_line(line: str):
+
+        try:
+            AnycubicSDevice.no_line.line_counter += 1
+        except Exception:
+            AnycubicSDevice.no_line.line_counter = 0
+
+        line = (
+            f"N{AnycubicSDevice.no_line.line_counter} "
+            + line
+            + f" N{AnycubicSDevice.no_line.line_counter}"
+        )
+
+        return line
