@@ -1,8 +1,10 @@
 import time
 from serial import Serial
 
+from printer_connector.device import Device
 
-class PrusaDevice:
+
+class PrusaDevice(Device):
     _device: Serial = None  # pyserial connector device
 
     def __init__(self, device) -> None:

@@ -4,13 +4,15 @@ from printer_connector.anycubic_s_device import AnycubicSDevice
 import time
 from serial import SerialException
 
+from printer_connector.device import Device
+from printer_connector.prusa_device import PrusaDevice
 
-def print_from_file(printer: AnycubicSDevice, file: GCodeFile) -> None:
+
+def print_from_file(printer: Device, file: GCodeFile) -> None:
     print("Commencing Printing.")
     while True:
         try:
             command = file.next_gcode_command()
-
             print(command)
             printer.send((command))
 
@@ -19,19 +21,10 @@ def print_from_file(printer: AnycubicSDevice, file: GCodeFile) -> None:
             return None
 
 
-import serial
-
-
 if __name__ == "__main__":
-    ser = serial.Serial("COM3", 115200)
-    print("await")
-    time.sleep(20)
-    print("zero axis")
-    ser.write(str.encode("G28 W\r\n"))
-    print("written")
-    time.sleep(20)
 
-    ser.close()
+
+    printer = PrusaDevice.connect()
 
     # for i in range(1, 14):
     #     print(f"COM{i}")
