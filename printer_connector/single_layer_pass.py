@@ -13,26 +13,28 @@ def simple_pass(
     y_direction = 1
 
     for x in range(0, int(printer_size[0] / path_width)):
-        for y in range(0, int((printer_size[1] / path_width) - antenna_offset[1])):
+        for y in range(0, int(printer_size[1] / path_width)):
             if y_direction == 1:
                 path.append(
                     (
-                        path_width / 2 + x * path_width + antenna_offset[0],
-                        path_width / 2 + y * path_width + antenna_offset[1],
+                        x * path_width,
+                        y * path_width,
                     )
                 )
             else:
                 path.append(
                     (
-                        path_width / 2 + x * path_width + antenna_offset[0],
-                        path_width / 2
-                        + printer_size[1]
-                        - y * path_width
-                        + antenna_offset[1],
+                        x * path_width,
+                        printer_size[1] - antenna_offset[1] - y * path_width,
                     )
                 )
         y_direction *= -1
 
+    # center on path
+    path = [(pos[0] + path_width / 2, pos[1] + path_width / 2) for pos in path]
+
+    # compensate for antenna to extruder offset
+    path = [(pos[0] + antenna_offset[0], pos[1] + antenna_offset[1]) for pos in path]
     return path
 
 
