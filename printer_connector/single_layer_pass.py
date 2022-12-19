@@ -1,3 +1,4 @@
+import math
 from typing import Tuple
 import numpy as np
 import matplotlib.pyplot as plt
@@ -12,8 +13,10 @@ def simple_pass(
 
     y_direction = 1
 
-    for x in range(0, int(printer_size[0] / path_width)):
-        for y in range(0, int(printer_size[1] / path_width)):
+    for x in range(0, math.floor((printer_size[0] - antenna_offset[0]) / path_width)):
+        for y in range(
+            0, math.floor((printer_size[1] - antenna_offset[1]) / path_width)
+        ):
             if y_direction == 1:
                 path.append(
                     (
@@ -25,7 +28,7 @@ def simple_pass(
                 path.append(
                     (
                         x * path_width,
-                        printer_size[1] - antenna_offset[1] - y * path_width,
+                        printer_size[1] - 2 * antenna_offset[1] - y * path_width,
                     )
                 )
         y_direction *= -1
@@ -50,7 +53,10 @@ if __name__ == "__main__":
         path_width=path_width,
         antenna_offset=antenna_offset,
     )
+
     path = [(pos[0], pos[1], pass_height) for pos in path]
+
+    path.insert(0, (0, 0, 0))
 
     x = [pos[0] for pos in path]
     y = [pos[1] for pos in path]
@@ -58,12 +64,12 @@ if __name__ == "__main__":
 
     ax = plt.figure().add_subplot(projection="3d")
     ax.plot(x, y, z)
-    ax.scatter(x, y, z)
+    ax.scatter(x, y, z, color="orange")
     ax.grid()
 
-    axx = plt.figure().add_subplot()
-    axx.plot(x, y)
-    axx.scatter(x, y)
-    axx.grid()
+    ax = plt.figure().add_subplot()
+    ax.plot(x, y)
+    ax.scatter(x, y, color="orange")
+    ax.grid()
 
     plt.show()
