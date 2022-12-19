@@ -10,12 +10,12 @@ from configs.exceptions import (
 
 class GCodeFile:
 
-    file_name: StrictStr = Field(...)
+    file_name: StrictStr = ""
     # TODO what is the type of filehandler?
     file_handle = None
     print_config: PrintConfig = None
 
-    def __init__(self, file_name: str) -> "GCodeFile":
+    def __init__(self, file_name: str) -> None:
         # TODO detect last '.' and calculate extension from that position
         if file_name[-6:] != ".gcode":
             raise InvalidGCodeFileExtension(
@@ -31,9 +31,11 @@ class GCodeFile:
             printer_name="Unknown",
             nozzle_diameter=0.4,
         )
+        
 
     def __del__(self):
-        self.file_handle.close()
+        if self.file_handle is not None:
+            self.file_handle.close()
 
     def read_slicer_vendor(self) -> SlicerVendor:
         """

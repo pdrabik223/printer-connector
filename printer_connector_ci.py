@@ -4,25 +4,30 @@ from printer_connector.anycubic_s_device import AnycubicSDevice
 import time
 from serial import SerialException
 
+from printer_connector.device import Device
+from printer_connector.prusa_device import PrusaDevice
 
-def print_from_file(printer: AnycubicSDevice, file: GCodeFile) -> None:
+
+def print_from_file(printer: Device, file: GCodeFile) -> None:
     print("Commencing Printing.")
     while True:
         try:
             command = file.next_gcode_command()
-
             print(command)
-            printer.send((command))
+            printer.send_and_await(command)
 
         except EndofFile as ex:
             print("Printing completed.")
             return None
 
 
-import serial
-
-
 if __name__ == "__main__":
+
+    printer = PrusaDevice.connect_on_port("COM8")
+    file = GCodeFile(file_name="C:\D\desk-spacer v6_0.15mm_PLA_MK3S_16m.gcode")
+
+    print_from_file(printer=printer, file=file)
+
     # ser = serial.Serial("COM3", 115200)
     # print("await")
     # time.sleep(20)
@@ -31,23 +36,23 @@ if __name__ == "__main__":
     # print("written")
     # time.sleep(20)
 
-    # ser.close()
+    # # ser.close()
 
-    for i in range(1, 14):
-        print(f"COM{i}")
-        try:
-            printer = AnycubicSDevice.connect_on_port(f"COM{i}", 250000)
-            break
+    # for i in range(1, 14):
+    #     print(f"COM{i}")
+    #     try:
+    #         printer = AnycubicSDevice.connect_on_port(f"COM{i}", 250000)
+    #         break
 
-        except SerialException:
-            continue
+    #     except SerialException:
+    #         continue
 
-    print("great, back to connector")
-    time.sleep(2)
-    print(printer.send_and_await(AnycubicSDevice.csline("N0 M110 N0")))
+    # print("great, back to connector")
+    # time.sleep(2)
+    # print(printer.send_and_await(AnycubicSDevice.csline("N0 M110 N0")))
 
-    time.sleep(2)
-    print(printer.send_and_await(AnycubicSDevice.csline("N1 M104 S30 N1")))
+    # time.sleep(2)
+    # print(printer.send_and_await(AnycubicSDevice.csline("N1 M104 S30 N1")))
 
     # time.sleep(2)
     # print(printer.send_and_await(AnycubicSDevice.csline("N2 M104 S185 N2")))
