@@ -43,8 +43,8 @@ class AnycubicSDevice:
     def connect() -> "AnycubicSDevice":
         baudrate: int = 250000
         timeout = 5
-
-        for i in range(1, 14):
+        resp = ""
+        for i in range(1, 20):
             try:
                 port: str = f"COM{i}"
                 device = Serial(port=port, baudrate=baudrate, timeout=timeout)
@@ -57,6 +57,8 @@ class AnycubicSDevice:
                 break
 
             except SerialException:
+                if i == 19:
+                    raise Exception("device not found")
                 continue
 
         while str(resp) != "b''":
@@ -99,17 +101,14 @@ class AnycubicSDevice:
         return line + "*" + AnycubicSDevice.checksum(line)
 
     @staticmethod
+    @static_vars(line_counter=0)
     def no_line(line: str):
-
-        try:
-            AnycubicSDevice.no_line.line_counter += 1
-        except Exception:
-            AnycubicSDevice.no_line.line_counter = 0
 
         line = (
             f"N{AnycubicSDevice.no_line.line_counter} "
             + line
             + f" N{AnycubicSDevice.no_line.line_counter}"
         )
+        AnycubicSDevice.no_line.line_counter += 1
 
         return line
