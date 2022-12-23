@@ -14,7 +14,7 @@ def static_vars(**kwargs):
     return decorate
 
 
-class AnycubicSDevice(Device):
+class AnycubicKobraDevice(Device):
     _device: Serial = None  # pyserial connector device
 
     def __init__(self, device) -> None:
@@ -26,8 +26,9 @@ class AnycubicSDevice(Device):
     @staticmethod
     def connect_on_port(
         port: str, baudrate: int = 250000, timeout=5
-    ) -> "AnycubicSDevice":
-        dev = AnycubicSDevice(
+    ) -> "AnycubicKobraDevice":
+
+        dev = AnycubicKobraDevice(
             device=Serial(port=port, baudrate=baudrate, timeout=timeout)
         )
         time.sleep(2)
@@ -41,7 +42,7 @@ class AnycubicSDevice(Device):
         return dev
 
     @staticmethod
-    def connect() -> "AnycubicSDevice":
+    def connect() -> "AnycubicKobraDevice":
         baudrate: int = 250000
         timeout = 5
 
@@ -58,13 +59,15 @@ class AnycubicSDevice(Device):
                 break
 
             except SerialException:
+                if i == 13:
+                    raise SerialException("Device not found")
                 continue
 
         while str(resp) != "b''":
             print(resp)
             resp = device.readline()
 
-        return AnycubicSDevice(device=device)
+        return AnycubicKobraDevice(device=device)
 
     def send_and_await(self, command: str) -> Tuple[str, str]:
         """
@@ -76,8 +79,8 @@ class AnycubicSDevice(Device):
         Returns:
             str: response from device
         """
-        command = AnycubicSDevice.no_line(command)
-        command = AnycubicSDevice.cs_line(command)
+        command = AnycubicKobraDevice.no_line(command)
+        command = AnycubicKobraDevice.cs_line(command)
 
         if command[-1] != "\n":
             command += "\n"
@@ -97,20 +100,20 @@ class AnycubicSDevice(Device):
 
     @staticmethod
     def cs_line(line: str):
-        return line + "*" + AnycubicSDevice.checksum(line)
+        return line + "*" + AnycubicKobraDevice.checksum(line)
 
     @staticmethod
     def no_line(line: str):
 
         try:
-            AnycubicSDevice.no_line.line_counter += 1
+            AnycubicKobraDevice.no_line.line_counter += 1
         except Exception:
-            AnycubicSDevice.no_line.line_counter = 0
+            AnycubicKobraDevice.no_line.line_counter = 0
 
         line = (
-            f"N{AnycubicSDevice.no_line.line_counter} "
+            f"N{AnycubicKobraDevice.no_line.line_counter} "
             + line
-            + f" N{AnycubicSDevice.no_line.line_counter}"
+            + f" N{AnycubicKobraDevice.no_line.line_counter}"
         )
 
         return line

@@ -31,7 +31,6 @@ class GCodeFile:
             printer_name="Unknown",
             nozzle_diameter=0.4,
         )
-        
 
     def __del__(self):
         if self.file_handle is not None:

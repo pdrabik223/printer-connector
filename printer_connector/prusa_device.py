@@ -4,6 +4,7 @@ from serial import SerialException
 
 from printer_connector.device import Device
 
+
 class PrusaDevice(Device):
     _device: Serial = None  # pyserial connector device
 
@@ -53,7 +54,6 @@ class PrusaDevice(Device):
 
         return dev
 
-
     @staticmethod
     def connect() -> "PrusaDevice":
         baudrate: int = 115200
@@ -80,7 +80,6 @@ class PrusaDevice(Device):
 
         return PrusaDevice(device=device)
 
-
     def send_and_await(self, command: str) -> str:
         """
         send command to Prusa device, than await response
@@ -101,12 +100,12 @@ class PrusaDevice(Device):
         r = 0
         # after every successfully completed command, prusa returns 'ok' message
         while "ok" not in resp:
-            
+
             resp = str(self._device.read_all().decode("utf-8"))
             print(resp.strip())
-            r  += 1
-            if r > retries : return "none message"
-
+            r += 1
+            if r > retries:
+                return "none message"
 
     def startup_procedure(self) -> None:
         """
