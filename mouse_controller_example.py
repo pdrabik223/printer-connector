@@ -1,14 +1,13 @@
 from g_code_file_handler.g_code_file import GCodeFile
 from configs.exceptions import EndofFile
-from printer_connector.anycubic_s_device import AnycubicSDevice
-from printer_connector.anycubic_kobra_device import AnycubicKobraDevice
+from device_connector.marlin_device import MarlinDevice
 
 import time
 from serial import SerialException
 
 
 if __name__ == "__main__":
-    printer = AnycubicKobraDevice.connect()
+    printer = MarlinDevice.connect()
 
     print("great, back to connector")
     time.sleep(2)

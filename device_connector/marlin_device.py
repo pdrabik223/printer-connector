@@ -14,7 +14,7 @@ def static_vars(**kwargs):
     return decorate
 
 
-class AnycubicSDevice(Device):
+class MarlinDevice(Device):
     _device: Serial = None  # pyserial connector device
 
     def __init__(self, device) -> None:
@@ -26,8 +26,8 @@ class AnycubicSDevice(Device):
     @staticmethod
     def connect_on_port(
         port: str, baudrate: int = 250000, timeout=5
-    ) -> "AnycubicSDevice":
-        dev = AnycubicSDevice(
+    ) -> "MarlinDevice":
+        dev = MarlinDevice(
             device=Serial(port=port, baudrate=baudrate, timeout=timeout)
         )
         time.sleep(2)
@@ -41,7 +41,7 @@ class AnycubicSDevice(Device):
         return dev
 
     @staticmethod
-    def connect() -> "AnycubicSDevice":
+    def connect() -> "MarlinDevice":
         baudrate: int = 250000
         timeout = 5
         resp = ""
@@ -66,7 +66,7 @@ class AnycubicSDevice(Device):
             print(resp)
             resp = device.readline()
 
-        return AnycubicSDevice(device=device)
+        return MarlinDevice(device=device)
 
     def send_and_await(self, command: str) -> Tuple[str, str]:
         """
@@ -78,8 +78,8 @@ class AnycubicSDevice(Device):
         Returns:
             str: response from device
         """
-        command = AnycubicSDevice.no_line(command)
-        command = AnycubicSDevice.cs_line(command)
+        command = MarlinDevice.no_line(command)
+        command = MarlinDevice.cs_line(command)
 
         if command[-1] != "\n":
             command += "\n"
@@ -99,17 +99,17 @@ class AnycubicSDevice(Device):
 
     @staticmethod
     def cs_line(line: str)->str:
-        return line + "*" + str(AnycubicSDevice.checksum(line))
+        return line + "*" + str(MarlinDevice.checksum(line))
 
     @staticmethod
     @static_vars(line_counter=0)
     def no_line(line: str)->str:
 
         line = (
-            f"N{AnycubicSDevice.no_line.line_counter} "
+            f"N{MarlinDevice.no_line.line_counter} "
             + line
-            + f" N{AnycubicSDevice.no_line.line_counter}"
+            + f" N{MarlinDevice.no_line.line_counter}"
         )
-        AnycubicSDevice.no_line.line_counter += 1
+        MarlinDevice.no_line.line_counter += 1
 
         return line

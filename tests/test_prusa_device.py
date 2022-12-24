@@ -1,5 +1,5 @@
 import pytest
-from printer_connector.prusa_device import PrusaDevice
+from device_connector.prusa_device import PrusaDevice
 
 
 class TestPrusaDevice:

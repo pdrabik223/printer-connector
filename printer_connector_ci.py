@@ -1,6 +1,6 @@
 from g_code_file_handler.g_code_file import GCodeFile
 from configs.exceptions import EndofFile
-from device_connector.anycubic_s_device import AnycubicSDevice
+from device_connector.marlin_device import MarlinDevice
 import time
 from serial import SerialException
 
