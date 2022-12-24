@@ -2,7 +2,7 @@ import time
 from typing import Tuple
 from serial import Serial
 from serial import SerialException
-from printer_connector.device import Device
+from device_connector.device import Device
 
 
 def static_vars(**kwargs):
@@ -90,20 +90,20 @@ class AnycubicSDevice(Device):
         return (resp, resp[2:-3])
 
     @staticmethod
-    def checksum(line: str):
+    def checksum(line: str)->int:
         cs = 0
         for i in range(0, len(line)):
             cs ^= ord(line[i]) & 0xFF
         cs &= 0xFF
-        return str(cs)
+        return cs
 
     @staticmethod
-    def cs_line(line: str):
-        return line + "*" + AnycubicSDevice.checksum(line)
+    def cs_line(line: str)->str:
+        return line + "*" + str(AnycubicSDevice.checksum(line))
 
     @staticmethod
     @static_vars(line_counter=0)
-    def no_line(line: str):
+    def no_line(line: str)->str:
 
         line = (
             f"N{AnycubicSDevice.no_line.line_counter} "

@@ -1,11 +1,11 @@
 from g_code_file_handler.g_code_file import GCodeFile
 from configs.exceptions import EndofFile
-from printer_connector.anycubic_s_device import AnycubicSDevice
+from device_connector.anycubic_s_device import AnycubicSDevice
 import time
 from serial import SerialException
 
-from printer_connector.device import Device
-from printer_connector.prusa_device import PrusaDevice
+from device_connector.device import Device
+from device_connector.prusa_device import PrusaDevice
 
 
 def print_from_file(printer: Device, file: GCodeFile) -> None:
