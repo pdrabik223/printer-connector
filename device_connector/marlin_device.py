@@ -3,7 +3,7 @@ from typing import Tuple
 from typing import Optional
 from serial import Serial
 from serial import SerialException
-from device_connector.device import Device
+from device_connector.device import Device, static_vars
 from device_connector.exceptions import Err, ResultWithErr
 
 import serial.tools.list_ports
@@ -21,7 +21,7 @@ class MarlinDevice(Device):
 
     """
 
-    _SUCCESSFUL_CONNECTION_MESSAGE = bytes("start\n")
+    _SUCCESSFUL_CONNECTION_MESSAGE = bytes("start\n", "utf-8")
 
     _device: Serial  # pyserial connector device
 
