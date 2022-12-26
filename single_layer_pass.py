@@ -3,7 +3,13 @@ from typing import List, Tuple
 import matplotlib.pyplot as plt
 
 
-def f_range(start: float = 0, end: float = 1, step: float = 1, include_start = True,include_end = False):
+def f_range(
+    start: float = 0,
+    end: float = 1,
+    step: float = 1,
+    include_start=True,
+    include_end=False,
+):
     range = []
 
     temp_value = start
@@ -22,7 +28,6 @@ def f_range(start: float = 0, end: float = 1, step: float = 1, include_start = T
         range.append(temp_value)
 
     return range
-    
 
 
 def simple_pass(
@@ -31,16 +36,22 @@ def simple_pass(
     antenna_measurement_radius: float,
 ) -> List[Tuple[float, float]]:
 
-    # antenna diameter 
-    antenna_d = antenna_measurement_radius*2 
+    # antenna diameter
+    antenna_d = antenna_measurement_radius * 2
     x_ps = printer_size[0]
     y_ps = printer_size[1]
 
     # list of extruder positions when measurement is done``
     # not shifted by antenna offset
     # measurements are spaced by antenna_measurement_radius
-    y_measurements_coords = [y for y in f_range(antenna_measurement_radius, y_ps, antenna_d, include_end=True)]
-    x_measurements_coords = [x for x in f_range(antenna_measurement_radius, x_ps, antenna_d, include_end=True)]
+    y_measurements_coords = [
+        y
+        for y in f_range(antenna_measurement_radius, y_ps, antenna_d, include_end=True)
+    ]
+    x_measurements_coords = [
+        x
+        for x in f_range(antenna_measurement_radius, x_ps, antenna_d, include_end=True)
+    ]
 
     path = []
     for x in x_measurements_coords:
@@ -54,6 +65,7 @@ def simple_pass(
     path = [(x, y) for x, y in path if x <= x_ps and y <= y_ps]
 
     return path
+
 
 def plot_measurement_areas(
     x_values: List[float],
@@ -146,5 +158,3 @@ if __name__ == "__main__":
     create_2d_movement_plot(path=path, printer_boundaries=printer_size)
     create_2d_measurement_placement_plot(path=path, printer_boundaries=printer_size)
     plt.show()
-
-    
