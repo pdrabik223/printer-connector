@@ -125,4 +125,3 @@ class PrusaDevice(Device):
         ]
         for command in commands:
             self._device.send_and_await(command=command)
-

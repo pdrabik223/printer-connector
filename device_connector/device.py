@@ -1,7 +1,7 @@
-
 import serial.tools.list_ports
-def static_vars(**kwargs)->callable:
-    
+
+
+def static_vars(**kwargs) -> callable:
     def decorate(func):
         for k in kwargs:
             setattr(func, k, kwargs[k])
@@ -9,18 +9,19 @@ def static_vars(**kwargs)->callable:
 
     return decorate
 
-    
+
 def list_available_serial_ports():
-    
+
     ports = serial.tools.list_ports.comports()
     for port, desc, hwid in sorted(ports):
-            print("{}: {} [{}]".format(port, desc, hwid))
+        print("{}: {} [{}]".format(port, desc, hwid))
 
 
 class Device:
     """
-    **Base class for various printer devices.** 
+    **Base class for various printer devices.**
     """
+
     def send_and_await(command: str) -> str:
         """
         **Send command and await response.**
@@ -30,27 +31,29 @@ class Device:
         Parameters
         ----------
         **command : str**
-            Command send to device 
+            Command send to device
 
         Returns
-        ------- 
+        -------
         **str**
             Response from device
         """
         pass
-    
-    def connect_on_port(port: str, baudrate: int = 250000, timeout:int=5)->"Device":
+
+    def connect_on_port(
+        port: str, baudrate: int = 250000, timeout: int = 5
+    ) -> "Device":
         """
-        **Connects to device on specified port.** 
+        **Connects to device on specified port.**
 
         Parameters
         ----------
         **port : str**
             Port on witch Printer device is connected
-        
+
         **baudrate : int, optional**
             Information transfer speed (in bits per second), **by default 250000**
-        
+
         **timeout : int, optional**
             Await for response time in seconds, **by default 5**
 
@@ -61,10 +64,10 @@ class Device:
         """
         pass
 
-    def connect()->"Device":
+    def connect() -> "Device":
         """
         **Search for port on which printed device is connected to pc.**
-        If none is found, error is raised.  
+        If none is found, error is raised.
 
         Returns
         -------

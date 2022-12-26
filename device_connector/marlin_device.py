@@ -150,6 +150,7 @@ class MarlinDevice(Device):
         MarlinDevice.no_line.line_counter += 1
 
         return line
+
     @staticmethod
     def _read_printer_info(device: Serial) -> None:
         resp: bytes = None
