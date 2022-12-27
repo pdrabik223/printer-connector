@@ -1,7 +1,6 @@
 import copy
 import enum
 import threading
-from typing import List, Tuple
 from device_connector.marlin_device import MarlinDevice
 from device_connector.prusa_device import PrusaDevice
 import time
@@ -10,33 +9,36 @@ import PySimpleGUI as sg
 
 
 class ExtruderMovement(str, enum.Enum):
-    UP = "up"
+    UP = "up  "
     DOWN = "down"
     STAY = "stay"
 
 
 def window_loop(vars):
+
     window = sg.Window(
         title="Mouse Controller",
         layout=[
+            [sg.VPush()],
             [
                 sg.Text(
-                    text="Left to lower extruder\nRight to raise extruder",
+                    "Right to raise extruder\nLeft to lower extruder",
                     justification="center",
                 )
-            ]
+            ],
+            [sg.VPush()],
         ],
         size=(400, 400),
-        element_justification="center",
+        element_justification="c",
         finalize=True,
         resizable=True,
     )
 
-    window.bind("<Button-1>", "<Button-1>")
-    window.bind("<Button-3>", "<Button-3>")
+    window.bind("<Button-1>", ExtruderMovement.UP)
+    window.bind("<Button-3>", ExtruderMovement.DOWN)
 
-    window.bind("<ButtonRelease-1>", "<ButtonRelease-1>")
-    window.bind("<ButtonRelease-3>", "<ButtonRelease-3>")
+    window.bind("<ButtonRelease-1>", ExtruderMovement.STAY)
+    window.bind("<ButtonRelease-3>", ExtruderMovement.STAY)
 
     window.bind("<Motion>", "<Motion>")
 
@@ -45,37 +47,33 @@ def window_loop(vars):
         # End program if user closes window or
         # presses the OK button
 
-        if event == "OK" or event == sg.WIN_CLOSED:
+        if event == sg.WIN_CLOSED:
             break
 
-        if event == "<Button-1>":
-            vars[0] = ExtruderMovement.UP
-
-        if event == "<ButtonRelease-1>":
-            vars[0] = ExtruderMovement.STAY
-
-        if event == "<Button-3>":
-            vars[0] = ExtruderMovement.DOWN
-
-        if event == "<ButtonRelease-3>":
-            vars[0] = ExtruderMovement.STAY
+        if isinstance(event, ExtruderMovement):
+            vars[0] = event
 
         if event == "<Motion>":
             x = window.mouse_location()[0] - window.current_location()[0]
             y = window.mouse_location()[1] - window.current_location()[1] - 30
 
-            vars[1] = x / window.size[0]
-            vars[2] = y / window.size[1]
+            x = x / window.size[0]
+            y = y / window.size[1]
 
-            if vars[1] < 0:
-                vars[1] = 0
-            if vars[1] > 1:
-                vars[1] = 1
+            if x < 0:
+                x = 0
 
-            if vars[2] < 0:
-                vars[2] = 0
-            if vars[2] > 1:
-                vars[2] = 1
+            if x > 1:
+                x = 1
+
+            if y < 0:
+                y = 0
+
+            if y > 1:
+                y = 1
+
+            vars[1] = x
+            vars[2] = y
 
     window.close()
 
@@ -84,10 +82,10 @@ if __name__ == "__main__":
     # printer = MarlinDevice.connect()
 
     vars = [ExtruderMovement.STAY, 0, 0]
-    previous_vars = copy.deepcopy(vars)
-
     height = 0
-    previous_height = copy.copy(height)
+
+    previous_vars = None
+    previous_height = None
 
     x = threading.Thread(
         target=window_loop,
@@ -95,23 +93,19 @@ if __name__ == "__main__":
     )
     x.start()
 
-    while x.isAlive():
+    while x.is_alive():
         if previous_vars != vars or height != previous_height:
-
             previous_vars = copy.deepcopy(vars)
-
+            previous_height = copy.copy(height)
             print(
-                f"direction: {str(vars[0])} position x: {vars[1]} position y: {vars[2]} height: {height}                             \r",
+                f"direction: {str(vars[0])} position x: {vars[1]} position y: {round(vars[2],3)} height: {height}     \r",
                 end="",
             )
-
-        if vars[0] == ExtruderMovement.STAY:
-            pass
 
         if vars[0] == ExtruderMovement.UP:
             height += 1
 
-        if vars[0] == ExtruderMovement.DOWN:
+        if vars[0] == ExtruderMovement.DOWN and height > 0:
             height -= 1
 
         time.sleep(0.1)
