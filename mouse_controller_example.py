@@ -15,7 +15,6 @@ class ExtruderMovement(str, enum.Enum):
 
 
 def window_loop(vars):
-
     window = sg.Window(
         title="Mouse Controller",
         layout=[
@@ -79,7 +78,7 @@ def window_loop(vars):
 
 
 if __name__ == "__main__":
-    # printer = MarlinDevice.connect()
+    printer: MarlinDevice = MarlinDevice.connect()
 
     vars = [ExtruderMovement.STAY, 0, 0]
     height = 0
@@ -87,20 +86,25 @@ if __name__ == "__main__":
     previous_vars = None
     previous_height = None
 
-    x = threading.Thread(
+    thread = threading.Thread(
         target=window_loop,
         args=(vars,),
     )
-    x.start()
+    thread.start()
 
-    while x.is_alive():
+    while thread.is_alive():
         if previous_vars != vars or height != previous_height:
             previous_vars = copy.deepcopy(vars)
             previous_height = copy.copy(height)
+            x = round(vars[1], 2)
+            y = round(vars[2], 2)
+            z = height
+
             print(
-                f"direction: {str(vars[0])} position x: {vars[1]} position y: {round(vars[2],3)} height: {height}     \r",
+                f"direction: {str(vars[0])} position x: {x} position y: {y} height: {height}     \r",
                 end="",
             )
+            printer.send_and_await()
 
         if vars[0] == ExtruderMovement.UP:
             height += 1

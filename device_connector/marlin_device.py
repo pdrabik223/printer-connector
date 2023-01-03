@@ -11,7 +11,6 @@ import logging
 
 
 class MarlinDevice(Device):
-
     """
     **Marlin Device Connector**
     Specification of Connector class for printers running marlin os.
@@ -59,7 +58,7 @@ class MarlinDevice(Device):
         return MarlinDevice(device=device)
 
     @staticmethod
-    def connect() -> ResultWithErr["MarlinDevice"]:
+    def connect() -> "MarlinDevice":
         """
         **Search for port on which printed device is connected to pc.**
         If none is found, error is raised.
@@ -96,10 +95,11 @@ class MarlinDevice(Device):
                 break
 
             except SerialException:
+                device = None
                 continue
 
         if device is None:
-            return SerialException("Device not found")
+            raise SerialException("Device not found")
 
         MarlinDevice._read_printer_info(device)
 
