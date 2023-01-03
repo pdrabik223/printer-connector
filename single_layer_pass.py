@@ -35,7 +35,6 @@ def simple_pass(
     antenna_offset: Tuple[float, float, float],
     antenna_measurement_radius: float,
 ) -> List[Tuple[float, float]]:
-
     # antenna diameter
     antenna_d = antenna_measurement_radius * 2
     x_ps = printer_size[0]
@@ -80,7 +79,6 @@ def plot_measurement_areas(
 
 
 def create_3d_movement_plot(path: List[Tuple[float, float]], pass_height: float):
-
     path = [(pos[0], pos[1], pass_height) for pos in path]
 
     x = [pos[0] for pos in path]

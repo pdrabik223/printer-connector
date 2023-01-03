@@ -96,8 +96,8 @@ if __name__ == "__main__":
         if previous_vars != vars or height != previous_height:
             previous_vars = copy.deepcopy(vars)
             previous_height = copy.copy(height)
-            x = round(vars[1], 3)
-            y = round(vars[2], 3)
+            x = round(vars[1], 2)
+            y = round(vars[2], 2)
             z = height
             print(
                 f"direction: {str(vars[0])} position x: {x} position y: {y} height: {height}     \r",
