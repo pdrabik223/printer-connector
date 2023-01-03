@@ -1,11 +1,13 @@
 import enum
 from typing import Callable, Generic, NoReturn, Optional, Tuple, TypeVar, Any
+
 T = TypeVar("T")
 E = TypeVar("E", bound=Exception)
 
 Result = Tuple[T, Optional[E]]
 
 ResultWithErr = Tuple[T, Optional[Exception]]
+
 
 class Ok(Generic[T, E]):
     _value: T
@@ -30,6 +32,7 @@ class Ok(Generic[T, E]):
 
     def __repr__(self) -> str:
         return f"Ok({repr(self._value)})"
+
 
 class Err(Generic[T, E]):
     _err: E

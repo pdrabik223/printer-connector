@@ -11,7 +11,6 @@ import logging
 
 
 class MarlinDevice(Device):
-
     """
     **Marlin Device Connector**
     Specification of Connector class for printers running marlin os.
@@ -59,7 +58,7 @@ class MarlinDevice(Device):
         return MarlinDevice(device=device)
 
     @staticmethod
-    def connect() -> ResultWithErr["MarlinDevice"]:
+    def connect() -> "MarlinDevice":
         """
         **Search for port on which printed device is connected to pc.**
         If none is found, error is raised.
@@ -78,28 +77,29 @@ class MarlinDevice(Device):
         timeout: int = 1
         device: Optional[Serial] = None
         available_ports = serial.tools.list_ports.comports()
-
         for port, desc, hwid in sorted(available_ports):
+            print(f"Scanning port: '{port}', desc: '{desc}', hwid: '{hwid}")
             try:
                 device: Serial = Serial(
                     port=str(port), baudrate=baudrate, timeout=timeout
                 )
-
+                print(f"Serial port is Open'")
                 resp: bytes = device.readline()
-
+                print(f"Answer: '{resp}'")
                 if resp != MarlinDevice._SUCCESSFUL_CONNECTION_MESSAGE:
                     raise SerialException()
-
+                print(f"Connected on port: '{port}', desc: '{desc}', hwid: '{hwid}")
                 logging.info(
                     f"Connected on port: '{port}', desc: '{desc}', hwid: '{hwid}"
                 )
                 break
 
             except SerialException:
+                device = None
                 continue
 
         if device is None:
-            return SerialException("Device not found")
+            raise SerialException("Device not found")
 
         MarlinDevice._read_printer_info(device)
 
@@ -107,7 +107,7 @@ class MarlinDevice(Device):
 
     def send_and_await(self, command: str) -> Tuple[str, str]:
         """
-        send command to Anycubic S device, than await response
+        send command to Anycubic S device, then await response
 
         Args:
             command (str): g-code command

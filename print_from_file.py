@@ -23,6 +23,6 @@ def print_from_file(printer: Device, file: GCodeFile) -> None:
 
 if __name__ == "__main__":
 
-    printer = PrusaDevice.connect_on_port("COM8")
+    printer = MarlinDevice.connect_on_port("COM8")
     file = GCodeFile(file_name="C:\D\desk-spacer v6_0.15mm_PLA_MK3S_16m.gcode")
     print_from_file(printer=printer, file=file)

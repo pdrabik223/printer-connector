@@ -11,7 +11,6 @@ def static_vars(**kwargs) -> callable:
 
 
 def list_available_serial_ports():
-
     ports = serial.tools.list_ports.comports()
     for port, desc, hwid in sorted(ports):
         print("{}: {} [{}]".format(port, desc, hwid))
@@ -64,6 +63,7 @@ class Device:
         """
         pass
 
+    @staticmethod
     def connect() -> "Device":
         """
         **Search for port on which printed device is connected to pc.**
