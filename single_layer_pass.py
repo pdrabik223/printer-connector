@@ -2,77 +2,20 @@ import copy
 from typing import List, Tuple
 import matplotlib.pyplot as plt
 
+from time import sleep
 
-def f_range(
-    start: float = 0,
-    end: float = 1,
-    step: float = 1,
-    include_start=True,
-    include_end=False,
-):
-    range = []
+from device_connector.prusa_device import PrusaDevice
 
-    temp_value = start
-
-    if include_start:
-        range.append(temp_value)
-
-    temp_value += step
-    while temp_value < end:
-        range.append(temp_value)
-        temp_value += step
-
-    print(temp_value)
-
-    if include_end:
-        range.append(temp_value)
-
-    return range
-
-
-def simple_pass(
-    printer_size: Tuple[float, float, float],
-    antenna_offset: Tuple[float, float, float],
-    antenna_measurement_radius: float,
-) -> List[Tuple[float, float]]:
-    # antenna diameter
-    antenna_d = antenna_measurement_radius * 2
-    x_ps = printer_size[0]
-    y_ps = printer_size[1]
-
-    # list of extruder positions when measurement is done``
-    # not shifted by antenna offset
-    # measurements are spaced by antenna_measurement_radius
-    y_measurements_coords = [
-        y
-        for y in f_range(antenna_measurement_radius, y_ps, antenna_d, include_end=True)
-    ]
-    x_measurements_coords = [
-        x
-        for x in f_range(antenna_measurement_radius, x_ps, antenna_d, include_end=True)
-    ]
-
-    path = []
-    for x in x_measurements_coords:
-        for y in y_measurements_coords:
-            path.append((x, y))
-
-    # shift by antenna offset
-    path = [(x + antenna_offset[0], y + antenna_offset[1]) for x, y in path]
-
-    # erase all positions that collide with boundaries of printer
-    path = [(x, y) for x, y in path if x <= x_ps and y <= y_ps]
-
-    return path
+from pass_generators.simple_pass import simple_pass, f_range
 
 
 def plot_measurement_areas(
-    x_values: List[float],
-    y_values: List[float],
-    ax: plt.Axes,
-    radius: float,
-    color: str = "blue",
-    alpha: float = 0.4,
+        x_values: List[float],
+        y_values: List[float],
+        ax: plt.Axes,
+        radius: float,
+        color: str = "blue",
+        alpha: float = 0.4,
 ) -> None:
     for x, y in zip(x_values, y_values):
         ax.add_patch(plt.Circle((x, y), radius, color=color, alpha=alpha))
@@ -102,7 +45,7 @@ def create_3d_movement_plot(path: List[Tuple[float, float]], pass_height: float)
 
 
 def create_2d_movement_plot(
-    path: List[Tuple[float, float]], printer_boundaries: Tuple[float, float, float]
+        path: List[Tuple[float, float]], printer_boundaries: Tuple[float, float, float]
 ):
     ax = plt.figure().add_subplot()
 
@@ -120,7 +63,7 @@ def create_2d_movement_plot(
 
 
 def create_2d_measurement_placement_plot(
-    path: List[Tuple[float, float]], printer_boundaries: Tuple[float, float, float]
+        path: List[Tuple[float, float]], printer_boundaries: Tuple[float, float, float]
 ):
     ax = plt.figure().add_subplot()
 
@@ -142,7 +85,7 @@ def create_2d_measurement_placement_plot(
 
 if __name__ == "__main__":
     #               x    y    z
-    printer_size = (230, 230, 200)
+    printer_size = (180, 180, 100)
     antenna_offset = (5, 10, 0)
     antenna_measurement_radius = 10
     pass_height = 120
@@ -152,7 +95,24 @@ if __name__ == "__main__":
         antenna_measurement_radius=antenna_measurement_radius,
         antenna_offset=antenna_offset,
     )
+
     create_3d_movement_plot(path=path, pass_height=pass_height)
     create_2d_movement_plot(path=path, printer_boundaries=printer_size)
     create_2d_measurement_placement_plot(path=path, printer_boundaries=printer_size)
     plt.show()
+
+    # perform_scan = input("commence scan [y/n]")
+    # if perform_scan not in ('Y', 'Yes', "YES", 'y', 'yes'):
+    #     exit(0)
+    #
+    # printer: PrusaDevice = PrusaDevice.connect_on_port("COM8")
+    # print("startup procedure")
+    #
+    # printer.startup_procedure()
+    # print("scanning...")
+    #
+    # for position in path:
+    #     x, y, z = position[0], position[1], pass_height
+    #     print(f"G1 X{x} Y{y}, Z{z}")
+    #     printer.send_and_await(f"G1 X{x} Y{y}, Z{z}")
+    #     sleep(2)

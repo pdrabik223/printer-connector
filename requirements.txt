@@ -6,3 +6,4 @@ numpy
 matplotlib
 pyautogui
 pysimplegui
+PyQt6~=6.4.0

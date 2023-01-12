@@ -14,17 +14,16 @@ class ExtruderMovement(str, enum.Enum):
     STAY = "stay"
 
 
-def window_loop(vars):
+def window_loop(variables):
+    middle_text = sg.Text(
+        "Right to raise extruder\nLeft to lower extruder\nx: ?, y: ?",
+        justification="center",
+    )
     window = sg.Window(
         title="Mouse Controller",
         layout=[
             [sg.VPush()],
-            [
-                sg.Text(
-                    "Right to raise extruder\nLeft to lower extruder",
-                    justification="center",
-                )
-            ],
+            [middle_text],
             [sg.VPush()],
         ],
         size=(400, 400),
@@ -43,14 +42,12 @@ def window_loop(vars):
 
     while True:
         event, values = window.read()
-        # End program if user closes window or
-        # presses the OK button
 
         if event == sg.WIN_CLOSED:
             break
 
         if isinstance(event, ExtruderMovement):
-            vars[0] = event
+            variables[0] = event
 
         if event == "<Motion>":
             x = window.mouse_location()[0] - window.current_location()[0]
@@ -71,16 +68,19 @@ def window_loop(vars):
             if y > 1:
                 y = 1
 
-            vars[1] = x
-            vars[2] = y
+            middle_text.update(
+                value=f"Right to raise extruder\nLeft to lower extruder\nx: {round(x, 2)}, y: {round(y, 2)}")
+
+            variables[1] = x
+            variables[2] = y
 
     window.close()
 
 
 if __name__ == "__main__":
-    printer: MarlinDevice = MarlinDevice.connect()
+    printer = PrusaDevice.connect()
 
-    vars = [ExtruderMovement.STAY, 0, 0]
+    variables = [ExtruderMovement.STAY, 0, 0]
     height = 0
 
     previous_vars = None
@@ -88,27 +88,27 @@ if __name__ == "__main__":
 
     thread = threading.Thread(
         target=window_loop,
-        args=(vars,),
+        args=(variables,),
     )
     thread.start()
 
     while thread.is_alive():
-        if previous_vars != vars or height != previous_height:
-            previous_vars = copy.deepcopy(vars)
+        if previous_vars != variables or height != previous_height:
+            previous_vars = copy.deepcopy(variables)
             previous_height = copy.copy(height)
-            x = round(vars[1], 2)
-            y = round(vars[2], 2)
+            x = round(variables[1], 2)
+            y = round(variables[2], 2)
             z = height
-            print(
-                f"direction: {str(vars[0])} position x: {x} position y: {y} height: {height}     \r",
-                end="",
-            )
+            # print(
+            #     f"direction: {str(vars[0])} position x: {x} position y: {y} height: {height}     \r",
+            #     end="",
+            # )
             printer.send_and_await(f"G1 X{x} Y{y} Z{z}")
 
-        if vars[0] == ExtruderMovement.UP:
+        if variables[0] == ExtruderMovement.UP:
             height += 1
 
-        if vars[0] == ExtruderMovement.DOWN and height > 0:
+        if variables[0] == ExtruderMovement.DOWN and height > 0:
             height -= 1
 
         time.sleep(0.1)

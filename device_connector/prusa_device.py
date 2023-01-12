@@ -1,8 +1,10 @@
+import enum
 import time
 from serial import Serial
 from serial import SerialException
-
+from typing import Optional
 from device_connector.device import Device
+import serial.tools.list_ports
 
 
 class PrusaDevice(Device):
@@ -11,6 +13,7 @@ class PrusaDevice(Device):
     def __init__(self, device) -> None:
         self._device = device
 
+    # TODO READ on self
     def __del__(self) -> None:
         if self._device is None:
             return
@@ -23,8 +26,8 @@ class PrusaDevice(Device):
             "M900 K0",  # reset LA
             "M907 E538",  # reset extruder motor current
             "M104 S0",  # turn off temperature
-            "M140 S0",  # turn off heatbed
-            "M107" "M84",  # turn off fan  # disable motors
+            "M140 S0",  # turn off heated
+            "M107 M84",  # turn off fan  # disable motors
         ]
         for command in commands:
             self.send_and_await(command=command)
@@ -43,46 +46,62 @@ class PrusaDevice(Device):
         Returns:
             PrusaDevice: _description_
         """
-        dev = PrusaDevice(device=Serial(port=port, baudrate=baudrate, timeout=timeout))
+        device = Serial(port=port, baudrate=baudrate, timeout=timeout)
         time.sleep(2)
 
-        resp = dev._device.read_all().decode("utf-8")
+        resp = device.readline().decode("utf-8")
 
         while resp != "":
             print(resp.strip())
-            resp = dev._device.read_all().decode("utf-8")
+            resp = device.readline().decode("utf-8")
 
-        return dev
+        return PrusaDevice(device)
 
     @staticmethod
     def connect() -> "PrusaDevice":
-        baudrate: int = 115200
-        timeout = 2
+        baudrate: int = 250000
+        timeout: int = 1
+        device: Optional[Serial] = None
+        available_ports = serial.tools.list_ports.comports()
 
-        for i in range(1, 14):
+        for port, desc, hwid in sorted(available_ports):
+            print(f"Scanning port: '{port}', desc: '{desc}', hwid: '{hwid}")
             try:
-                port: str = f"COM{i}"
-                device = Serial(port=port, baudrate=baudrate, timeout=timeout)
+                device: Serial = Serial(
+                    port=str(port), baudrate=baudrate, timeout=timeout
+                )
+                print(f"Serial port is Open'")
 
-                resp = device.read_all().decode("utf-8")
-                if resp != "start\n":
-                    raise SerialException()
+                resp: bytes = device.read_all().decode("utf-8")
+                print(f"Answer: '{resp}'")
 
-                print(f"connected on port '{port}'")
+                # if resp != "start\n":
+                #     raise SerialException()
+
+                print(f"Connected on port: '{port}', desc: '{desc}', hwid: '{hwid}")
+
                 break
 
             except SerialException:
+                device = None
                 continue
+        if not device:
+            raise SerialException("Device not found")
 
         while resp != "":
             print(resp.strip())
-            resp = device.read_all().decode("utf-8")
+            resp = device.readline().decode("utf-8")
 
         return PrusaDevice(device=device)
 
+    class PrusaPrinterStatus(enum.Enum):
+        PROCESSING = 'processing'
+        READY = 'ready'
+
     def send_and_await(self, command: str) -> str:
+
         """
-        send command to Prusa device, than await response
+        send command to Prusa device, then await response
 
         Args:
             command (str): g-code command
@@ -94,18 +113,26 @@ class PrusaDevice(Device):
             command += "\n"
 
         self._device.write(bytearray(command, "utf-8"))
+        if "G1" in command:
+            time.sleep(5)
+
+        elif "G28" in command:
+            time.sleep(30)
 
         resp = ""
-        retries = 3
+        retries = 5
         r = 0
         # after every successfully completed command, prusa returns 'ok' message
         while "ok" not in resp:
-
-            resp = str(self._device.read_all().decode("utf-8"))
+            resp = str(self._device.readline().decode("utf-8"))
             print(resp.strip())
-            r += 1
-            if r > retries:
-                return "none message"
+            if 'busy' in resp:
+                print("awaiting 2s")
+                time.sleep(2)
+            else:
+                r += 1
+                if r > retries:
+                    return "none message"
 
     def startup_procedure(self) -> None:
         """
@@ -124,4 +151,4 @@ class PrusaDevice(Device):
             "G28 W",
         ]
         for command in commands:
-            self._device.send_and_await(command=command)
+            self.send_and_await(command=command)

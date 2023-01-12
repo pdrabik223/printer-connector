@@ -77,6 +77,7 @@ class MarlinDevice(Device):
         timeout: int = 1
         device: Optional[Serial] = None
         available_ports = serial.tools.list_ports.comports()
+
         for port, desc, hwid in sorted(available_ports):
             print(f"Scanning port: '{port}', desc: '{desc}', hwid: '{hwid}")
             try:
@@ -143,9 +144,9 @@ class MarlinDevice(Device):
     def no_line(line: str) -> str:
 
         line = (
-            f"N{MarlinDevice.no_line.line_counter} "
-            + line
-            + f" N{MarlinDevice.no_line.line_counter}"
+                f"N{MarlinDevice.no_line.line_counter} "
+                + line
+                + f" N{MarlinDevice.no_line.line_counter}"
         )
         MarlinDevice.no_line.line_counter += 1
 
