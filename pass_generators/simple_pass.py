@@ -68,7 +68,7 @@ def simple_pass_3d(
         antenna_measurement_radius: float,
         pass_height: float
 
-) -> List[Tuple[float, float, float]]:
+) -> Tuple[List[Tuple[float, float, float]], Tuple[int, int]]:
     # antenna diameter
     antenna_d = antenna_measurement_radius * 2
     x_ps = printer_size[0]
@@ -90,7 +90,6 @@ def simple_pass_3d(
     flip = False
     for x in x_measurements_coords:
         for y in y_measurements_coords:
-
             # if flip:
             #     path.append((x, printer_size[1] - y))
             # else:
@@ -104,4 +103,4 @@ def simple_pass_3d(
     # erase all positions that collide with boundaries of printer
     path = [(x, y, pass_height) for x, y in path if x <= x_ps and y <= y_ps]
 
-    return path
+    return path, (x_measurements_coords, y_measurements_coords)

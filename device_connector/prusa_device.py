@@ -59,7 +59,7 @@ class PrusaDevice(Device):
 
     @staticmethod
     def connect() -> "PrusaDevice":
-        baudrate: int = 250000
+        baudrate: int = 115200
         timeout: int = 1
         device: Optional[Serial] = None
         available_ports = serial.tools.list_ports.comports()

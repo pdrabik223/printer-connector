@@ -1,0 +1,7 @@
+# Communication standard between Python API and C++ arduino software
+|     *command*     | *shorthand* | *arguments* | *answer* | *response time* |          *example*           |                                             *description*                                              |
+|:-----------------:|:-----------:|:-----------:|:--------:|:---------------:|:----------------------------:|:------------------------------------------------------------------------------------------------------:|
+|     get angle     |     get     |     ---     |  float   |      short      |   req:'get'  resp:'-12.2'    |                                          angle hold by rotor                                           |
+|     set angle     |     set     |    float    |  float   |      long       | req:'set-12.4'  resp:'-12.2' | the actual motor might not be able to turn to requested angle, the true angle set by rotor is returned |
+| connection status |     con     |     ---     |   str    |      short      |     req:'con'  resp:'ok'     |                                         check connection state                                         |
+|  override angle   |     ovr     |    float    |  float   |      short      |  req:'ovr12.3'  resp:'12.3'  |                                     override angle in rotor memory                                     |

@@ -2,6 +2,7 @@ import threading
 from time import sleep
 from random import random
 
+from device_connector.marlin_device import MarlinDevice
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QIntValidator
 from PyQt6.QtWidgets import (
@@ -18,6 +19,7 @@ from PyQt6.QtWidgets import (
 )
 import sys
 from gui_plots.gui_plots import *
+from hapmd.src.hameg_ci import set_up_hamed_device, get_level
 
 
 class MainWindow(QMainWindow):
@@ -106,11 +108,12 @@ class MainWindow(QMainWindow):
         self._left_wing.insertWidget(len(self._left_wing) - 1, self.start_stop_measurement_button)
 
     def start_thread(self):
-        antenna_offset = (5, 10, 0)
-        antenna_measurement_radius = 5
-        pass_height = 120
+        printer_size = (80, 80, 80)
+        antenna_offset = (5, 52, 0)
+        antenna_measurement_radius = 2
+        pass_height = 4
 
-        path = simple_pass_3d(
+        path, no_bins = simple_pass_3d(
             printer_size=printer_size,
             antenna_measurement_radius=antenna_measurement_radius,
             antenna_offset=antenna_offset,
@@ -118,29 +121,40 @@ class MainWindow(QMainWindow):
         )
 
         self.path_3d_plot_canvas.plot_data(path)
-        self.path_3d_plot_canvas.draw()
         self.path_2d_plot_canvas.plot_data(path,
                                            printer_boundaries=printer_size,
                                            antenna_offset=antenna_offset,
                                            antenna_measurement_radius=antenna_measurement_radius)
+
+        # no_bins_x = no_bins[0]
+        # no_bins_y = no_bins[1]
+        self.measurements_plot_canvas.plot_data(path, measurements=[], printer_boundaries=printer_size,
+                                                no_bins=no_bins)
+
+        self.path_3d_plot_canvas.draw()
         self.path_2d_plot_canvas.draw()
-        # printer: PrusaDevice = PrusaDevice.connect_on_port("COM8")
-        printer = None
+        self.measurements_plot_canvas.draw()
+
+        printer: MarlinDevice = MarlinDevice.connect_on_port("COM5")
+        hameg = set_up_hamed_device()
         print("startup procedure")
 
         thread = threading.Thread(
             target=self.main_loop,
-            args=(path, printer, antenna_offset, printer_size, antenna_measurement_radius),
+            args=(path, printer, hameg, antenna_offset, printer_size, antenna_measurement_radius, no_bins),
         )
         thread.start()
-    def main_loop(self, path: List[Point], printer: PrusaDevice, antenna_offset: Tuple[float, float, float],
+
+    def main_loop(self, path: List[Point], printer: MarlinDevice, hameg, antenna_offset: Tuple[float, float, float],
                   printer_size: Tuple[float, float, float],
-                  antenna_measurement_radius: float
+                  antenna_measurement_radius: float, no_bins
                   ):
 
-        # printer.startup_procedure()
+        printer.startup_procedure()
         print("Measurement loop ")
         measurement = []
+        no_bins_x = len(path)
+        no_bins_y = len(path)
 
         for point in path:
             print("\tMOVE")
@@ -148,14 +162,14 @@ class MainWindow(QMainWindow):
             x = round(x, 2)
             y = round(y, 2)
             z = round(z, 2)
-            # printer.send_and_await(f"G1 X{x} Y{y} Z{z}")
+            printer.send_and_await(f"G1 X{x} Y{y} Z{z}")
             sleep(1)
             if self.check_for_stop():
                 return
 
             print("\tSCAN")
-            scan = random()
-            measurement.append((x - antenna_offset[0], y - antenna_offset[1], z - antenna_offset[2], scan))
+            scan_val = get_level(hameg, 2.622 * (10 ** 9), 1)
+            measurement.append((x - antenna_offset[0], y - antenna_offset[1], z - antenna_offset[2], scan_val))
 
             if self.check_for_stop():
                 return
@@ -167,7 +181,9 @@ class MainWindow(QMainWindow):
                                                antenna_offset=antenna_offset,
                                                antenna_measurement_radius=antenna_measurement_radius,
                                                highlight=(x, y, z))
-            self.measurements_plot_canvas.plot_data(measurement, printer_boundaries=printer_size)
+
+            self.measurements_plot_canvas.plot_data(path, measurement, printer_boundaries=printer_size,
+                                                    no_bins=no_bins)
 
             self.path_3d_plot_canvas.draw()
             self.path_2d_plot_canvas.draw()

@@ -1,0 +1,47 @@
+body {
+    margin: 0;
+    background-color: dimgray;
+}
+
+.device_info {
+    background-color: #262626;
+    width: 50;
+    padding: 20px;
+    display: "table-cell";
+    text-align: center;
+}
+
+H3 {
+    text-align: center;
+    color: #7FDBFF
+}
+
+p {
+    text-align: center;
+    color: #7FDBFF
+}
+
+.header_text {
+    text-align: center;
+    color: #7FDBFF
+}
+
+table {
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.device_grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-gap: 20px;
+}
+
+#start_stop_measurement {
+    /* width: 200px; */
+    height: 80px;
+    text-align: center;
+    color: #7FDBFF;
+    background-color: dimgray;
+
+}

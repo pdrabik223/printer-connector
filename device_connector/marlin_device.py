@@ -52,8 +52,14 @@ class MarlinDevice(Device):
            Correctly set up connector to printer device
         """
         device = Serial(port=port, baudrate=baudrate, timeout=timeout)
+        print("connected")
+        resp: bytes = device.readline()
+        print(resp.strip())
 
-        MarlinDevice._read_printer_info(device)
+        while resp != bytes():
+            if resp is not None:
+                resp = device.readline()
+                print(resp.strip())
 
         return MarlinDevice(device=device)
 
@@ -78,8 +84,16 @@ class MarlinDevice(Device):
         device: Optional[Serial] = None
         available_ports = serial.tools.list_ports.comports()
 
+        print("List all available ports:")
         for port, desc, hwid in sorted(available_ports):
-            print(f"Scanning port: '{port}', desc: '{desc}', hwid: '{hwid}")
+            print(
+                f"\t port: '{port}', desc: '{desc}', hwid: '{hwid}"
+            )
+
+        for port, desc, hwid in sorted(available_ports):
+            print(
+                f"Connected connecting to:\n\t port: '{port}', desc: '{desc}', hwid: '{hwid}"
+            )
             try:
                 device: Serial = Serial(
                     port=str(port), baudrate=baudrate, timeout=timeout
@@ -87,8 +101,10 @@ class MarlinDevice(Device):
                 print(f"Serial port is Open'")
                 resp: bytes = device.readline()
                 print(f"Answer: '{resp}'")
+
                 if resp != MarlinDevice._SUCCESSFUL_CONNECTION_MESSAGE:
                     raise SerialException()
+
                 print(f"Connected on port: '{port}', desc: '{desc}', hwid: '{hwid}")
                 logging.info(
                     f"Connected on port: '{port}', desc: '{desc}', hwid: '{hwid}"
@@ -102,7 +118,10 @@ class MarlinDevice(Device):
         if device is None:
             raise SerialException("Device not found")
 
-        MarlinDevice._read_printer_info(device)
+        while resp != "":
+            if resp is not None:
+                resp = device.readline().decode("utf-8")
+                print(resp.strip())
 
         return MarlinDevice(device=device)
 
@@ -116,12 +135,13 @@ class MarlinDevice(Device):
         Returns:
             str: response from device
         """
+
         command = MarlinDevice.no_line(command)
         command = MarlinDevice.cs_line(command)
 
         if command[-1] != "\n":
             command += "\n"
-
+        print(f"req:  {command}")
         self._device.write(bytearray(command, "ascii"))
 
         if "G1" in command:
@@ -131,6 +151,7 @@ class MarlinDevice(Device):
             time.sleep(30)
 
         resp = str(self._device.readline())
+        print(f"resp: {resp}")
         return (resp, resp[2:-3])
 
     @staticmethod
@@ -146,7 +167,7 @@ class MarlinDevice(Device):
         return line + "*" + str(MarlinDevice.checksum(line))
 
     @staticmethod
-    @static_vars(line_counter=0)
+    @static_vars(line_counter=1)
     def no_line(line: str) -> str:
 
         line = (
@@ -160,8 +181,8 @@ class MarlinDevice(Device):
 
     @staticmethod
     def _read_printer_info(device: Serial) -> None:
-        resp: bytes = None
+        resp: Optional[bytes] = None
 
-        while not resp and len(resp):
-            resp = device.readline()
-            logging.info(resp)
+    def startup_procedure(self):
+        self.send_and_await("G28")
+

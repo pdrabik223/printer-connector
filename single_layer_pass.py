@@ -106,14 +106,16 @@ if __name__ == "__main__":
     # if perform_scan not in ('Y', 'Yes', "YES", 'y', 'yes'):
     #     exit(0)
 
-    printer: MarlinDevice = MarlinDevice.connect()
+    printer: MarlinDevice = MarlinDevice.connect_on_port("COM5")
     print("startup procedure")
-    printer.send_and_await("G28")
-    # printer.startup_procedure()
+
+    printer.startup_procedure()
     print("scanning...")
+    printer.send_and_await(f"G1 X{0} Y{0} Z{0}")
+    # 2.622 GHz
 
     for position in path:
         x, y, z = position[0], position[1], pass_height
-        print(f"G1 X{x} Y{y}, Z{z}")
-        printer.send_and_await(f"G1 X{x} Y{y}, Z{z}")
-        sleep(2)
+        # print(f"G1 X{x} Y{y} Z{z}")
+        printer.send_and_await(f"G1 X{x} Y{y} Z{z}")
+        sleep(10)
