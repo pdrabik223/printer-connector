@@ -124,6 +124,12 @@ class MarlinDevice(Device):
 
         self._device.write(bytearray(command, "ascii"))
 
+        if "G1" in command:
+            time.sleep(5)
+
+        elif "G28" in command:
+            time.sleep(30)
+
         resp = str(self._device.readline())
         return (resp, resp[2:-3])
 

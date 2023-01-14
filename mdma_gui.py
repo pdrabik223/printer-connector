@@ -106,8 +106,6 @@ class MainWindow(QMainWindow):
         self._left_wing.insertWidget(len(self._left_wing) - 1, self.start_stop_measurement_button)
 
     def start_thread(self):
-
-        printer_size = (180, 180, 100)
         antenna_offset = (5, 10, 0)
         antenna_measurement_radius = 5
         pass_height = 120

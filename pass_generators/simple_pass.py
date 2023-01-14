@@ -87,9 +87,16 @@ def simple_pass_3d(
     ]
 
     path = []
+    flip = False
     for x in x_measurements_coords:
         for y in y_measurements_coords:
+
+            # if flip:
+            #     path.append((x, printer_size[1] - y))
+            # else:
             path.append((x, y))
+
+        flip = not flip
 
     # shift by antenna offset
     path = [(x + antenna_offset[0], y + antenna_offset[1]) for x, y in path]

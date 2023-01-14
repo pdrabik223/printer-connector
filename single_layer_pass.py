@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 from time import sleep
 
 from device_connector.prusa_device import PrusaDevice
+from device_connector.marlin_device import MarlinDevice
 
 from pass_generators.simple_pass import simple_pass, f_range
 
@@ -104,15 +105,15 @@ if __name__ == "__main__":
     # perform_scan = input("commence scan [y/n]")
     # if perform_scan not in ('Y', 'Yes', "YES", 'y', 'yes'):
     #     exit(0)
-    #
-    # printer: PrusaDevice = PrusaDevice.connect_on_port("COM8")
-    # print("startup procedure")
-    #
+
+    printer: MarlinDevice = MarlinDevice.connect()
+    print("startup procedure")
+    printer.send_and_await("G28")
     # printer.startup_procedure()
-    # print("scanning...")
-    #
-    # for position in path:
-    #     x, y, z = position[0], position[1], pass_height
-    #     print(f"G1 X{x} Y{y}, Z{z}")
-    #     printer.send_and_await(f"G1 X{x} Y{y}, Z{z}")
-    #     sleep(2)
+    print("scanning...")
+
+    for position in path:
+        x, y, z = position[0], position[1], pass_height
+        print(f"G1 X{x} Y{y}, Z{z}")
+        printer.send_and_await(f"G1 X{x} Y{y}, Z{z}")
+        sleep(2)
