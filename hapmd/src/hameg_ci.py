@@ -20,30 +20,32 @@ def get_level(device: Union[Device, DeviceMock], frequency: int, measurement_tim
 
 def hameg_console_loop(hameg_handle: Union[Device, DeviceMock]):
     while True:
-        command = input("hameg> ")
-        # command = command.casefold()
-        command = command.replace(" ", "")
-        if "read" in command.casefold():
-            command = command[4:]
-            if "ghz" in command.casefold():
-                val = float(command[:-3])
-                val *= 10 ** 9
+        try:
+            command = input("hameg> ")
+            # command = command.casefold()
+            command = command.replace(" ", "")
+            if "read" in command.casefold():
+                command = command[4:]
+                if "ghz" in command.casefold():
+                    val = float(command[:-3])
+                    val *= 10 ** 9
+                else:
+                    val = int(command)
+
+                print(get_level(hameg_handle, val))
+
+            if command in ("quit", "q"):
+                return
             else:
-                val = int(command)
+                resp = hameg_handle.send_await_resp(command)
+                print(f"response: {resp[1]}")
+                print(
+                    f"errors:   {hameg_handle.send_await_resp('SYSTem:ERRor:ALL?')[1][2:-1]}"
+                )
+        except Exception as ex:
+            print(f"Command: {command} is not recognized")
 
-            print(get_level(hameg_handle, val))
-
-        if command in ("quit", "q"):
-            return
-        else:
-            resp = hameg_handle.send_await_resp(command)
-            print(f"response: {resp[1]}")
-            print(
-                f"errors:   {hameg_handle.send_await_resp('SYSTem:ERRor:ALL?')[1][2:-1]}"
-            )
-
-
-def set_up_hamed_device():
+def set_up_hamed_device(debug: bool = False):
     print(
         """
 
@@ -59,10 +61,12 @@ def set_up_hamed_device():
                                             |  $$$$$$/                        
                                              \______/                         """
     )
-
-    hameg_device_handle = Device.connect_using_vid_pid(
-        idVendor=0x0403, idProduct=0xED72
-    )
+    if debug:
+        hameg_device_handle = DeviceMock()
+    else:
+        hameg_device_handle = Device.connect_using_vid_pid(
+            idVendor=0x0403, idProduct=0xED72
+        )
 
     print(
         f"""
@@ -78,5 +82,5 @@ def set_up_hamed_device():
 
 
 if __name__ == "__main__":
-    hameg_device_handle = set_up_hamed_device()
+    hameg_device_handle = set_up_hamed_device(debug = True)
     hameg_console_loop(hameg_device_handle)
