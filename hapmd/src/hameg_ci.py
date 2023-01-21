@@ -1,7 +1,7 @@
 import time
 from typing import Union
-from hapmd.src.hameg3010.device import Device
-from hapmd.src.hameg3010.device_mock import DeviceMock
+from hapmd.src.hameg3010.hameg3010device import Hameg3010Device
+from hapmd.src.hameg3010.hameg3010device_mock import Hameg3010DeviceMock
 
 
 #
@@ -9,7 +9,7 @@ from hapmd.src.hameg3010.device_mock import DeviceMock
 
 
 def get_level(
-    device: Union[Device, DeviceMock],
+    device: Union[Hameg3010Device, Hameg3010DeviceMock],
     frequency: int,
     measurement_time: int = 1,
     debug=False,
@@ -24,7 +24,7 @@ def get_level(
     return value
 
 
-def hameg_console_loop(hameg_handle: Union[Device, DeviceMock]):
+def hameg_console_loop(hameg_handle: Union[Hameg3010Device, Hameg3010DeviceMock]):
     while True:
         try:
             command = input("hameg> ")
@@ -69,9 +69,9 @@ def set_up_hamed_device(debug: bool = False):
                                              \______/                         """
     )
     if debug:
-        hameg_device_handle = DeviceMock()
+        hameg_device_handle = Hameg3010DeviceMock()
     else:
-        hameg_device_handle = Device.connect_using_vid_pid(
+        hameg_device_handle = Hameg3010Device.connect_using_vid_pid(
             idVendor=0x0403, idProduct=0xED72
         )
 

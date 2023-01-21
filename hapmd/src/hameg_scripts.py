@@ -1,12 +1,12 @@
 import time
 from typing import Union, Optional
-from hameg3010.device import Device
-from hameg3010.device_mock import DeviceMock
+from hameg3010.hameg3010device import Hameg3010Device
+from hameg3010.hameg3010device_mock import Hameg3010DeviceMock
 from src.assets.ci_colors import Colors
 from src.hampd_config import HapmdConfig
 
 
-def get_level(device: Union[Device, DeviceMock], frequency: int) -> float:
+def get_level(device: Union[Hameg3010Device, Hameg3010DeviceMock], frequency: int) -> float:
     device.send_await_resp(f"rmode:frequency {frequency}")
     time.sleep(2)
     value: float = 1
@@ -29,9 +29,9 @@ def get_level(device: Union[Device, DeviceMock], frequency: int) -> float:
 
 def set_up_hameg_device(
     hapmd_config: HapmdConfig,
-) -> Optional[Union[Device, DeviceMock]]:
+) -> Optional[Union[Hameg3010Device, Hameg3010DeviceMock]]:
     try:
-        hameg_device = Device.connect_using_vid_pid(
+        hameg_device = Hameg3010Device.connect_using_vid_pid(
             hapmd_config.hameg_vid, hapmd_config.hameg_pid
         )
 

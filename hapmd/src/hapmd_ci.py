@@ -8,8 +8,8 @@ import datetime
 from typing import Optional, Union
 import pandas as pd
 
-from hameg3010.device import Device
-from hameg3010.device_mock import DeviceMock
+from hameg3010.hameg3010device import Hameg3010Device
+from hameg3010.hameg3010device_mock import Hameg3010DeviceMock
 from hameg_scripts import get_level
 
 from rotor.arduino_connector import ArduinoConnector
@@ -25,7 +25,7 @@ from hampd_config import HapmdConfig
 
 def hapmd_console_loop(
     hapmd_config: HapmdConfig,
-    hameg_handle: Union[Device, DeviceMock],
+    hameg_handle: Union[Hameg3010Device, Hameg3010DeviceMock],
     rotor_handle: Union[ArduinoConnector, ArduinoConnectorMock],
 ):
     while True:
@@ -46,7 +46,7 @@ def hapmd_console_loop(
 
 def measurement_loop(
     hapmd_config: HapmdConfig,
-    hameg_handle: Union[Device, DeviceMock],
+    hameg_handle: Union[Hameg3010Device, Hameg3010DeviceMock],
     rotor_handle: Union[ArduinoConnector, ArduinoConnectorMock],
 ) -> pd.DataFrame:
     print(

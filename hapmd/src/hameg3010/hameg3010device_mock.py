@@ -13,7 +13,7 @@ def static_vars(**kwargs) -> callable:
     return decorate
 
 
-class DeviceMock:
+class Hameg3010DeviceMock:
     current_frequency = 1_000_000
     receiver_mode = "RMODE"
     freq_value_mapping = {}
@@ -26,14 +26,14 @@ class DeviceMock:
         logging.debug(
             f"Connected to mock device with pid: {idProduct}, vid: {idVendor}"
         )
-        return DeviceMock()
+        return Hameg3010DeviceMock()
 
     @static_vars(no_measurement=0)
     def func(self):
 
-        new_value = math.sin(2 * math.pi * DeviceMock.func.no_measurement)
+        new_value = math.sin(2 * math.pi * Hameg3010DeviceMock.func.no_measurement)
 
-        DeviceMock.func.no_measurement += 1
+        Hameg3010DeviceMock.func.no_measurement += 1
         return new_value
 
     def send_await_resp(self, cmd: str) -> Any:

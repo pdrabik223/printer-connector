@@ -4,7 +4,7 @@ import usb.util
 import logging
 
 
-class Device:
+class Hameg3010Device:
     def __init__(self, device: usb.core.Device) -> None:
         self.device: usb.core.Device = device
         self.device.set_configuration()
@@ -18,7 +18,7 @@ class Device:
             raise ValueError("Device is not found")
 
         logging.debug(f"connected do device with pid: {idProduct}, vid: {idVendor}")
-        return Device(device)
+        return Hameg3010Device(device)
 
     def _send_str(self, command: str):
         if not isinstance(command, str):

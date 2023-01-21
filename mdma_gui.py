@@ -1,6 +1,7 @@
 import threading
 from time import sleep
 from random import random
+from typing import Union
 
 from device_connector.device_mock import DeviceMock
 from device_connector.marlin_device import MarlinDevice
@@ -20,37 +21,13 @@ from PyQt6.QtWidgets import (
     QGridLayout,
 )
 import sys
-from gui_plots.gui_plots import *
+
+from gui_tools.gui_buttons import PrinterHeadPositionControler, StartStopContinueButton
+from gui_tools.gui_plots import *
+from hapmd.src.hameg3010.hameg3010device import Hameg3010Device
+from hapmd.src.hameg3010.hameg3010device_mock import Hameg3010DeviceMock
 from hapmd.src.hameg_ci import set_up_hamed_device, get_level
-
-DEBUG_MODE = True
-
-
-class PrinterHeadPositionControler(QWidget):
-    def __init__(self):
-        super().__init__()
-        self.mainLayout = QGridLayout()
-
-        self.forward = QPushButton("y+")
-        self.up = QPushButton("z+")
-        self.mainLayout.addWidget(self.forward, 0, 1)
-        self.mainLayout.addWidget(self.up, 0, 2)
-
-        self.left = QPushButton("x-")
-        self.home = QPushButton("H")
-        self.right = QPushButton("x+")
-
-        self.mainLayout.addWidget(self.left, 1, 0)
-        self.mainLayout.addWidget(self.home, 1, 1)
-        self.mainLayout.addWidget(self.right, 1, 2)
-
-        self.backward = QPushButton("y-")
-        self.down = QPushButton("z-")
-        self.mainLayout.addWidget(self.backward, 2, 1)
-        self.mainLayout.addWidget(self.down, 2, 2)
-
-        self.setLayout(self.mainLayout)
-        self.show()
+from pass_generators.scan_loop import DEBUG_MODE, main_loop
 
 
 class MainWindow(QMainWindow):
@@ -69,7 +46,10 @@ class MainWindow(QMainWindow):
         self._left_wing.addWidget(PrinterHeadPositionControler())
 
         self.add_plots()
-        self.add_start_button()
+
+        self.start_stop_measurement_button = StartStopContinueButton()
+        self.start_stop_measurement_button.clicked.connect(self.start_thread)
+        self._left_wing.addWidget(self.start_stop_measurement_button)
 
         self._central_layout = QHBoxLayout()
 
@@ -107,40 +87,36 @@ class MainWindow(QMainWindow):
     def measurements_plot_canvas(self) -> MeasurementsPlotCanvas:
         return self._measurements_plot_canvas
 
-    START_MEASUREMENT = "START"
-    STOP_MEASUREMENT = "STOP"
-
     def check_for_stop(self):
+        return self.start_stop_measurement_button.state_text == StartStopContinueButton.STOP_MEASUREMENT[0]
 
-        return self.start_stop_measurement_button.text() == self.START_MEASUREMENT
-
-    def change_text(self):
-        if self.start_stop_measurement_button.text() == self.START_MEASUREMENT:
-            self.start_stop_measurement_button.setStyleSheet(
-                "background-color: rgb(255, 0, 0);"
-            )
-            self.start_stop_measurement_button.setText(self.STOP_MEASUREMENT)
-
-        elif self.start_stop_measurement_button.text() == self.STOP_MEASUREMENT:
-            self.start_stop_measurement_button.setStyleSheet(
-                "background-color: rgb(0, 255, 0);"
-            )
-            self.start_stop_measurement_button.setText(self.START_MEASUREMENT)
-        else:
-
-            raise Exception(
-                f"Bad start_stop_measurement_button text: {self.start_stop_measurement_button.text()}"
-            )
-
-    def add_start_button(self):
-        self.start_stop_measurement_button = QPushButton()
-
-        self.start_stop_measurement_button.setText(self.START_MEASUREMENT)
-        self.start_stop_measurement_button.setStyleSheet("background-color:   ;")
-
-        self.start_stop_measurement_button.clicked.connect(self.change_text)
-        self.start_stop_measurement_button.clicked.connect(self.start_thread)
-        self._left_wing.addWidget(self.start_stop_measurement_button)
+    # def change_text(self):
+    #     if self.start_stop_measurement_button.text() == self.START_MEASUREMENT[]:
+    #         self.start_stop_measurement_button.setStyleSheet(
+    #             "background-color: rgb(255, 0, 0);"
+    #         )
+    #         self.start_stop_measurement_button.setText(self.STOP_MEASUREMENT)
+    #
+    #     elif self.start_stop_measurement_button.text() == self.STOP_MEASUREMENT:
+    #         self.start_stop_measurement_button.setStyleSheet(
+    #             "background-color: rgb(0, 255, 0);"
+    #         )
+    #         self.start_stop_measurement_button.setText(self.START_MEASUREMENT)
+    #     else:
+    #
+    #         raise Exception(
+    #             f"Bad start_stop_measurement_button text: {self.start_stop_measurement_button.text()}"
+    #         )
+    #
+    # def add_start_button(self):
+    #     self.start_stop_measurement_button = QPushButton()
+    #
+    #     self.start_stop_measurement_button.setText(self.START_MEASUREMENT)
+    #     self.start_stop_measurement_button.setStyleSheet("background-color:   ;")
+    #
+    #     self.start_stop_measurement_button.clicked.connect(self.change_text)
+    #     self.start_stop_measurement_button.clicked.connect(self.start_thread)
+    #     self._left_wing.addWidget(self.start_stop_measurement_button)
 
     def start_thread(self):
         printer_size = (80, 80, 80)
@@ -176,8 +152,9 @@ class MainWindow(QMainWindow):
         print("startup procedure")
 
         thread = threading.Thread(
-            target=self.main_loop,
+            target=main_loop,
             args=(
+                self,
                 path,
                 printer,
                 hameg,
@@ -187,63 +164,6 @@ class MainWindow(QMainWindow):
             ),
         )
         thread.start()
-
-    def main_loop(
-            self,
-            path: List[Point],
-            printer_handle: MarlinDevice,
-            hameg_handle,
-            antenna_offset: Tuple[float, float, float],
-            printer_size: Tuple[float, float, float],
-            antenna_measurement_radius: float,
-    ):
-
-        printer_handle.startup_procedure()
-        print("Measurement loop ")
-        measurement = []
-        for point in path:
-            print("Moving...")
-            x, y, z = point
-            x = round(x, 3)
-            y = round(y, 3)
-            z = round(z, 3)
-            printer_handle.send_and_await(f"G1 X{x} Y{y} Z{z}")
-            print(f"\tx:{x}\ty:{y}\tz:{z}")
-
-            if self.check_for_stop():
-                return
-
-            print("Scanning...")
-            scan_val = get_level(hameg_handle, 2.622 * (10 ** 9), 1, DEBUG_MODE)
-            print(f"\tmeasurement:{scan_val}")
-            measurement.append(
-                (
-                    x - antenna_offset[0],
-                    y - antenna_offset[1],
-                    z - antenna_offset[2],
-                    scan_val,
-                )
-            )
-
-            if self.check_for_stop():
-                return
-            print("Updating plots...")
-
-            self.path_3d_plot_canvas.plot_data(
-                path,
-                printer_boundaries=printer_size,
-                antenna_offset=antenna_offset,
-                antenna_measurement_radius=antenna_measurement_radius,
-                highlight=(x, y, z),
-            )
-
-            self.measurements_plot_canvas.plot_data(path, measurement)
-
-            self.path_3d_plot_canvas.draw()
-            # self.path_2d_plot_canvas.draw()
-            self.measurements_plot_canvas.draw()
-            if self.check_for_stop():
-                return
 
 
 if __name__ == "__main__":
