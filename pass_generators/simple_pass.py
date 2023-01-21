@@ -68,7 +68,7 @@ def simple_pass_3d(
         antenna_measurement_radius: float,
         pass_height: float
 
-) -> Tuple[List[Tuple[float, float, float]], Tuple[int, int]]:
+) -> Tuple[List[Tuple[float, float, float]], Tuple[List[float], List[float]]]:
     # antenna diameter
     antenna_d = antenna_measurement_radius * 2
     x_ps = printer_size[0]

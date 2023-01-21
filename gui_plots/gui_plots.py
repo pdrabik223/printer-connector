@@ -15,16 +15,19 @@ matplotlib.use("Qt5Agg")
 Point = Tuple[float, float, float]
 
 
-class Path3DPlotCanvas(FigureCanvas):
+class PathPlotCanvas(FigureCanvas):
     def __init__(self, parent=None, width=9, height=5, dpi=90):
         self.fig = Figure(figsize=(width, height), dpi=dpi)
 
         self.axes = self.fig.add_subplot(111, projection="3d")
+        self.axes2 = self.fig.add_subplot(111)
 
         self.fig.tight_layout()
-        super(Path3DPlotCanvas, self).__init__(self.fig)
+        super(PathPlotCanvas, self).__init__(self.fig)
 
-    def plot_data(self, path: List[Point], highlight: Optional[Point] = None):
+    def plot_data(self, path: List[Point], printer_boundaries: Tuple[float, float, float],
+                  antenna_offset: Tuple[float, float, float], antenna_measurement_radius: float,
+                  highlight: Optional[Point] = None):
         x = [pos[0] for pos in path]
         y = [pos[1] for pos in path]
         z = [pos[2] for pos in path]
@@ -32,28 +35,35 @@ class Path3DPlotCanvas(FigureCanvas):
         self.axes.cla()
         self.axes.plot(x, y, z)
         self.axes.scatter(x, y, z, color="red")
-        # if highlight is not None:
-        #     self.axes.add_patch(plt.Circle((highlight[0], highlight[1]), 2, color="violet", alpha=1))
 
-        # self.axes.axis("square")
         self.axes.grid()
-
         self.axes.set_xlabel("X [arb. units]")
         self.axes.set_ylabel("Y [arb. units]")
         self.axes.set_title("Some thing")
 
-    def show(self):
-        self.fig.draw()
+        x_printer_boundaries = (0, 0, printer_boundaries[0], printer_boundaries[0], 0)
+        y_printer_boundaries = (0, printer_boundaries[1], printer_boundaries[1], 0, 0)
 
+        x = [pos[0] for pos in path]
+        y = [pos[1] for pos in path]
 
-class Path2DPlotCanvas(FigureCanvas):
-    def __init__(self, parent=None, width=9, height=5, dpi=90):
-        self.fig = Figure(figsize=(width, height), dpi=dpi)
+        antenna_x = [pos[0] - antenna_offset[0] for pos in path]
+        antenna_y = [pos[1] - antenna_offset[1] for pos in path]
 
-        self.axes = self.fig.add_subplot(111)
+        self.axes2.cla()
+        PathPlotCanvas.plot_measurement_areas(antenna_x, antenna_y, self.axes2, antenna_measurement_radius)
+        self.axes2.plot(x_printer_boundaries, y_printer_boundaries, color="black", alpha=0.6)
+        self.axes2.plot(x, y)
+        self.axes2.scatter(x, y, color="red")
 
-        self.fig.tight_layout()
-        super(Path2DPlotCanvas, self).__init__(self.fig)
+        if highlight is not None:
+            self.axes2.add_patch(plt.Circle((highlight[0], highlight[1]), 2, color="black", alpha=1))
+
+        self.axes2.axis("square")
+        self.axes2.grid()
+        self.axes2.set_xlabel("X [arb. units]")
+        self.axes2.set_ylabel("Y [arb. units]")
+        self.axes2.set_title("Some thing")
 
     @staticmethod
     def plot_measurement_areas(
@@ -67,35 +77,61 @@ class Path2DPlotCanvas(FigureCanvas):
         for x, y in zip(x_values, y_values):
             ax.add_patch(plt.Circle((x, y), radius, color=color, alpha=alpha))
 
-    def plot_data(self, path: List[Point], printer_boundaries: Tuple[float, float, float],
-                  antenna_offset: Tuple[float, float, float], antenna_measurement_radius: float,
-                  highlight: Optional[Point] = None):
-        x_printer_boundaries = (0, 0, printer_boundaries[0], printer_boundaries[0], 0)
-        y_printer_boundaries = (0, printer_boundaries[1], printer_boundaries[1], 0, 0)
-
-        x = [pos[0] for pos in path]
-        y = [pos[1] for pos in path]
-
-        antenna_x = [pos[0] - antenna_offset[0] for pos in path]
-        antenna_y = [pos[1] - antenna_offset[1] for pos in path]
-
-        self.axes.cla()
-        Path2DPlotCanvas.plot_measurement_areas(antenna_x, antenna_y, self.axes, antenna_measurement_radius)
-        self.axes.plot(x_printer_boundaries, y_printer_boundaries, color="black", alpha=0.6)
-        self.axes.plot(x, y)
-        self.axes.scatter(x, y, color="red")
-
-        if highlight is not None:
-            self.axes.add_patch(plt.Circle((highlight[0], highlight[1]), 2, color="black", alpha=1))
-
-        self.axes.axis("square")
-        self.axes.grid()
-        self.axes.set_xlabel("X [arb. units]")
-        self.axes.set_ylabel("Y [arb. units]")
-        self.axes.set_title("Some thing")
-
     def show(self):
         self.fig.draw()
+
+
+#
+# class Path2DPlotCanvas(FigureCanvas):
+#     def __init__(self, parent=None, width=9, height=5, dpi=90):
+#         self.fig = Figure(figsize=(width, height), dpi=dpi)
+#
+#         self.axes = self.fig.add_subplot(111)
+#
+#         self.fig.tight_layout()
+#         super(Path2DPlotCanvas, self).__init__(self.fig)
+#
+#     @staticmethod
+#     def plot_measurement_areas(
+#             x_values: List[float],
+#             y_values: List[float],
+#             ax: plt.Axes,
+#             radius: float,
+#             color: str = "orange",
+#             alpha: float = 0.2,
+#     ) -> None:
+#         for x, y in zip(x_values, y_values):
+#             ax.add_patch(plt.Circle((x, y), radius, color=color, alpha=alpha))
+#
+#     def plot_data(self, path: List[Point], printer_boundaries: Tuple[float, float, float],
+#                   antenna_offset: Tuple[float, float, float], antenna_measurement_radius: float,
+#                   highlight: Optional[Point] = None):
+#         x_printer_boundaries = (0, 0, printer_boundaries[0], printer_boundaries[0], 0)
+#         y_printer_boundaries = (0, printer_boundaries[1], printer_boundaries[1], 0, 0)
+#
+#         x = [pos[0] for pos in path]
+#         y = [pos[1] for pos in path]
+#
+#         antenna_x = [pos[0] - antenna_offset[0] for pos in path]
+#         antenna_y = [pos[1] - antenna_offset[1] for pos in path]
+#
+#         self.axes.cla()
+#         Path2DPlotCanvas.plot_measurement_areas(antenna_x, antenna_y, self.axes, antenna_measurement_radius)
+#         self.axes.plot(x_printer_boundaries, y_printer_boundaries, color="black", alpha=0.6)
+#         self.axes.plot(x, y)
+#         self.axes.scatter(x, y, color="red")
+#
+#         if highlight is not None:
+#             self.axes.add_patch(plt.Circle((highlight[0], highlight[1]), 2, color="black", alpha=1))
+#
+#         self.axes.axis("square")
+#         self.axes.grid()
+#         self.axes.set_xlabel("X [arb. units]")
+#         self.axes.set_ylabel("Y [arb. units]")
+#         self.axes.set_title("Some thing")
+#
+#     def show(self):
+#         self.fig.draw()
 
 
 class MeasurementsPlotCanvas(FigureCanvas):
@@ -107,39 +143,32 @@ class MeasurementsPlotCanvas(FigureCanvas):
         self.fig.tight_layout()
         super(MeasurementsPlotCanvas, self).__init__(self.fig)
 
-    def plot_data(self, path: List[Tuple[float, float, float]],
-                  measurements: List[Tuple[float, float, float, float]],
-                  printer_boundaries: Tuple[float, float, float],
-                  no_bins: Tuple[list, list]):
+    def plot_data(self, path: List[Tuple[float, float, float]], measurements: List[Tuple[float, float, float, float]]):
 
-        # x_printer_boundaries = (0, 0, printer_boundaries[0], printer_boundaries[0], 0)
-        # y_printer_boundaries = (0, printer_boundaries[1], printer_boundaries[1], 0, 0)
-        # self.axes.plot(x_printer_boundaries, y_printer_boundaries, color="black", alpha=0.9)
+        no_bins_x = np.unique([x for x, _, _ in path])
+        no_bins_y = np.unique([y for _, y, _ in path])
+
+        values = [m for _, _, _, m in measurements]
+        if len(values) == 0:
+            filler = 0
+        else:
+            filler = np.average(values)
 
         val = []
-        for _ in no_bins[0]:
+        for _ in no_bins_y:
             val.append([])
-            for _ in no_bins[1]:
-                val[-1].append(-19.7)
+            for _ in no_bins_x:
+                val[-1].append(filler)
 
-        len_x = len(no_bins[0])
-        len_y = len(no_bins[1])
-        for id, measurement in enumerate(measurements):
-            _, _, _, m = measurement
-            val[id % len_x][int(id / len_x)] = m
+        k: int = 0
+        for y in range(len(no_bins_y)):
+            for x in range(len(no_bins_x)):
+                if k >= len(values):
+                    break
+                val[y][x] = values[k]
+                k += 1
 
-        x, y = no_bins[0], no_bins[1]
-        x, y = np.meshgrid(no_bins[0], no_bins[1])
-        # x = [pos[0] for pos in path]
-        # y = [pos[1] for pos in path]
-
-        # val = [(0, 0, 0) for _ in path]
-
-        # print(type(val[0]))
-
-        # cp = self.axes.contour(x, y, vmin=np.min(val), vmax=np.max(val), shading='auto')
         cp = self.axes.imshow(val)
-        # self.axes.colorbar(cp)
         self.axes.set_xlabel("X [arb. units]")
         self.axes.set_ylabel("Y [arb. units]")
         self.axes.set_title("Some thing")

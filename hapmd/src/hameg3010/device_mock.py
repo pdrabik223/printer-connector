@@ -4,6 +4,15 @@ from typing import Any
 import logging
 
 
+def static_vars(**kwargs) -> callable:
+    def decorate(func):
+        for k in kwargs:
+            setattr(func, k, kwargs[k])
+        return func
+
+    return decorate
+
+
 class DeviceMock:
     current_frequency = 1_000_000
     receiver_mode = "RMODE"
@@ -19,22 +28,12 @@ class DeviceMock:
         )
         return DeviceMock()
 
+    @static_vars(no_measurement=0)
     def func(self):
-        if self.current_frequency not in self.freq_value_mapping.keys():
-            self.freq_value_mapping[self.current_frequency] = random.random() * math.pi
 
-        new_value = math.sin(self.freq_value_mapping[self.current_frequency]) * 35 - 40
-        self.freq_value_mapping[self.current_frequency] += 0.025
+        new_value = math.sin(2 * math.pi * DeviceMock.func.no_measurement)
 
-        # if new_value < -80:
-        #     new_value = new_value + (0.1*new_value)
-        # elif new_value > -10:
-        #     new_value = new_value - (0.1*new_value)
-        # elif random.random() < 0.5:
-        #     new_value = new_value + (0.1*new_value)
-        # else:
-        #     new_value = new_value - (0.1*new_value)
-
+        DeviceMock.func.no_measurement += 1
         return new_value
 
     def send_await_resp(self, cmd: str) -> Any:

@@ -8,10 +8,11 @@ from hapmd.src.hameg3010.device_mock import DeviceMock
 # from hameg3010.device import Device
 
 
-def get_level(device: Union[Device, DeviceMock], frequency: int, measurement_time: int = 1) -> float:
+def get_level(device: Union[Device, DeviceMock], frequency: int, measurement_time: int = 1, debug=False) -> float:
     device.send_await_resp(f"rmode:mtime {measurement_time}")
     device.send_await_resp(f"rmode:frequency {frequency}")
-    time.sleep(2)
+    if not debug:
+        time.sleep(2)
     level_raw: str = device.send_await_resp("rmode:level?")[1][2:-1]
     level = level_raw[level_raw.find(",") + 1:]
     value = float(level)
@@ -44,6 +45,7 @@ def hameg_console_loop(hameg_handle: Union[Device, DeviceMock]):
                 )
         except Exception as ex:
             print(f"Command: {command} is not recognized")
+
 
 def set_up_hamed_device(debug: bool = False):
     print(
@@ -82,5 +84,5 @@ def set_up_hamed_device(debug: bool = False):
 
 
 if __name__ == "__main__":
-    hameg_device_handle = set_up_hamed_device(debug = True)
+    hameg_device_handle = set_up_hamed_device(debug=True)
     hameg_console_loop(hameg_device_handle)

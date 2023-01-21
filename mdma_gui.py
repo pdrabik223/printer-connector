@@ -2,6 +2,7 @@ import threading
 from time import sleep
 from random import random
 
+from device_connector.device_mock import DeviceMock
 from device_connector.marlin_device import MarlinDevice
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QIntValidator
@@ -15,11 +16,40 @@ from PyQt6.QtWidgets import (
     QLabel,
     QInputDialog,
     QLineEdit,
-    QDialog
+    QDialog, QGridLayout
 )
 import sys
 from gui_plots.gui_plots import *
 from hapmd.src.hameg_ci import set_up_hamed_device, get_level
+
+DEBUG_MODE = True
+
+
+class PrinterHeadPositionControler(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.mainLayout = QGridLayout()
+
+        self.forward = QPushButton("y+")
+        self.up = QPushButton("z+")
+        self.mainLayout.addWidget(self.forward, 0, 1)
+        self.mainLayout.addWidget(self.up, 0, 2)
+
+        self.left = QPushButton("x-")
+        self.home = QPushButton("H")
+        self.right = QPushButton("x+")
+
+        self.mainLayout.addWidget(self.left, 1, 0)
+        self.mainLayout.addWidget(self.home, 1, 1)
+        self.mainLayout.addWidget(self.right, 1, 2)
+
+        self.backward = QPushButton("y-")
+        self.down = QPushButton("z-")
+        self.mainLayout.addWidget(self.backward, 2, 1)
+        self.mainLayout.addWidget(self.down, 2, 2)
+
+        self.setLayout(self.mainLayout)
+        self.show()
 
 
 class MainWindow(QMainWindow):
@@ -30,11 +60,12 @@ class MainWindow(QMainWindow):
         self._path_2d_plot_canvas = None
 
         self.setWindowTitle("MDMA gui")
-
         self._left_wing = QVBoxLayout()
         self._right_wing = QVBoxLayout()
         self._graphs_layout = QHBoxLayout()
         self._graphs_settings_layout = QHBoxLayout()
+
+        self._left_wing.addWidget(PrinterHeadPositionControler())
 
         self.add_plots()
         self.add_start_button()
@@ -58,22 +89,22 @@ class MainWindow(QMainWindow):
             toolbar = NavigationToolbar(plot, self)
             self._graphs_settings_layout.addWidget(toolbar)
 
-        self._path_3d_plot_canvas = Path3DPlotCanvas()
+        self._path_3d_plot_canvas = PathPlotCanvas()
         helper(self._path_3d_plot_canvas)
 
-        self._path_2d_plot_canvas = Path2DPlotCanvas()
-        helper(self._path_2d_plot_canvas)
+        # self._path_2d_plot_canvas = Path2DPlotCanvas()
+        # helper(self._path_2d_plot_canvas)
 
         self._measurements_plot_canvas = MeasurementsPlotCanvas()
         helper(self._measurements_plot_canvas)
 
     @property
-    def path_3d_plot_canvas(self) -> Path3DPlotCanvas:
+    def path_3d_plot_canvas(self) -> PathPlotCanvas:
         return self._path_3d_plot_canvas
 
-    @property
-    def path_2d_plot_canvas(self) -> Path2DPlotCanvas:
-        return self._path_2d_plot_canvas
+    # @property
+    # def path_2d_plot_canvas(self) -> Path2DPlotCanvas:
+    #     return self._path_2d_plot_canvas
 
     @property
     def measurements_plot_canvas(self) -> MeasurementsPlotCanvas:
@@ -101,11 +132,11 @@ class MainWindow(QMainWindow):
         self.start_stop_measurement_button = QPushButton()
 
         self.start_stop_measurement_button.setText(self.START_MEASUREMENT)
-        self.start_stop_measurement_button.setStyleSheet("background-color: rgb(0, 255, 0);")
+        self.start_stop_measurement_button.setStyleSheet("background-color:   ;")
 
         self.start_stop_measurement_button.clicked.connect(self.change_text)
         self.start_stop_measurement_button.clicked.connect(self.start_thread)
-        self._left_wing.insertWidget(len(self._left_wing) - 1, self.start_stop_measurement_button)
+        self._left_wing.addWidget(self.start_stop_measurement_button)
 
     def start_thread(self):
         printer_size = (80, 80, 80)
@@ -120,23 +151,22 @@ class MainWindow(QMainWindow):
             pass_height=pass_height
         )
 
-        self.path_3d_plot_canvas.plot_data(path)
-        self.path_2d_plot_canvas.plot_data(path,
+        self.path_3d_plot_canvas.plot_data(path,
                                            printer_boundaries=printer_size,
                                            antenna_offset=antenna_offset,
                                            antenna_measurement_radius=antenna_measurement_radius)
 
-        # no_bins_x = no_bins[0]
-        # no_bins_y = no_bins[1]
-        self.measurements_plot_canvas.plot_data(path, measurements=[], printer_boundaries=printer_size,
-                                                no_bins=no_bins)
+        self.measurements_plot_canvas.plot_data(path, measurements=[])
 
         self.path_3d_plot_canvas.draw()
-        self.path_2d_plot_canvas.draw()
         self.measurements_plot_canvas.draw()
 
-        printer: MarlinDevice = MarlinDevice.connect_on_port("COM5")
-        hameg = set_up_hamed_device()
+        if DEBUG_MODE:
+            printer: DeviceMock = DeviceMock.connect_on_port("COM5")
+        else:
+            printer: MarlinDevice = MarlinDevice.connect_on_port("COM5")
+
+        hameg = set_up_hamed_device(debug=DEBUG_MODE)
         print("startup procedure")
 
         thread = threading.Thread(
@@ -153,9 +183,6 @@ class MainWindow(QMainWindow):
         printer.startup_procedure()
         print("Measurement loop ")
         measurement = []
-        no_bins_x = len(path)
-        no_bins_y = len(path)
-
         for point in path:
             print("\tMOVE")
             x, y, z = point
@@ -163,30 +190,28 @@ class MainWindow(QMainWindow):
             y = round(y, 2)
             z = round(z, 2)
             printer.send_and_await(f"G1 X{x} Y{y} Z{z}")
-            sleep(1)
+
             if self.check_for_stop():
                 return
 
             print("\tSCAN")
-            scan_val = get_level(hameg, 2.622 * (10 ** 9), 1)
+            scan_val = get_level(hameg, 2.622 * (10 ** 9), 1, DEBUG_MODE)
             measurement.append((x - antenna_offset[0], y - antenna_offset[1], z - antenna_offset[2], scan_val))
 
             if self.check_for_stop():
                 return
             print("\tUPDATE PLOTS")
 
-            self.path_3d_plot_canvas.plot_data(path, highlight=(x, y, z))
-            self.path_2d_plot_canvas.plot_data(path,
-                                               printer_boundaries=printer_size,
+            self.path_3d_plot_canvas.plot_data(path, printer_boundaries=printer_size,
                                                antenna_offset=antenna_offset,
                                                antenna_measurement_radius=antenna_measurement_radius,
                                                highlight=(x, y, z))
 
-            self.measurements_plot_canvas.plot_data(path, measurement, printer_boundaries=printer_size,
-                                                    no_bins=no_bins)
+
+            self.measurements_plot_canvas.plot_data(path, measurement)
 
             self.path_3d_plot_canvas.draw()
-            self.path_2d_plot_canvas.draw()
+            # self.path_2d_plot_canvas.draw()
             self.measurements_plot_canvas.draw()
             if self.check_for_stop():
                 return
@@ -196,13 +221,5 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
 
     window = MainWindow()
-    #
-    # window.path_3d_plot_canvas.plot_data(path)
-    # window.path_2d_plot_canvas.plot_data(path, printer_boundaries=printer_size, antenna_offset=antenna_offset,
-    #                                      antenna_measurement_radius=antenna_measurement_radius)
-    # measurement = [(x - antenna_offset[0], y - antenna_offset[1], z - antenna_offset[2], random()) for x, y, z in
-    #                path]
-    # window.measurements_plot_canvas.plot_data(measurement, printer_boundaries=printer_size)
-
     window.show()
     app.exec()
