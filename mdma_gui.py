@@ -87,8 +87,8 @@ class MainWindow(QMainWindow):
         def helper(plot):
             self._graphs_layout.addWidget(plot)
 
-            toolbar = NavigationToolbar(plot, self)
-            self._graphs_settings_layout.addWidget(toolbar)
+            # toolbar = NavigationToolbar(plot, self)
+            # self._graphs_settings_layout.addWidget(toolbar)
 
         self._path_3d_plot_canvas = PathPlotCanvas()
         helper(self._path_3d_plot_canvas)
@@ -103,10 +103,6 @@ class MainWindow(QMainWindow):
     def path_3d_plot_canvas(self) -> PathPlotCanvas:
         return self._path_3d_plot_canvas
 
-    # @property
-    # def path_2d_plot_canvas(self) -> Path2DPlotCanvas:
-    #     return self._path_2d_plot_canvas
-
     @property
     def measurements_plot_canvas(self) -> MeasurementsPlotCanvas:
         return self._measurements_plot_canvas
@@ -115,6 +111,7 @@ class MainWindow(QMainWindow):
     STOP_MEASUREMENT = "STOP"
 
     def check_for_stop(self):
+
         return self.start_stop_measurement_button.text() == self.START_MEASUREMENT
 
     def change_text(self):
@@ -187,38 +184,38 @@ class MainWindow(QMainWindow):
                 antenna_offset,
                 printer_size,
                 antenna_measurement_radius,
-                no_bins,
             ),
         )
         thread.start()
 
     def main_loop(
-        self,
-        path: List[Point],
-        printer: MarlinDevice,
-        hameg,
-        antenna_offset: Tuple[float, float, float],
-        printer_size: Tuple[float, float, float],
-        antenna_measurement_radius: float,
-        no_bins,
+            self,
+            path: List[Point],
+            printer_handle: MarlinDevice,
+            hameg_handle,
+            antenna_offset: Tuple[float, float, float],
+            printer_size: Tuple[float, float, float],
+            antenna_measurement_radius: float,
     ):
 
-        printer.startup_procedure()
+        printer_handle.startup_procedure()
         print("Measurement loop ")
         measurement = []
         for point in path:
-            print("\tMOVE")
+            print("Moving...")
             x, y, z = point
-            x = round(x, 2)
-            y = round(y, 2)
-            z = round(z, 2)
-            printer.send_and_await(f"G1 X{x} Y{y} Z{z}")
+            x = round(x, 3)
+            y = round(y, 3)
+            z = round(z, 3)
+            printer_handle.send_and_await(f"G1 X{x} Y{y} Z{z}")
+            print(f"\tx:{x}\ty:{y}\tz:{z}")
 
             if self.check_for_stop():
                 return
 
-            print("\tSCAN")
-            scan_val = get_level(hameg, 2.622 * (10**9), 1, DEBUG_MODE)
+            print("Scanning...")
+            scan_val = get_level(hameg_handle, 2.622 * (10 ** 9), 1, DEBUG_MODE)
+            print(f"\tmeasurement:{scan_val}")
             measurement.append(
                 (
                     x - antenna_offset[0],
@@ -230,7 +227,7 @@ class MainWindow(QMainWindow):
 
             if self.check_for_stop():
                 return
-            print("\tUPDATE PLOTS")
+            print("Updating plots...")
 
             self.path_3d_plot_canvas.plot_data(
                 path,
