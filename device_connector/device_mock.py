@@ -11,10 +11,10 @@ class DeviceMock(Device):
         elif "G28" in command:
             time.sleep(1)
 
-        return 'this is mock'
+        return "this is mock"
 
     def connect_on_port(
-            port: str, baudrate: int = 250000, timeout: int = 5
+        port: str, baudrate: int = 250000, timeout: int = 5
     ) -> "DeviceMock":
         print(f"Connected on port: '{69}', desc: 'table', hwid: 'kazooooo")
         return DeviceMock()

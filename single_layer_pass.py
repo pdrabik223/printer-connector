@@ -11,12 +11,12 @@ from pass_generators.simple_pass import simple_pass, f_range
 
 
 def plot_measurement_areas(
-        x_values: List[float],
-        y_values: List[float],
-        ax: plt.Axes,
-        radius: float,
-        color: str = "blue",
-        alpha: float = 0.4,
+    x_values: List[float],
+    y_values: List[float],
+    ax: plt.Axes,
+    radius: float,
+    color: str = "blue",
+    alpha: float = 0.4,
 ) -> None:
     for x, y in zip(x_values, y_values):
         ax.add_patch(plt.Circle((x, y), radius, color=color, alpha=alpha))
@@ -46,7 +46,7 @@ def create_3d_movement_plot(path: List[Tuple[float, float]], pass_height: float)
 
 
 def create_2d_movement_plot(
-        path: List[Tuple[float, float]], printer_boundaries: Tuple[float, float, float]
+    path: List[Tuple[float, float]], printer_boundaries: Tuple[float, float, float]
 ):
     ax = plt.figure().add_subplot()
 
@@ -64,7 +64,7 @@ def create_2d_movement_plot(
 
 
 def create_2d_measurement_placement_plot(
-        path: List[Tuple[float, float]], printer_boundaries: Tuple[float, float, float]
+    path: List[Tuple[float, float]], printer_boundaries: Tuple[float, float, float]
 ):
     ax = plt.figure().add_subplot()
 

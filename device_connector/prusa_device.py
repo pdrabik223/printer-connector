@@ -95,8 +95,8 @@ class PrusaDevice(Device):
         return PrusaDevice(device=device)
 
     class PrusaPrinterStatus(enum.Enum):
-        PROCESSING = 'processing'
-        READY = 'ready'
+        PROCESSING = "processing"
+        READY = "ready"
 
     def send_and_await(self, command: str) -> str:
 
@@ -126,7 +126,7 @@ class PrusaDevice(Device):
         while "ok" not in resp:
             resp = str(self._device.readline().decode("utf-8"))
             print(resp.strip())
-            if 'busy' in resp:
+            if "busy" in resp:
                 print("awaiting 2s")
                 time.sleep(2)
             else:

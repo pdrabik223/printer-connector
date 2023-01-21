@@ -2,11 +2,11 @@ from typing import Tuple, List
 
 
 def f_range(
-        start: float = 0,
-        end: float = 1,
-        step: float = 1,
-        include_start=True,
-        include_end=False,
+    start: float = 0,
+    end: float = 1,
+    step: float = 1,
+    include_start=True,
+    include_end=False,
 ):
     range = []
 
@@ -27,9 +27,9 @@ def f_range(
 
 
 def simple_pass(
-        printer_size: Tuple[float, float, float],
-        antenna_offset: Tuple[float, float, float],
-        antenna_measurement_radius: float,
+    printer_size: Tuple[float, float, float],
+    antenna_offset: Tuple[float, float, float],
+    antenna_measurement_radius: float,
 ) -> List[Tuple[float, float]]:
     # antenna diameter
     antenna_d = antenna_measurement_radius * 2
@@ -63,11 +63,10 @@ def simple_pass(
 
 
 def simple_pass_3d(
-        printer_size: Tuple[float, float, float],
-        antenna_offset: Tuple[float, float, float],
-        antenna_measurement_radius: float,
-        pass_height: float
-
+    printer_size: Tuple[float, float, float],
+    antenna_offset: Tuple[float, float, float],
+    antenna_measurement_radius: float,
+    pass_height: float,
 ) -> Tuple[List[Tuple[float, float, float]], Tuple[List[float], List[float]]]:
     # antenna diameter
     antenna_d = antenna_measurement_radius * 2

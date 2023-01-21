@@ -14,7 +14,7 @@ def get_level(device: Union[Device, DeviceMock], frequency: int) -> float:
     while value > 0 or value < -100:
         level_raw: str = device.send_await_resp("rmode:level?")[1][2:-1]
         try:
-            level = level_raw[level_raw.find(",") + 1:]
+            level = level_raw[level_raw.find(",") + 1 :]
             value = float(level)
 
         except Exception as ex:
@@ -28,7 +28,7 @@ def get_level(device: Union[Device, DeviceMock], frequency: int) -> float:
 
 
 def set_up_hameg_device(
-        hapmd_config: HapmdConfig,
+    hapmd_config: HapmdConfig,
 ) -> Optional[Union[Device, DeviceMock]]:
     try:
         hameg_device = Device.connect_using_vid_pid(

@@ -69,7 +69,8 @@ def window_loop(variables):
                 y = 1
 
             middle_text.update(
-                value=f"Right to raise extruder\nLeft to lower extruder\nx: {round(x, 2)}, y: {round(y, 2)}")
+                value=f"Right to raise extruder\nLeft to lower extruder\nx: {round(x, 2)}, y: {round(y, 2)}"
+            )
 
             variables[1] = x
             variables[2] = y

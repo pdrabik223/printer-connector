@@ -16,7 +16,8 @@ from PyQt6.QtWidgets import (
     QLabel,
     QInputDialog,
     QLineEdit,
-    QDialog, QGridLayout
+    QDialog,
+    QGridLayout,
 )
 import sys
 from gui_plots.gui_plots import *
@@ -118,15 +119,21 @@ class MainWindow(QMainWindow):
 
     def change_text(self):
         if self.start_stop_measurement_button.text() == self.START_MEASUREMENT:
-            self.start_stop_measurement_button.setStyleSheet("background-color: rgb(255, 0, 0);")
+            self.start_stop_measurement_button.setStyleSheet(
+                "background-color: rgb(255, 0, 0);"
+            )
             self.start_stop_measurement_button.setText(self.STOP_MEASUREMENT)
 
         elif self.start_stop_measurement_button.text() == self.STOP_MEASUREMENT:
-            self.start_stop_measurement_button.setStyleSheet("background-color: rgb(0, 255, 0);")
+            self.start_stop_measurement_button.setStyleSheet(
+                "background-color: rgb(0, 255, 0);"
+            )
             self.start_stop_measurement_button.setText(self.START_MEASUREMENT)
         else:
 
-            raise Exception(f"Bad start_stop_measurement_button text: {self.start_stop_measurement_button.text()}")
+            raise Exception(
+                f"Bad start_stop_measurement_button text: {self.start_stop_measurement_button.text()}"
+            )
 
     def add_start_button(self):
         self.start_stop_measurement_button = QPushButton()
@@ -148,13 +155,15 @@ class MainWindow(QMainWindow):
             printer_size=printer_size,
             antenna_measurement_radius=antenna_measurement_radius,
             antenna_offset=antenna_offset,
-            pass_height=pass_height
+            pass_height=pass_height,
         )
 
-        self.path_3d_plot_canvas.plot_data(path,
-                                           printer_boundaries=printer_size,
-                                           antenna_offset=antenna_offset,
-                                           antenna_measurement_radius=antenna_measurement_radius)
+        self.path_3d_plot_canvas.plot_data(
+            path,
+            printer_boundaries=printer_size,
+            antenna_offset=antenna_offset,
+            antenna_measurement_radius=antenna_measurement_radius,
+        )
 
         self.measurements_plot_canvas.plot_data(path, measurements=[])
 
@@ -171,14 +180,28 @@ class MainWindow(QMainWindow):
 
         thread = threading.Thread(
             target=self.main_loop,
-            args=(path, printer, hameg, antenna_offset, printer_size, antenna_measurement_radius, no_bins),
+            args=(
+                path,
+                printer,
+                hameg,
+                antenna_offset,
+                printer_size,
+                antenna_measurement_radius,
+                no_bins,
+            ),
         )
         thread.start()
 
-    def main_loop(self, path: List[Point], printer: MarlinDevice, hameg, antenna_offset: Tuple[float, float, float],
-                  printer_size: Tuple[float, float, float],
-                  antenna_measurement_radius: float, no_bins
-                  ):
+    def main_loop(
+        self,
+        path: List[Point],
+        printer: MarlinDevice,
+        hameg,
+        antenna_offset: Tuple[float, float, float],
+        printer_size: Tuple[float, float, float],
+        antenna_measurement_radius: float,
+        no_bins,
+    ):
 
         printer.startup_procedure()
         print("Measurement loop ")
@@ -195,18 +218,27 @@ class MainWindow(QMainWindow):
                 return
 
             print("\tSCAN")
-            scan_val = get_level(hameg, 2.622 * (10 ** 9), 1, DEBUG_MODE)
-            measurement.append((x - antenna_offset[0], y - antenna_offset[1], z - antenna_offset[2], scan_val))
+            scan_val = get_level(hameg, 2.622 * (10**9), 1, DEBUG_MODE)
+            measurement.append(
+                (
+                    x - antenna_offset[0],
+                    y - antenna_offset[1],
+                    z - antenna_offset[2],
+                    scan_val,
+                )
+            )
 
             if self.check_for_stop():
                 return
             print("\tUPDATE PLOTS")
 
-            self.path_3d_plot_canvas.plot_data(path, printer_boundaries=printer_size,
-                                               antenna_offset=antenna_offset,
-                                               antenna_measurement_radius=antenna_measurement_radius,
-                                               highlight=(x, y, z))
-
+            self.path_3d_plot_canvas.plot_data(
+                path,
+                printer_boundaries=printer_size,
+                antenna_offset=antenna_offset,
+                antenna_measurement_radius=antenna_measurement_radius,
+                highlight=(x, y, z),
+            )
 
             self.measurements_plot_canvas.plot_data(path, measurement)
 

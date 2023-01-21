@@ -76,9 +76,6 @@ def measurement_loop(
     return measurement_df
 
 
-
-
-
 def set_up_rotor_device(
     hapmd_config: HapmdConfig,
 ) -> Optional[Union[ArduinoConnector, ArduinoConnectorMock]]:

@@ -86,9 +86,7 @@ class MarlinDevice(Device):
 
         print("List all available ports:")
         for port, desc, hwid in sorted(available_ports):
-            print(
-                f"\t port: '{port}', desc: '{desc}', hwid: '{hwid}"
-            )
+            print(f"\t port: '{port}', desc: '{desc}', hwid: '{hwid}")
 
         for port, desc, hwid in sorted(available_ports):
             print(
@@ -171,9 +169,9 @@ class MarlinDevice(Device):
     def no_line(line: str) -> str:
 
         line = (
-                f"N{MarlinDevice.no_line.line_counter} "
-                + line
-                + f" N{MarlinDevice.no_line.line_counter}"
+            f"N{MarlinDevice.no_line.line_counter} "
+            + line
+            + f" N{MarlinDevice.no_line.line_counter}"
         )
         MarlinDevice.no_line.line_counter += 1
 
@@ -185,4 +183,3 @@ class MarlinDevice(Device):
 
     def startup_procedure(self):
         self.send_and_await("G28")
-
