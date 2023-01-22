@@ -32,7 +32,6 @@ from pass_generators.scan_loop import main_loop
 DEBUG_MODE = True
 
 
-
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -54,7 +53,7 @@ class MainWindow(QMainWindow):
         self.add_plots()
 
         self.start_stop_measurement_button = StartStopContinueButton()
-        self.start_stop_measurement_button.clicked.pressed(self.start_thread)
+        self.start_stop_measurement_button.pressed.connect(self.start_thread)
 
         self._left_wing.addWidget(self.start_stop_measurement_button)
 
@@ -95,13 +94,17 @@ class MainWindow(QMainWindow):
         return self._measurements_plot_canvas
 
     def check_for_stop(self):
-        return self.start_stop_measurement_button.state != StartStopContinueButton.State.STOP
+        return (
+            self.start_stop_measurement_button.state
+            != StartStopContinueButton.State.STOP
+        )
 
     def start_thread(self):
         if self.thread is not None:
             print("thread is already running")
             self.thread.join()
             print("thread is closed")
+            self.thread = None
             return
 
         printer_size = (80, 80, 80)
