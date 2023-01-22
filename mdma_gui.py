@@ -3,7 +3,7 @@ from time import sleep
 from random import random
 from typing import Union
 
-from printer_device_connector.device_mock import DeviceMock
+from printer_device_connector.device_mock import PrinterDeviceMock
 from printer_device_connector.marlin_device import MarlinDevice
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QIntValidator
@@ -40,6 +40,8 @@ class MainWindow(QMainWindow):
         self._path_2d_plot_canvas = None
 
         self.thread = None
+        self.printer: Union[MarlinDevice, PrusaDevice, PrinterDeviceMock] = None
+        self.analyzer = None
 
         self.setWindowTitle("MDMA gui")
         self._left_wing = QVBoxLayout()
@@ -48,12 +50,40 @@ class MainWindow(QMainWindow):
         self._graphs_settings_layout = QHBoxLayout()
 
         self.printer_head_controller = PrinterHeadPositionController()
+
+        self.printer_head_controller.forward.pressed.connect(
+            lambda: self.move_extruder(PrinterHeadPositionController.Direction.FORWARD))
+
+        self.printer_head_controller.up.pressed.connect(
+            lambda: self.move_extruder(PrinterHeadPositionController.Direction.UP))
+
+        self.printer_head_controller.left.pressed.connect(
+            lambda: self.move_extruder(PrinterHeadPositionController.Direction.LEFT))
+
+        self.printer_head_controller.home.pressed.connect(
+            lambda: self.move_extruder(PrinterHeadPositionController.Direction.HOME))
+
+        self.printer_head_controller.right.pressed.connect(
+            lambda: self.move_extruder(PrinterHeadPositionController.Direction.RIGHT))
+
+        self.printer_head_controller.back.pressed.connect(
+            lambda: self.move_extruder(PrinterHeadPositionController.Direction.BACK))
+
+        self.printer_head_controller.down.pressed.connect(
+            lambda: self.move_extruder(PrinterHeadPositionController.Direction.DOWN))
+
+        self.printer_head_controller.center_extruder.pressed.connect(
+            lambda: self.move_extruder(PrinterHeadPositionController.Direction.CENTER))
+
         self._left_wing.addWidget(self.printer_head_controller)
 
         self.add_plots()
 
         self.start_stop_measurement_button = StartStopContinueButton()
+
         self.start_stop_measurement_button.pressed.connect(self.start_thread)
+
+        self._left_wing.addWidget(self.start_stop_measurement_button)
 
         self._left_wing.addWidget(self.start_stop_measurement_button)
 
@@ -68,6 +98,14 @@ class MainWindow(QMainWindow):
         widget = QWidget()
         widget.setLayout(self._central_layout)
         self.setCentralWidget(widget)
+
+    def move_extruder(self, direction: PrinterHeadPositionController.Direction):
+        print(f"moving extruder: {direction}")
+        # current_position = self.printer.current_position()
+        # if direction == PrinterHeadPositionController.Direction.UP:
+        #     new_position = current_position
+
+        # self.printer.move_to(new_position)
 
     def add_plots(self) -> None:
         def helper(plot):
@@ -94,9 +132,10 @@ class MainWindow(QMainWindow):
         return self._measurements_plot_canvas
 
     def check_for_stop(self):
+
         return (
-            self.start_stop_measurement_button.state
-            != StartStopContinueButton.State.STOP
+                self.start_stop_measurement_button.state
+                != StartStopContinueButton.State.STOP
         )
 
     def start_thread(self):
@@ -105,7 +144,10 @@ class MainWindow(QMainWindow):
             self.thread.join()
             print("thread is closed")
             self.thread = None
+            self.printer_head_controller.enable()
             return
+
+        self.printer_head_controller.disable()
 
         printer_size = (80, 80, 80)
         antenna_offset = (5, 52, 0)
@@ -132,11 +174,11 @@ class MainWindow(QMainWindow):
         self.measurements_plot_canvas.draw()
 
         if DEBUG_MODE:
-            printer: DeviceMock = DeviceMock.connect_on_port("COM5")
+            printer: PrinterDeviceMock = PrinterDeviceMock.connect_on_port("COM5")
         else:
             printer: MarlinDevice = MarlinDevice.connect_on_port("COM5")
 
-        hameg = set_up_hamed_device(debug=DEBUG_MODE)
+        self.analyzer = set_up_hamed_device(debug=DEBUG_MODE)
 
         print("startup procedure")
 
@@ -146,7 +188,7 @@ class MainWindow(QMainWindow):
                 self,
                 path,
                 printer,
-                hameg,
+                self.analyzer,
                 antenna_offset,
                 printer_size,
                 antenna_measurement_radius,

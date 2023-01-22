@@ -1,3 +1,5 @@
+from typing import Optional, Tuple
+
 import serial.tools.list_ports
 
 
@@ -16,12 +18,61 @@ def list_available_serial_ports():
         print("{}: {} [{}]".format(port, desc, hwid))
 
 
+class Position:
+    def __init__(self):
+        self.x: Optional[float] = None
+        self.y: Optional[float] = None
+        self.z: Optional[float] = None
+
+    def is_none(self):
+        return self.x is None or self.y is None or self.z is None
+
+    def from_tuple(self, position: Tuple[float, float, float]):
+        self.x = position[0]
+        self.y = position[1]
+        self.z = position[2]
+
+    def to_tuple(self) -> Optional[Tuple[float, float, float]]:
+        if self is None:
+            return None
+        return tuple(self.x, self.y, self.z)
+
+
 class Device:
     """
     **Base class for various printer devices.**
     """
 
-    def send_and_await(command: str) -> str:
+    def __init__(self):
+        self.current_position: Position = Position()
+
+    def get_current_position(self) -> Optional[Tuple[float, float, float]]:
+        return self.current_position.to_tuple()
+
+    def set_current_position(self, x: float, y: float, z: float):
+        self.current_position.from_tuple((x, y, z))
+
+    def set_current_position_from_string(self, position: Tuple[float, float, float]):
+        self.current_position.from_tuple(position)
+
+    @staticmethod
+    def parse_move_command_to_position(command: str) -> Optional[Tuple[float, float, float]]:
+        x_pos = command.find("X")
+        y_pos = command.find("Y")
+        z_pos = command.find("Z")
+
+        split_by_space = command.split(" ")
+
+        if x_pos != -1:
+            pass
+
+        if y_pos != -1:
+            pass
+
+        if z_pos != -1:
+            pass
+
+    def send_and_await(self, command: str) -> str:
         """
         **Send command and await response.**
         Depending on used software, response might be returned as soon as command is acknowledged by the device, or after completion.
@@ -40,7 +91,7 @@ class Device:
         pass
 
     def connect_on_port(
-        port: str, baudrate: int = 250000, timeout: int = 5
+            port: str, baudrate: int = 250000, timeout: int = 5
     ) -> "Device":
         """
         **Connects to device on specified port.**

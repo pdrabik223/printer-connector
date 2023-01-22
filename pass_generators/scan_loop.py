@@ -1,6 +1,6 @@
 from typing import List, Tuple, Union
 
-from printer_device_connector.device_mock import DeviceMock
+from printer_device_connector.device_mock import PrinterDeviceMock
 from printer_device_connector.marlin_device import MarlinDevice
 from printer_device_connector.prusa_device import PrusaDevice
 from gui_tools.gui_plots import Point
@@ -12,7 +12,7 @@ from hapmd.src.hameg_ci import get_level
 def main_loop(
     window: "MainWindow",
     path: List[Point],
-    printer_handle: Union[MarlinDevice, PrusaDevice, DeviceMock],
+    printer_handle: Union[MarlinDevice, PrusaDevice, PrinterDeviceMock],
     hameg_handle: Union[Hameg3010Device, Hameg3010DeviceMock],
     antenna_offset: Tuple[float, float, float],
     printer_size: Tuple[float, float, float],

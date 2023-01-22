@@ -14,7 +14,6 @@ matplotlib.use("Qt5Agg")
 
 Point = Tuple[float, float, float]
 
-
 class PathPlotCanvas(FigureCanvas):
     def __init__(self, parent=None, width=9, height=5, dpi=90):
         self.fig = Figure(figsize=(width, height), dpi=dpi)
@@ -26,12 +25,12 @@ class PathPlotCanvas(FigureCanvas):
         super(PathPlotCanvas, self).__init__(self.fig)
 
     def plot_data(
-        self,
-        path: List[Point],
-        printer_boundaries: Tuple[float, float, float],
-        antenna_offset: Tuple[float, float, float],
-        antenna_measurement_radius: float,
-        highlight: Optional[Point] = None,
+            self,
+            path: List[Point],
+            printer_boundaries: Tuple[float, float, float],
+            antenna_offset: Tuple[float, float, float],
+            antenna_measurement_radius: float,
+            highlight: Optional[Point] = None,
     ):
 
         x_printer_boundaries = (0, 0, printer_boundaries[0], printer_boundaries[0], 0)
@@ -66,15 +65,17 @@ class PathPlotCanvas(FigureCanvas):
 
     @staticmethod
     def plot_measurement_areas(
-        x_values: List[float],
-        y_values: List[float],
-        ax: plt.Axes,
-        radius: float,
-        color: str = "orange",
-        alpha: float = 0.2,
+            x_values: List[float],
+            y_values: List[float],
+            ax: plt.Axes,
+            radius: float,
+            color: str = "orange",
+            alpha: float = 0.2,
     ) -> None:
         for x, y in zip(x_values, y_values):
             ax.add_patch(plt.Circle((x, y), radius, color=color, alpha=alpha))
+
+    # def highlight(self, point:Point,point_b:P ):
 
     def show(self):
         self.fig.draw()
@@ -107,9 +108,9 @@ class MeasurementsPlotCanvas(FigureCanvas):
         super(MeasurementsPlotCanvas, self).__init__(self.fig)
 
     def plot_data(
-        self,
-        path: List[Tuple[float, float, float]],
-        measurements: List[Tuple[float, float, float, float]],
+            self,
+            path: List[Tuple[float, float, float]],
+            measurements: List[Tuple[float, float, float, float]],
     ):
         self.axes.cla()
         no_bins_x = np.unique([x for x, _, _ in path])
