@@ -8,8 +8,6 @@ from hapmd.src.hameg3010.hameg3010device import Hameg3010Device
 from hapmd.src.hameg3010.hameg3010device_mock import Hameg3010DeviceMock
 from hapmd.src.hameg_ci import get_level
 
-DEBUG_MODE = True
-
 
 def main_loop(
         window: "MainWindow",
@@ -37,7 +35,7 @@ def main_loop(
             return
 
         print("Scanning...")
-        scan_val = get_level(hameg_handle, 2.622 * (10 ** 9), 1, DEBUG_MODE)
+        scan_val = get_level(hameg_handle, 2.622 * (10 ** 9), 1)
 
         print(f"\tmeasurement:{scan_val}")
         measurement.append(

@@ -141,7 +141,7 @@ class MeasurementsPlotCanvas(FigureCanvas):
         # self.cbar = self.fig.colorbar(self.cp, ax=self.axes, extend='both')
         # self.cbar.ax = self.axes
         # self.cbar.extend = 'both'
-        self.cbar.mappable = self.cp
+        # self.cbar.mappable = self.cp
 
         self.axes.set_xlabel("X [arb. units]")
         self.axes.set_ylabel("Y [arb. units]")
