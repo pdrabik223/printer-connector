@@ -1,5 +1,5 @@
 import pytest
-from device_connector.marlin_device import MarlinDevice
+from printer_device_connector.marlin_device import MarlinDevice
 
 
 class TestMarlinDevice:

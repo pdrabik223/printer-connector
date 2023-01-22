@@ -1,6 +1,6 @@
 import time
 
-from device_connector.device import Device, static_vars
+from printer_device_connector.device import Device, static_vars
 
 
 class DeviceMock(Device):

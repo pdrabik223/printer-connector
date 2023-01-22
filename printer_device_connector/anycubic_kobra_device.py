@@ -2,7 +2,7 @@ import time
 from typing import Tuple
 from serial import Serial
 from serial import SerialException
-from device_connector.device import Device
+from printer_device_connector.device import Device
 
 
 def static_vars(**kwargs):

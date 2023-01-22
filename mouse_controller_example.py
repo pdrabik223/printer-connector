@@ -1,8 +1,8 @@
 import copy
 import enum
 import threading
-from device_connector.marlin_device import MarlinDevice
-from device_connector.prusa_device import PrusaDevice
+from printer_device_connector.marlin_device import MarlinDevice
+from printer_device_connector.prusa_device import PrusaDevice
 import time
 
 import PySimpleGUI as sg

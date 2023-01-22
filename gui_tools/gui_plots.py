@@ -7,7 +7,7 @@ from matplotlib.figure import Figure
 import matplotlib
 from typing import Tuple, List, Optional
 
-from device_connector.prusa_device import PrusaDevice
+from printer_device_connector.prusa_device import PrusaDevice
 from pass_generators.simple_pass import simple_pass_3d
 
 matplotlib.use("Qt5Agg")

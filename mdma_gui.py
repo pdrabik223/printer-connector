@@ -3,8 +3,8 @@ from time import sleep
 from random import random
 from typing import Union
 
-from device_connector.device_mock import DeviceMock
-from device_connector.marlin_device import MarlinDevice
+from printer_device_connector.device_mock import DeviceMock
+from printer_device_connector.marlin_device import MarlinDevice
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QIntValidator
 from PyQt6.QtWidgets import (
@@ -32,6 +32,7 @@ from pass_generators.scan_loop import main_loop
 DEBUG_MODE = True
 
 
+
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -47,12 +48,13 @@ class MainWindow(QMainWindow):
         self._graphs_layout = QHBoxLayout()
         self._graphs_settings_layout = QHBoxLayout()
 
-        self._left_wing.addWidget(PrinterHeadPositionController())
+        self.printer_head_controller = PrinterHeadPositionController()
+        self._left_wing.addWidget(self.printer_head_controller)
 
         self.add_plots()
 
         self.start_stop_measurement_button = StartStopContinueButton()
-        self.start_stop_measurement_button.clicked.connect(self.start_thread)
+        self.start_stop_measurement_button.clicked.pressed(self.start_thread)
 
         self._left_wing.addWidget(self.start_stop_measurement_button)
 

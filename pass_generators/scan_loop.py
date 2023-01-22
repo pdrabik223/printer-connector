@@ -1,8 +1,8 @@
 from typing import List, Tuple, Union
 
-from device_connector.device_mock import DeviceMock
-from device_connector.marlin_device import MarlinDevice
-from device_connector.prusa_device import PrusaDevice
+from printer_device_connector.device_mock import DeviceMock
+from printer_device_connector.marlin_device import MarlinDevice
+from printer_device_connector.prusa_device import PrusaDevice
 from gui_tools.gui_plots import Point
 from hapmd.src.hameg3010.hameg3010device import Hameg3010Device
 from hapmd.src.hameg3010.hameg3010device_mock import Hameg3010DeviceMock

@@ -1,14 +1,26 @@
 import enum
 
-from PyQt6.QtWidgets import QPushButton, QGridLayout
+from PyQt6.QtWidgets import QPushButton, QGridLayout, QWidget
 
 
-class PrinterHeadPositionController(QPushButton):
+class PrinterHeadPositionController(QWidget):
+    class Direction(enum.Enum):
+        UP = 0,
+        DOWN = 1,
+        LEFT = 2,
+        RIGHT = 3,
+        LEFT = 4,
+        FORWARD = 5,
+        BACK = 6,
+        HOME = 7
+
     def __init__(self):
         super().__init__()
+        self.enabled = False
         self._central_layout = QGridLayout()
 
         self.forward = QPushButton('Y+')
+        self.forward.pressed.connect(lambda: print('Y+'))
         self.up = QPushButton('Z+')
 
         self._central_layout.addWidget(self.forward, *(0, 1))
@@ -29,6 +41,12 @@ class PrinterHeadPositionController(QPushButton):
 
         self.setLayout(self._central_layout)
 
+    def disable(self):
+        self.enabled = False
+
+    def enable(self):
+        self.enabled = True
+
 
 class StartStopContinueButton(QPushButton):
     class State(enum.Enum):
@@ -40,7 +58,7 @@ class StartStopContinueButton(QPushButton):
         super().__init__()
         self.state = self.State.START
         self.update_text()
-        self.clicked.connect(self.change_state)
+        self.pressed.connect(self.change_state)
         # self.clicked.connect(self.start_thread)
 
     def update_text(self):

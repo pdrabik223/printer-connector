@@ -3,8 +3,8 @@ from typing import Tuple
 from typing import Optional
 from serial import Serial
 from serial import SerialException
-from device_connector.device import Device, static_vars
-from device_connector.exceptions import Err, ResultWithErr
+from printer_device_connector.device import Device, static_vars
+from printer_device_connector.exceptions import Err, ResultWithErr
 
 import serial.tools.list_ports
 import logging
