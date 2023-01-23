@@ -131,17 +131,20 @@ class MainWindow(QMainWindow):
 
         elif direction == PrinterHeadPositionController.Direction.HOME:
             self.printer.send_and_await("G28")
+            print(f"new position: {self.printer.current_position.to_tuple()}")
             return
         elif direction == PrinterHeadPositionController.Direction.CENTER:
             self.printer.send_and_await(
-                f"G1 X {self.printer.x_size / 2} Y {self.printer.y_size / 2} Z {self.printer.y_size / 2}")
+                f"G1 X {self.printer.x_size / 2} Y {self.printer.y_size / 2} Z {self.printer.current_position.z}")
+            print(f"new position: {self.printer.current_position.to_tuple()}")
             return
 
         # if new_position == self.printer.current_position:
         #     return
 
         self.printer.send_and_await(
-            f"G1 X {new_position.x / 2} Y {new_position.y / 2} Z {new_position.z / 2}")
+            f"G1 X {new_position.x} Y {new_position.y} Z {new_position.z}")
+
         print(f"new position: {self.printer.current_position.to_tuple()}")
 
     def add_plots(self) -> None:

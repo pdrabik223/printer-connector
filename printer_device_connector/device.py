@@ -57,7 +57,6 @@ class Device:
         x, y, z = Device.parse_move_command_to_position(position)
         self.current_position.from_tuple((x, y, z))
 
-
     @staticmethod
     def parse_move_command_to_position(command: str) -> Optional[Tuple[float, float, float]]:
         # Fuck me, get uot with this weak ass shit
@@ -65,7 +64,12 @@ class Device:
 
         if "x" in command:
 
-            x_val_begin = command.find('x') + 2
+            x_val_begin = command.find('x')
+            if command[x_val_begin + 1] != ' ':
+                command = command[:x_val_begin] + ' ' + command[x_val_begin:]
+
+            x_val_begin += 2
+
             x_val_end = command[x_val_begin:].find(" ")
             x = float(command[x_val_begin: x_val_end + x_val_begin])
 
@@ -73,7 +77,12 @@ class Device:
             x = None
 
         if "y" in command:
-            y_val_begin = command.find('y') + 2
+            y_val_begin = command.find('y')
+
+            if command[y_val_begin + 1] != ' ':
+                command = command[:y_val_begin] + ' ' + command[y_val_begin:]
+
+            y_val_begin += 2
             y_val_end = command[y_val_begin:].find(" ")
             y = float(command[y_val_begin: y_val_end + y_val_begin])
 
@@ -81,7 +90,11 @@ class Device:
             y = None
 
         if "z" in command:
-            z_val_begin = command.find('z') + 2
+            z_val_begin = command.find('z')
+            if command[z_val_begin + 1] != ' ':
+                command = command[:z_val_begin] + ' ' + command[z_val_begin:]
+
+            z_val_begin += 2
             z_val_end = command[z_val_begin:].find(" ")
             z = float(command[z_val_begin: z_val_end + z_val_begin])
 
