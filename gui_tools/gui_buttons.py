@@ -1,101 +1,164 @@
-import threading
-from time import sleep
-from random import random
-from typing import Union
+import enum
+from typing import List
 
-from device_connector.device_mock import DeviceMock
-from device_connector.marlin_device import MarlinDevice
-from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QIntValidator
-from PyQt6.QtWidgets import (
-    QApplication,
-    QWidget,
-    QMainWindow,
-    QPushButton,
-    QVBoxLayout,
-    QHBoxLayout,
-    QLabel,
-    QInputDialog,
-    QLineEdit,
-    QDialog,
-    QGridLayout,
-)
-import sys
-from gui_tools.gui_plots import *
-from hapmd.src.hameg3010.hameg3010device import Hameg3010Device
-from hapmd.src.hameg3010.hameg3010device_mock import Hameg3010DeviceMock
-from hapmd.src.hameg_ci import set_up_hamed_device, get_level
-from pass_generators.scan_loop import DEBUG_MODE, main_loop
+from PyQt6.QtWidgets import QPushButton, QGridLayout, QWidget, QVBoxLayout
 
 
-class PrinterHeadPositionControler(QWidget):
+class PrinterHeadPositionController(QWidget):
+    class Direction(enum.Enum):
+        UP = 0
+        DOWN = 1
+        LEFT = 2
+        RIGHT = 3
+        FORWARD = 4
+        BACK = 5
+        HOME = 6
+        CENTER = 7
+
     def __init__(self):
         super().__init__()
-        self.mainLayout = QGridLayout()
 
-        self.forward = QPushButton("y+")
-        self.up = QPushButton("z+")
-        self.mainLayout.addWidget(self.forward, 0, 1)
-        self.mainLayout.addWidget(self.up, 0, 2)
+        self.center_layout = QVBoxLayout()
+        self._main_layout = QGridLayout()
 
-        self.left = QPushButton("x-")
-        self.home = QPushButton("H")
-        self.right = QPushButton("x+")
+        self._forward = QPushButton("Y+")
 
-        self.mainLayout.addWidget(self.left, 1, 0)
-        self.mainLayout.addWidget(self.home, 1, 1)
-        self.mainLayout.addWidget(self.right, 1, 2)
+        self._up = QPushButton("Z+")
 
-        self.backward = QPushButton("y-")
-        self.down = QPushButton("z-")
-        self.mainLayout.addWidget(self.backward, 2, 1)
-        self.mainLayout.addWidget(self.down, 2, 2)
+        self._main_layout.addWidget(self._forward, *(0, 1))
+        self._main_layout.addWidget(self._up, *(0, 2))
 
-        self.setLayout(self.mainLayout)
-        self.show()
+        self._left = QPushButton("X-")
+        self._home = QPushButton("H")
+        self._right = QPushButton("X+")
+
+        self._main_layout.addWidget(self._left, *(1, 0))
+        self._main_layout.addWidget(self._home, *(1, 1))
+        self._main_layout.addWidget(self._right, *(1, 2))
+
+        self._back = QPushButton("Y-")
+        self._down = QPushButton("Z-")
+        self._main_layout.addWidget(self._back, *(2, 1))
+        self._main_layout.addWidget(self._down, *(2, 2))
+
+        self.center_layout.addLayout(self._main_layout)
+        self._center_extruder = QPushButton("Center Extruder")
+        self.center_layout.addWidget(self._center_extruder)
+        self.setLayout(self.center_layout)
+
+        self.enable()
+
+    def all_buttons(self) -> List[QPushButton]:
+        return [self._forward,
+                self._up,
+                self._left,
+                self._home,
+                self._right,
+                self._back,
+                self._down,
+                self._center_extruder]
+
+    @property
+    def forward(self) -> QPushButton:
+        return self._forward
+
+    @property
+    def up(self) -> QPushButton:
+        return self._up
+
+    @property
+    def left(self) -> QPushButton:
+        return self._left
+
+    @property
+    def home(self) -> QPushButton:
+        return self._home
+
+    @property
+    def right(self) -> QPushButton:
+        return self._right
+
+    @property
+    def back(self) -> QPushButton:
+        return self._back
+
+    @property
+    def down(self) -> QPushButton:
+        return self._down
+
+    @property
+    def center_extruder(self) -> QPushButton:
+        return self._center_extruder
+
+    def disable(self):
+
+        for button in self.all_buttons():
+            button.blockSignals(True)
+        self.update_background_color(color='rgb(160,160,160)')
+
+    def enable(self):
+
+        for button in self.all_buttons():
+            button.blockSignals(False)
+        self.update_background_color(color='rgb(98,170,252)')
+
+    def update_background_color(self, color: str = 'rgb(160,160,160)'):
+        for button in self.all_buttons():
+            button.setStyleSheet("border-style: outset;"
+                                 "border-width: 2px;"
+                                 "border-radius: 10px;"
+                                 "border-color: beige;"
+                                 "min-width: 2em;"
+                                 "padding: 6px;"
+                                 "color: white;"
+                                 f"background-color: {color};")
 
 
 class StartStopContinueButton(QPushButton):
-    START_MEASUREMENT = ("START", "rgb(0, 255,0 )")
-    STOP_MEASUREMENT = ("STOP", "rgb(255, 0, 0)")
-    CONTINUE_MEASUREMENT = ("CONTINUE", "rgb(0, 0, 255)")
+    class State(enum.Enum):
+        START = 0
+        STOP = 1
+        CONTINUE = 2
 
     def __init__(self):
         super().__init__()
-        self.start_stop_measurement_button = QPushButton()
+        self.state = self.State.START
+        self.update_text()
+        self.pressed.connect(self.change_state)
+        # self.clicked.connect(self.start_thread)
 
-        self._state = self.START_MEASUREMENT
+    def update_text(self):
 
-        self.start_stop_measurement_button.setText(self.state_text)
-        self.start_stop_measurement_button.setStyleSheet(f"background-color:  {self.state_color} ;")
-        self.start_stop_measurement_button.clicked.connect(self.change_text)
+        print(f"Button state: {self.state}")
+        STATE_MAPPING = {
+            self.State.START: {"color": "rgb(40,200,30)", "text": "START"},
+            self.State.STOP: {"color": "rgb(200,40,30)", "text": "STOP"},
+            self.State.CONTINUE: {"color": "rgb(0,0,255)", "text": "CONTINUE"},
+        }
 
-    @property
-    def state_text(self):
-        return self._state[0]
+        self.setText(STATE_MAPPING[self.state]["text"])
+        self.setStyleSheet(
+            "border-style: outset;"
+            "border-width: 2px;"
+            "border-radius: 10px;"
+            "border-color: beige;"
+            "min-width: 10em;"
+            "padding: 6px;"
+            f"background-color: {STATE_MAPPING[self.state]['color']};"
+            "color : beige "
 
-    @property
-    def state_color(self):
-        return self._state[1]
+        )
 
-    def set_state(self, new_state):
-        self._state = new_state
-        self.start_stop_measurement_button.setText(self.state_text)
-        self.start_stop_measurement_button.setStyleSheet(f"background-color:  {self.state_color} ;")
+    def change_state(self):
+        if self.state == StartStopContinueButton.State.START:
+            self.state = StartStopContinueButton.State.STOP
 
-    def change_text(self):
+        # elif self.state == StartStopContinueButton.State.STOP:
+        #     self.state = StartStopContinueButton.State.CONTINUE
+        #
+        # elif self.state == StartStopContinueButton.State.CONTINUE:
+        #     self.state = StartStopContinueButton.State.STOP
 
-        if self.state_text == self.START_MEASUREMENT[0]:
-            self.set_state(self.STOP_MEASUREMENT)
-        elif self.state_text == self.STOP_MEASUREMENT[0]:
-            self.set_state(self.CONTINUE_MEASUREMENT)
         else:
-            self.set_state(self.START_MEASUREMENT)
-
-    @property
-    def clicked(self):
-        return self.start_stop_measurement_button.clicked
-
-    @property
-    def connect(self):
-        return self.connect()
+            self.state = StartStopContinueButton.State.START
+        self.update_text()

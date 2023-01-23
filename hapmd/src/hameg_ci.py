@@ -4,20 +4,17 @@ from hapmd.src.hameg3010.hameg3010device import Hameg3010Device
 from hapmd.src.hameg3010.hameg3010device_mock import Hameg3010DeviceMock
 
 
-#
-# from hameg3010.device import Device
-
-
 def get_level(
     device: Union[Hameg3010Device, Hameg3010DeviceMock],
     frequency: int,
     measurement_time: int = 1,
-    debug=False,
 ) -> float:
     device.send_await_resp(f"rmode:mtime {measurement_time}")
     device.send_await_resp(f"rmode:frequency {frequency}")
-    if not debug:
+
+    if isinstance(device, Hameg3010DeviceMock):
         time.sleep(2)
+
     level_raw: str = device.send_await_resp("rmode:level?")[1][2:-1]
     level = level_raw[level_raw.find(",") + 1 :]
     value = float(level)

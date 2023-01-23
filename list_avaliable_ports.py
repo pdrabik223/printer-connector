@@ -1,5 +1,5 @@
 import serial.tools.list_ports
-from device_connector.marlin_device import MarlinDevice
+from printer_device_connector.marlin_device import MarlinDevice
 
 from time import sleep
 

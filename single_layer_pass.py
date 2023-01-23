@@ -4,8 +4,8 @@ import matplotlib.pyplot as plt
 
 from time import sleep
 
-from device_connector.prusa_device import PrusaDevice
-from device_connector.marlin_device import MarlinDevice
+from printer_device_connector.prusa_device import PrusaDevice
+from printer_device_connector.marlin_device import MarlinDevice
 
 from pass_generators.simple_pass import simple_pass, f_range
 
