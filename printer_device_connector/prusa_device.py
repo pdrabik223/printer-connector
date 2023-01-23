@@ -113,10 +113,13 @@ class PrusaDevice(Device):
             command += "\n"
 
         self._device.write(bytearray(command, "utf-8"))
+
         if "G1" in command:
+            self.set_current_position_from_string(command)
             time.sleep(5)
 
         elif "G28" in command:
+            self.current_position.from_tuple((0, 0, 0))
             time.sleep(30)
 
         resp = ""

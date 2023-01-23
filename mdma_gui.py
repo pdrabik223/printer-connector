@@ -95,17 +95,54 @@ class MainWindow(QMainWindow):
         self._central_layout.addLayout(self._left_wing)
         self._central_layout.addLayout(self._right_wing)
 
+        if DEBUG_MODE:
+            self.printer: PrinterDeviceMock = PrinterDeviceMock.connect_on_port("COM5")
+        else:
+            self.printer: MarlinDevice = MarlinDevice.connect_on_port("COM5")
+
+        self.analyzer = set_up_hamed_device(debug=DEBUG_MODE)
+
         widget = QWidget()
         widget.setLayout(self._central_layout)
         self.setCentralWidget(widget)
 
     def move_extruder(self, direction: PrinterHeadPositionController.Direction):
-        print(f"moving extruder: {direction}")
-        # current_position = self.printer.current_position()
-        # if direction == PrinterHeadPositionController.Direction.UP:
-        #     new_position = current_position
+        print(f"moving extruder: {direction}, current position: {self.printer.current_position.to_tuple()}")
 
-        # self.printer.move_to(new_position)
+        new_position = self.printer.current_position
+
+        if direction == PrinterHeadPositionController.Direction.UP:
+            new_position.z += 1
+
+        elif direction == PrinterHeadPositionController.Direction.DOWN:
+            new_position.z -= 1
+
+        elif direction == PrinterHeadPositionController.Direction.RIGHT:
+            new_position.x += 1
+
+        elif direction == PrinterHeadPositionController.Direction.LEFT:
+            new_position.x -= 1
+
+        elif direction == PrinterHeadPositionController.Direction.FORWARD:
+            new_position.y += 1
+
+        elif direction == PrinterHeadPositionController.Direction.BACK:
+            new_position.y -= 1
+
+        elif direction == PrinterHeadPositionController.Direction.HOME:
+            self.printer.send_and_await("G28")
+            return
+        elif direction == PrinterHeadPositionController.Direction.CENTER:
+            self.printer.send_and_await(
+                f"G1 X {self.printer.x_size / 2} Y {self.printer.y_size / 2} Z {self.printer.y_size / 2}")
+            return
+
+        # if new_position == self.printer.current_position:
+        #     return
+
+        self.printer.send_and_await(
+            f"G1 X {new_position.x / 2} Y {new_position.y / 2} Z {new_position.z / 2}")
+        print(f"new position: {self.printer.current_position.to_tuple()}")
 
     def add_plots(self) -> None:
         def helper(plot):
@@ -173,13 +210,6 @@ class MainWindow(QMainWindow):
         self.path_3d_plot_canvas.draw()
         self.measurements_plot_canvas.draw()
 
-        if DEBUG_MODE:
-            printer: PrinterDeviceMock = PrinterDeviceMock.connect_on_port("COM5")
-        else:
-            printer: MarlinDevice = MarlinDevice.connect_on_port("COM5")
-
-        self.analyzer = set_up_hamed_device(debug=DEBUG_MODE)
-
         print("startup procedure")
 
         self.thread = threading.Thread(
@@ -187,7 +217,7 @@ class MainWindow(QMainWindow):
             args=(
                 self,
                 path,
-                printer,
+                self.printer,
                 self.analyzer,
                 antenna_offset,
                 printer_size,
