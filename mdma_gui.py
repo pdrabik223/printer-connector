@@ -1,32 +1,20 @@
 import threading
-from time import sleep
-from random import random
 from typing import Union
 
 from printer_device_connector.device_mock import PrinterDeviceMock
 from printer_device_connector.marlin_device import MarlinDevice
-from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QIntValidator
 from PyQt6.QtWidgets import (
     QApplication,
     QWidget,
     QMainWindow,
-    QPushButton,
     QVBoxLayout,
     QHBoxLayout,
-    QLabel,
-    QInputDialog,
-    QLineEdit,
-    QDialog,
-    QGridLayout,
 )
 import sys
 
 from gui_tools.gui_buttons import PrinterHeadPositionController, StartStopContinueButton
 from gui_tools.gui_plots import *
-from hapmd.src.hameg3010.hameg3010device import Hameg3010Device
-from hapmd.src.hameg3010.hameg3010device_mock import Hameg3010DeviceMock
-from hapmd.src.hameg_ci import set_up_hamed_device, get_level
+from hapmd.src.hameg_ci import set_up_hamed_device
 from pass_generators.scan_loop import main_loop
 
 DEBUG_MODE = True
@@ -138,9 +126,6 @@ class MainWindow(QMainWindow):
                 f"G1 X {self.printer.x_size / 2} Y {self.printer.y_size / 2} Z {self.printer.current_position.z}")
             print(f"new position: {self.printer.current_position.to_tuple()}")
             return
-
-        # if new_position == self.printer.current_position:
-        #     return
 
         self.printer.send_and_await(
             f"G1 X {new_position.x} Y {new_position.y} Z {new_position.z}")

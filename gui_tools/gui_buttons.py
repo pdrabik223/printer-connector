@@ -1,6 +1,21 @@
 import enum
 from typing import List
 
+from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QIntValidator
+from PyQt6.QtWidgets import (
+    QApplication,
+    QWidget,
+    QMainWindow,
+    QPushButton,
+    QVBoxLayout,
+    QHBoxLayout,
+    QLabel,
+    QInputDialog,
+    QLineEdit,
+    QDialog, QMessageBox
+)
+
 from PyQt6.QtWidgets import QPushButton, QGridLayout, QWidget, QVBoxLayout
 
 
@@ -162,3 +177,17 @@ class StartStopContinueButton(QPushButton):
         else:
             self.state = StartStopContinueButton.State.START
         self.update_text()
+
+
+class TwoParamInput(QWidget):
+    def __init__(self):
+        super().__init__()
+
+
+        self.input_a = QLineEdit()
+        self.input_a.setValidator(QIntValidator())
+        self.input_a.setMaxLength(3)
+        self.input_a.setMaximumWidth(50)
+        self.input_a.setText("10")
+        self.input_a.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        # self.e1.editingFinished.connect(self.update_graphs)
