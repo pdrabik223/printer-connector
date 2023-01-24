@@ -10,13 +10,13 @@ from hapmd.src.hameg_ci import get_level
 
 
 def main_loop(
-    window: "MainWindow",
-    path: List[Point],
-    printer_handle: Union[MarlinDevice, PrusaDevice, PrinterDeviceMock],
-    hameg_handle: Union[Hameg3010Device, Hameg3010DeviceMock],
-    antenna_offset: Tuple[float, float, float],
-    printer_size: Tuple[float, float, float],
-    antenna_measurement_radius: float,
+        window: "MainWindow",
+        path: List[Point],
+        printer_handle: Union[MarlinDevice, PrusaDevice, PrinterDeviceMock],
+        hameg_handle: Union[Hameg3010Device, Hameg3010DeviceMock],
+        antenna_offset: Tuple[float, float, float],
+        printer_size: Tuple[float, float, float],
+        antenna_measurement_radius: float,
 ):
     printer_handle.startup_procedure()
     print("Measurement loop ")
@@ -35,7 +35,7 @@ def main_loop(
             return
 
         print("Scanning...")
-        scan_val = get_level(hameg_handle, 2.622 * (10**9), 1)
+        scan_val = get_level(hameg_handle, 2.622 * (10 ** 9), 1)
 
         print(f"\tmeasurement:{scan_val}")
         measurement.append(

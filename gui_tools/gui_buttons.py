@@ -1,5 +1,5 @@
 import enum
-from typing import List
+from typing import List, Tuple, Callable
 
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QIntValidator
@@ -17,6 +17,9 @@ from PyQt6.QtWidgets import (
 )
 
 from PyQt6.QtWidgets import QPushButton, QGridLayout, QWidget, QVBoxLayout
+
+CYAN_BLUE = "rgb(98,170,252)"
+GRAY = "rgb(160,160,160)"
 
 
 class PrinterHeadPositionController(QWidget):
@@ -109,15 +112,15 @@ class PrinterHeadPositionController(QWidget):
 
         for button in self.all_buttons():
             button.blockSignals(True)
-        self.update_background_color(color='rgb(160,160,160)')
+        self.update_background_color(color=GRAY)
 
     def enable(self):
 
         for button in self.all_buttons():
             button.blockSignals(False)
-        self.update_background_color(color='rgb(98,170,252)')
+        self.update_background_color(color=CYAN_BLUE)
 
-    def update_background_color(self, color: str = 'rgb(160,160,160)'):
+    def update_background_color(self, color: str = GRAY):
         for button in self.all_buttons():
             button.setStyleSheet("border-style: outset;"
                                  "border-width: 2px;"
@@ -180,14 +183,63 @@ class StartStopContinueButton(QPushButton):
 
 
 class TwoParamInput(QWidget):
-    def __init__(self):
+    def __init__(self, label_a: str, label_b: str, val_a: int = 50, val_b: int = 50):
         super().__init__()
+        self._main_layout = QHBoxLayout()
 
-
+        self.input_label_a = QLabel(label_a)
         self.input_a = QLineEdit()
         self.input_a.setValidator(QIntValidator())
         self.input_a.setMaxLength(3)
-        self.input_a.setMaximumWidth(50)
-        self.input_a.setText("10")
+        self.input_a.setMaximumWidth(38)
+        self.input_a.setText(str(val_a))
         self.input_a.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        # self.e1.editingFinished.connect(self.update_graphs)
+
+        self.input_label_b = QLabel(label_b)
+        self.input_b = QLineEdit()
+        self.input_b.setValidator(QIntValidator())
+        self.input_b.setMaxLength(3)
+        self.input_b.setMaximumWidth(38)
+        self.input_b.setText(str(val_b))
+        self.input_b.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self._main_layout.addWidget(self.input_label_a)
+        self._main_layout.addWidget(self.input_a)
+
+        self._main_layout.addWidget(self.input_label_b)
+        self._main_layout.addWidget(self.input_b)
+
+        self.setLayout(self._main_layout)
+
+    def get_vals(self) -> Tuple[int, int]:
+        return int(self.input_a.text()), int(self.input_b.text())
+
+    def on_editing_finished_connect(self, function: Callable):
+        self.input_a.editingFinished.connect(function)
+        self.input_b.editingFinished.connect(function)
+
+
+class RecalculatePath(QPushButton):
+
+    def __init__(self):
+        super().__init__()
+        self.setText("Recalculate path")
+        self.update_background_color()
+
+    def disable(self):
+        self.blockSignals(True)
+        self.update_background_color(color=GRAY)
+
+    def enable(self):
+        self.blockSignals(False)
+        self.update_background_color(color=CYAN_BLUE)
+
+    def update_background_color(self, color: str = CYAN_BLUE):
+        self.setStyleSheet("border-style: outset;"
+                           "border-width: 2px;"
+                           "border-radius: 10px;"
+                           "border-color: beige;"
+                           "min-width: 2em;"
+                           "padding: 6px;"
+                           "color: white;"
+                           f"background-color: {color};")

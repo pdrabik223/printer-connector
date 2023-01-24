@@ -9,10 +9,11 @@ from PyQt6.QtWidgets import (
     QMainWindow,
     QVBoxLayout,
     QHBoxLayout,
+    QPushButton,
 )
 import sys
 
-from gui_tools.gui_buttons import PrinterHeadPositionController, StartStopContinueButton
+from gui_tools.gui_buttons import PrinterHeadPositionController, StartStopContinueButton, TwoParamInput, RecalculatePath
 from gui_tools.gui_plots import *
 from hapmd.src.hameg_ci import set_up_hamed_device
 from pass_generators.scan_loop import main_loop
@@ -23,13 +24,26 @@ DEBUG_MODE = True
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self._measurements_plot_canvas = None
-        self._path_3d_plot_canvas = None
-        self._path_2d_plot_canvas = None
+        self.innit_ui()
 
         self.thread = None
         self.printer: Union[MarlinDevice, PrusaDevice, PrinterDeviceMock] = None
         self.analyzer = None
+
+        self.measurement_path = None
+
+        if DEBUG_MODE:
+            self.printer: PrinterDeviceMock = PrinterDeviceMock.connect_on_port("COM5")
+        else:
+            self.printer: MarlinDevice = MarlinDevice.connect_on_port("COM5")
+
+        self.analyzer = set_up_hamed_device(debug=DEBUG_MODE)
+
+    def innit_ui(self):
+
+        self._measurements_plot_canvas = None
+        self._path_plot_canvas = None
+        self._path_2d_plot_canvas = None
 
         self.setWindowTitle("MDMA gui")
         self._left_wing = QVBoxLayout()
@@ -67,8 +81,19 @@ class MainWindow(QMainWindow):
 
         self.add_plots()
 
-        self.start_stop_measurement_button = StartStopContinueButton()
+        self.path_generation_position = TwoParamInput("x:", "y:")
+        self.path_generation_size = TwoParamInput("width:", "height:")
 
+        self.path_generation_position.on_editing_finished_connect(self.update_path)
+        self.path_generation_size.on_editing_finished_connect(self.update_path)
+
+        self._left_wing.addWidget(self.path_generation_position)
+        self._left_wing.addWidget(self.path_generation_size)
+
+        self.recalculate_path = RecalculatePath()
+        self._left_wing.addWidget(self.recalculate_path)
+
+        self.start_stop_measurement_button = StartStopContinueButton()
         self.start_stop_measurement_button.pressed.connect(self.start_thread)
 
         self._left_wing.addWidget(self.start_stop_measurement_button)
@@ -83,16 +108,14 @@ class MainWindow(QMainWindow):
         self._central_layout.addLayout(self._left_wing)
         self._central_layout.addLayout(self._right_wing)
 
-        if DEBUG_MODE:
-            self.printer: PrinterDeviceMock = PrinterDeviceMock.connect_on_port("COM5")
-        else:
-            self.printer: MarlinDevice = MarlinDevice.connect_on_port("COM5")
-
-        self.analyzer = set_up_hamed_device(debug=DEBUG_MODE)
-
         widget = QWidget()
         widget.setLayout(self._central_layout)
         self.setCentralWidget(widget)
+
+    def update_path(self):
+
+        print(self.path_generation_position.get_vals())
+        print(self.path_generation_size.get_vals())
 
     def move_extruder(self, direction: PrinterHeadPositionController.Direction):
         print(f"moving extruder: {direction}, current position: {self.printer.current_position.to_tuple()}")
@@ -122,8 +145,14 @@ class MainWindow(QMainWindow):
             print(f"new position: {self.printer.current_position.to_tuple()}")
             return
         elif direction == PrinterHeadPositionController.Direction.CENTER:
+            if self.printer.current_position.z < 10:
+                new_position.z = 10
+                self.printer.send_and_await(
+                    f"G1 X {self.printer.current_position.x} Y {self.printer.current_position.y} Z {new_position.z}")
+
             self.printer.send_and_await(
-                f"G1 X {self.printer.x_size / 2} Y {self.printer.y_size / 2} Z {self.printer.current_position.z}")
+                f"G1 X {self.printer.x_size / 2} Y {self.printer.y_size / 2} Z {new_position.z}")
+
             print(f"new position: {self.printer.current_position.to_tuple()}")
             return
 
@@ -139,8 +168,8 @@ class MainWindow(QMainWindow):
             # toolbar = NavigationToolbar(plot, self)
             # self._graphs_settings_layout.addWidget(toolbar)
 
-        self._path_3d_plot_canvas = PathPlotCanvas()
-        helper(self._path_3d_plot_canvas)
+        self._path_plot_canvas = PathPlotCanvas()
+        helper(self._path_plot_canvas)
 
         # self._path_2d_plot_canvas = Path2DPlotCanvas()
         # helper(self._path_2d_plot_canvas)
@@ -149,8 +178,8 @@ class MainWindow(QMainWindow):
         helper(self._measurements_plot_canvas)
 
     @property
-    def path_3d_plot_canvas(self) -> PathPlotCanvas:
-        return self._path_3d_plot_canvas
+    def path_plot_canvas(self) -> PathPlotCanvas:
+        return self._path_plot_canvas
 
     @property
     def measurements_plot_canvas(self) -> MeasurementsPlotCanvas:
@@ -170,9 +199,11 @@ class MainWindow(QMainWindow):
             print("thread is closed")
             self.thread = None
             self.printer_head_controller.enable()
+            self.recalculate_path.enable()
             return
 
         self.printer_head_controller.disable()
+        self.recalculate_path.disable()
 
         printer_size = (80, 80, 80)
         antenna_offset = (5, 52, 0)
@@ -186,7 +217,7 @@ class MainWindow(QMainWindow):
             pass_height=pass_height,
         )
 
-        self.path_3d_plot_canvas.plot_data(
+        self.path_plot_canvas.plot_data(
             path,
             printer_boundaries=printer_size,
             antenna_offset=antenna_offset,
@@ -195,7 +226,7 @@ class MainWindow(QMainWindow):
 
         self.measurements_plot_canvas.plot_data(path, measurements=[])
 
-        self.path_3d_plot_canvas.draw()
+        self.path_plot_canvas.draw()
         self.measurements_plot_canvas.draw()
 
         print("startup procedure")
