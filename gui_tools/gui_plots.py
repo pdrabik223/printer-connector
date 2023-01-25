@@ -1,11 +1,12 @@
 import numpy as np
+import pandas as pd
 from matplotlib import pyplot as plt
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 
 import matplotlib
-from typing import Tuple, List, Optional
+from typing import Tuple, List, Optional, Dict
 
 from printer_device_connector.prusa_device import PrusaDevice
 from pass_generators.simple_pass import simple_pass_3d
@@ -13,6 +14,7 @@ from pass_generators.simple_pass import simple_pass_3d
 matplotlib.use("Qt5Agg")
 
 Point = Tuple[float, float, float]
+
 
 class PathPlotCanvas(FigureCanvas):
     def __init__(self, parent=None, width=9, height=5, dpi=90):
@@ -110,14 +112,17 @@ class MeasurementsPlotCanvas(FigureCanvas):
     def plot_data(
             self,
             path: List[Tuple[float, float, float]],
-            measurements: List[Tuple[float, float, float, float]],
+            measurements: Optional[Dict[str, list]],
     ):
         self.axes.cla()
+
         no_bins_x = np.unique([x for x, _, _ in path])
         no_bins_y = np.unique([y for _, y, _ in path])
 
-        values = [m for _, _, _, m in measurements]
-
+        if measurements is not None:
+            values = measurements['m']
+        else:
+            values = []
         filler = (self.min + self.max) / 2
 
         val = []

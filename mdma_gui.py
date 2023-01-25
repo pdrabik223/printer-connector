@@ -1,5 +1,9 @@
+import os
 import threading
-from typing import Union
+from tkinter.filedialog import asksaveasfile
+from typing import Union, Dict
+
+from PyQt6.uic.properties import QtGui
 
 from printer_device_connector.device_mock import PrinterDeviceMock
 from printer_device_connector.marlin_device import MarlinDevice
@@ -9,14 +13,24 @@ from PyQt6.QtWidgets import (
     QMainWindow,
     QVBoxLayout,
     QHBoxLayout,
-    QPushButton,
+    QPushButton, QFileDialog,
 )
 import sys
+import pandas as pd
 
 from gui_tools.gui_buttons import PrinterHeadPositionController, StartStopContinueButton, TwoParamInput, RecalculatePath
 from gui_tools.gui_plots import *
 from hapmd.src.hameg_ci import set_up_hamed_device
-from pass_generators.scan_loop import main_loop
+
+from typing import List, Tuple, Union
+
+from printer_device_connector.device_mock import PrinterDeviceMock
+from printer_device_connector.marlin_device import MarlinDevice
+from printer_device_connector.prusa_device import PrusaDevice
+from gui_tools.gui_plots import Point
+from hapmd.src.hameg3010.hameg3010device import Hameg3010Device
+from hapmd.src.hameg3010.hameg3010device_mock import Hameg3010DeviceMock
+from hapmd.src.hameg_ci import get_level
 
 DEBUG_MODE = True
 
@@ -24,6 +38,7 @@ DEBUG_MODE = True
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
+        self.measurement = None
         self.innit_ui()
 
         self.path = None
@@ -92,6 +107,10 @@ class MainWindow(QMainWindow):
         self.recalculate_path = RecalculatePath()
         self.recalculate_path.pressed.connect(self.update_path)
         self._left_wing.addWidget(self.recalculate_path)
+
+        self.save_data_btn = QPushButton("Save data")
+        self.save_data_btn.pressed.connect(self.save_data)
+        self._left_wing.addWidget(self.save_data_btn)
 
         self.start_stop_measurement_button = StartStopContinueButton()
         self.start_stop_measurement_button.pressed.connect(self.start_thread)
@@ -185,6 +204,22 @@ class MainWindow(QMainWindow):
 
         print(f"new position: {self.printer.current_position.to_tuple()}")
 
+    def save_data(self):
+        if self.measurement is None:
+            print("can not save to file, path is empty")
+            return
+
+        measurement = pd.DataFrame(self.measurement)
+
+        fname = QFileDialog.getSaveFileName(
+            self,
+            "Save data",
+            os.getcwd(),
+            "All Files (*);;CSV File (*.csv);;Text (*.txt)",
+        )
+        print(fname)
+        measurement.to_csv(fname[0])
+
     def add_plots(self) -> None:
         def helper(plot):
             self._graphs_layout.addWidget(plot)
@@ -210,7 +245,6 @@ class MainWindow(QMainWindow):
         return self._measurements_plot_canvas
 
     def check_for_stop(self):
-
         return (
                 self.start_stop_measurement_button.state
                 != StartStopContinueButton.State.STOP
@@ -236,7 +270,7 @@ class MainWindow(QMainWindow):
         self.printer_head_controller.disable()
         self.recalculate_path.disable()
 
-        self.measurements_plot_canvas.plot_data(self.path, measurements=[])
+        self.measurements_plot_canvas.plot_data(self.path, None)
 
         self.path_plot_canvas.draw()
         self.measurements_plot_canvas.draw()
@@ -244,9 +278,8 @@ class MainWindow(QMainWindow):
         print("startup procedure")
 
         self.thread = threading.Thread(
-            target=main_loop,
+            target=self.main_loop,
             args=(
-                self,
                 self.path,
                 self.printer,
                 self.analyzer,
@@ -256,6 +289,66 @@ class MainWindow(QMainWindow):
             ),
         )
         self.thread.start()
+
+    def main_loop(
+            self,
+            path: List[Point],
+            printer_handle: Union[MarlinDevice, PrusaDevice, PrinterDeviceMock],
+            analyzer_handle: Union[Hameg3010Device, Hameg3010DeviceMock],
+            antenna_offset: Tuple[float, float, float],
+            printer_size: Tuple[float, float, float],
+            antenna_measurement_radius: float,
+    ):
+        printer_handle.startup_procedure()
+        print("Measurement loop ")
+        self.measurement: Dict[str, list] = {'x': [],
+                                             'y': [],
+                                             'z': [],
+                                             'm': []}
+
+        for point in path:
+            x, y, z = point
+
+            print("Moving...")
+            x = round(x, 3)
+            y = round(y, 3)
+            z = round(z, 3)
+            printer_handle.send_and_await(f"G1 X{x} Y{y} Z{z}")
+            print(f"\tx:{x}\ty:{y}\tz:{z}")
+
+            if self.check_for_stop():
+                return
+
+            print("Scanning...")
+            scan_val = get_level(analyzer_handle, 2.622 * (10 ** 9), 1)
+
+            print(f"\tmeasurement:{scan_val}")
+
+            self.measurement['x'].append(x - antenna_offset[0])
+            self.measurement['y'].append(y - antenna_offset[1])
+            self.measurement['z'].append(z - antenna_offset[2])
+            self.measurement['m'].append(scan_val)
+
+            if self.check_for_stop():
+                return
+
+            print("Updating plots...")
+
+            self.path_plot_canvas.plot_data(
+                path,
+                printer_boundaries=printer_size,
+                antenna_offset=antenna_offset,
+                antenna_measurement_radius=antenna_measurement_radius,
+                highlight=(x, y, z),
+            )
+
+            self.measurements_plot_canvas.plot_data(path, self.measurement)
+
+            self.path_plot_canvas.draw()
+            self.measurements_plot_canvas.draw()
+
+            if self.check_for_stop():
+                return
 
 
 if __name__ == "__main__":
