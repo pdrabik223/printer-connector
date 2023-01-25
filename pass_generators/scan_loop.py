@@ -52,7 +52,7 @@ def main_loop(
 
         print("Updating plots...")
 
-        window.path_3d_plot_canvas.plot_data(
+        window.path_plot_canvas.plot_data(
             path,
             printer_boundaries=printer_size,
             antenna_offset=antenna_offset,
@@ -62,7 +62,7 @@ def main_loop(
 
         window.measurements_plot_canvas.plot_data(path, measurement)
 
-        window.path_3d_plot_canvas.draw()
+        window.path_plot_canvas.draw()
         window.measurements_plot_canvas.draw()
 
         if window.check_for_stop():

@@ -155,27 +155,31 @@ class StartStopContinueButton(QPushButton):
         }
 
         self.setText(STATE_MAPPING[self.state]["text"])
-        self.setStyleSheet(
-            "border-style: outset;"
-            "border-width: 2px;"
-            "border-radius: 10px;"
-            "border-color: beige;"
-            "min-width: 10em;"
-            "padding: 6px;"
-            f"background-color: {STATE_MAPPING[self.state]['color']};"
-            "color : beige "
+        self.update_background_color(STATE_MAPPING[self.state]['color'])
 
-        )
+    def disable(self):
+        self.blockSignals(True)
+        self.update_background_color(color=GRAY)
+
+    def enable(self):
+
+        self.blockSignals(False)
+        self.update_background_color(color=CYAN_BLUE)
+
+    def update_background_color(self, color: str = GRAY):
+
+        self.setStyleSheet("border-style: outset;"
+                           "border-width: 2px;"
+                           "border-radius: 10px;"
+                           "border-color: beige;"
+                           "min-width: 2em;"
+                           "padding: 6px;"
+                           "color: white;"
+                           f"background-color: {color};")
 
     def change_state(self):
         if self.state == StartStopContinueButton.State.START:
             self.state = StartStopContinueButton.State.STOP
-
-        # elif self.state == StartStopContinueButton.State.STOP:
-        #     self.state = StartStopContinueButton.State.CONTINUE
-        #
-        # elif self.state == StartStopContinueButton.State.CONTINUE:
-        #     self.state = StartStopContinueButton.State.STOP
 
         else:
             self.state = StartStopContinueButton.State.START

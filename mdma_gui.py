@@ -26,11 +26,13 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.innit_ui()
 
+        self.path = None
         self.thread = None
         self.printer: Union[MarlinDevice, PrusaDevice, PrinterDeviceMock] = None
-        self.analyzer = None
 
-        self.measurement_path = None
+        self.antenna_offset = (5, 10, 0)
+        self.antenna_measurement_radius = 2
+        self.pass_height = 4
 
         if DEBUG_MODE:
             self.printer: PrinterDeviceMock = PrinterDeviceMock.connect_on_port("COM5")
@@ -84,13 +86,11 @@ class MainWindow(QMainWindow):
         self.path_generation_position = TwoParamInput("x:", "y:")
         self.path_generation_size = TwoParamInput("width:", "height:")
 
-        self.path_generation_position.on_editing_finished_connect(self.update_path)
-        self.path_generation_size.on_editing_finished_connect(self.update_path)
-
         self._left_wing.addWidget(self.path_generation_position)
         self._left_wing.addWidget(self.path_generation_size)
 
         self.recalculate_path = RecalculatePath()
+        self.recalculate_path.pressed.connect(self.update_path)
         self._left_wing.addWidget(self.recalculate_path)
 
         self.start_stop_measurement_button = StartStopContinueButton()
@@ -116,6 +116,30 @@ class MainWindow(QMainWindow):
 
         print(self.path_generation_position.get_vals())
         print(self.path_generation_size.get_vals())
+
+        path_x = np.min((self.printer.x_size,
+                         self.path_generation_position.get_vals()[0] + self.path_generation_size.get_vals()[0]))
+
+        path_y = np.min((self.printer.y_size,
+                         self.path_generation_position.get_vals()[1] + self.path_generation_size.get_vals()[1]))
+
+        printer_size = (path_x, path_y, self.printer.z_size)
+
+        self.path, no_bins = simple_pass_3d(
+            shift_from_0_0=self.path_generation_position.get_vals(),
+            printer_size=printer_size,
+            antenna_measurement_radius=self.antenna_measurement_radius,
+            antenna_offset=self.antenna_offset,
+            pass_height=self.pass_height,
+        )
+
+        self.path_plot_canvas.plot_data(
+            self.path,
+            printer_boundaries=printer_size,
+            antenna_offset=self.antenna_offset,
+            antenna_measurement_radius=self.antenna_measurement_radius,
+        )
+        self.path_plot_canvas.draw()
 
     def move_extruder(self, direction: PrinterHeadPositionController.Direction):
         print(f"moving extruder: {direction}, current position: {self.printer.current_position.to_tuple()}")
@@ -202,29 +226,17 @@ class MainWindow(QMainWindow):
             self.recalculate_path.enable()
             return
 
+        printer_size = (self.printer.x_size, self.printer.y_size, self.printer.z_size)
+
+        self.update_path()
+        if len(self.path) == 0:
+            print("could not perform measurement, path did not generate correctly")
+            return
+
         self.printer_head_controller.disable()
         self.recalculate_path.disable()
 
-        printer_size = (80, 80, 80)
-        antenna_offset = (5, 52, 0)
-        antenna_measurement_radius = 2
-        pass_height = 4
-
-        path, no_bins = simple_pass_3d(
-            printer_size=printer_size,
-            antenna_measurement_radius=antenna_measurement_radius,
-            antenna_offset=antenna_offset,
-            pass_height=pass_height,
-        )
-
-        self.path_plot_canvas.plot_data(
-            path,
-            printer_boundaries=printer_size,
-            antenna_offset=antenna_offset,
-            antenna_measurement_radius=antenna_measurement_radius,
-        )
-
-        self.measurements_plot_canvas.plot_data(path, measurements=[])
+        self.measurements_plot_canvas.plot_data(self.path, measurements=[])
 
         self.path_plot_canvas.draw()
         self.measurements_plot_canvas.draw()
@@ -235,12 +247,12 @@ class MainWindow(QMainWindow):
             target=main_loop,
             args=(
                 self,
-                path,
+                self.path,
                 self.printer,
                 self.analyzer,
-                antenna_offset,
+                self.antenna_offset,
                 printer_size,
-                antenna_measurement_radius,
+                self.antenna_measurement_radius,
             ),
         )
         self.thread.start()
