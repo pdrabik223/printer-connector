@@ -35,8 +35,13 @@ class PathPlotCanvas(FigureCanvas):
             highlight: Optional[Point] = None,
     ):
 
-        x_printer_boundaries = (0, 0, printer_boundaries[0], printer_boundaries[0], 0)
-        y_printer_boundaries = (0, printer_boundaries[1], printer_boundaries[1], 0, 0)
+        max_x = np.max([point[0] for point in path])
+        max_y = np.max([point[1] for point in path])
+        min_x = np.min([point[0] for point in path])
+        min_y = np.min([point[1] for point in path])
+
+        x_printer_boundaries = (min_x, min_x, max_x, max_x, min_x)
+        y_printer_boundaries = (min_y, max_y, max_y, min_y, min_y)
 
         x = [pos[0] for pos in path]
         y = [pos[1] for pos in path]

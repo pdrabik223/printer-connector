@@ -247,3 +247,29 @@ class RecalculatePath(QPushButton):
                            "padding: 6px;"
                            "color: white;"
                            f"background-color: {color};")
+
+class SavaData(QPushButton):
+
+    def __init__(self):
+        super().__init__()
+        self.setText("Save data")
+        self.update_background_color()
+        self.disable()
+    def disable(self):
+        self.blockSignals(True)
+        self.update_background_color(color=GRAY)
+
+    def enable(self):
+        self.blockSignals(False)
+        self.update_background_color(color=CYAN_BLUE)
+
+    def update_background_color(self, color: str = CYAN_BLUE):
+        self.setStyleSheet("border-style: outset;"
+                           "border-width: 2px;"
+                           "border-radius: 10px;"
+                           "border-color: beige;"
+                           "min-width: 2em;"
+                           "padding: 6px;"
+                           "color: white;"
+                           f"background-color: {color};")
+

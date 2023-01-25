@@ -25,6 +25,7 @@ class MarlinDevice(Device):
     _device: Serial  # pyserial connector device
 
     def __init__(self, device: Serial) -> None:
+        super().__init__()
         self._device = device
 
     def __del__(self) -> None:

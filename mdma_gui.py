@@ -18,7 +18,8 @@ from PyQt6.QtWidgets import (
 import sys
 import pandas as pd
 
-from gui_tools.gui_buttons import PrinterHeadPositionController, StartStopContinueButton, TwoParamInput, RecalculatePath
+from gui_tools.gui_buttons import PrinterHeadPositionController, StartStopContinueButton, TwoParamInput, \
+    RecalculatePath, SavaData
 from gui_tools.gui_plots import *
 from hapmd.src.hameg_ci import set_up_hamed_device
 
@@ -49,10 +50,10 @@ class MainWindow(QMainWindow):
         self.antenna_measurement_radius = 2
         self.pass_height = 4
 
-        if DEBUG_MODE:
-            self.printer: PrinterDeviceMock = PrinterDeviceMock.connect_on_port("COM5")
-        else:
-            self.printer: MarlinDevice = MarlinDevice.connect_on_port("COM5")
+        # if DEBUG_MODE:
+        #     self.printer: PrinterDeviceMock = PrinterDeviceMock.connect_on_port("COM5")
+        # else:
+        self.printer: MarlinDevice = MarlinDevice.connect_on_port("COM5")
 
         self.analyzer = set_up_hamed_device(debug=DEBUG_MODE)
 
@@ -108,7 +109,7 @@ class MainWindow(QMainWindow):
         self.recalculate_path.pressed.connect(self.update_path)
         self._left_wing.addWidget(self.recalculate_path)
 
-        self.save_data_btn = QPushButton("Save data")
+        self.save_data_btn = SavaData()
         self.save_data_btn.pressed.connect(self.save_data)
         self._left_wing.addWidget(self.save_data_btn)
 
@@ -215,7 +216,7 @@ class MainWindow(QMainWindow):
             self,
             "Save data",
             os.getcwd(),
-            "All Files (*);;CSV File (*.csv);;Text (*.txt)",
+            "CSV File (*.csv);;All Files (*);;Text (*.txt)",
         )
         print(fname)
         measurement.to_csv(fname[0])
@@ -258,6 +259,7 @@ class MainWindow(QMainWindow):
             self.thread = None
             self.printer_head_controller.enable()
             self.recalculate_path.enable()
+            self.save_data_btn.enable()
             return
 
         printer_size = (self.printer.x_size, self.printer.y_size, self.printer.z_size)
@@ -305,6 +307,22 @@ class MainWindow(QMainWindow):
                                              'y': [],
                                              'z': [],
                                              'm': []}
+
+        max_x = np.max([x for x, _, _ in path])
+        max_y = np.max([y for _, y, _ in path])
+        min_x = np.min([x for x, _, _ in path])
+        min_y = np.min([y for _, y, _ in path])
+
+        print((max_x, max_y, min_x, min_y))
+
+        x_printer_boundaries = (min_x, min_x, max_x, max_x, min_x)
+        y_printer_boundaries = (min_y, max_y, max_y, min_y, min_y)
+
+        z = 10
+
+        for x, y in zip(x_printer_boundaries, y_printer_boundaries):
+            printer_handle.send_and_await(f"G1 X{x} Y{y} Z{z}")
+            print(f"\tx:{x}\ty:{y}\tz:{z}")
 
         for point in path:
             x, y, z = point
