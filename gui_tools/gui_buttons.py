@@ -218,6 +218,11 @@ class TwoParamInput(QWidget):
     def get_vals(self) -> Tuple[int, int]:
         return int(self.input_a.text()), int(self.input_b.text())
 
+    def set_default(self, vals: Tuple[int, int]):
+        self.input_a.setText(str(vals[0]))
+        self.input_b.setText(str(vals[1]))
+
+
     def on_editing_finished_connect(self, function: Callable):
         self.input_a.editingFinished.connect(function)
         self.input_b.editingFinished.connect(function)
@@ -248,6 +253,7 @@ class RecalculatePath(QPushButton):
                            "color: white;"
                            f"background-color: {color};")
 
+
 class SavaData(QPushButton):
 
     def __init__(self):
@@ -255,6 +261,7 @@ class SavaData(QPushButton):
         self.setText("Save data")
         self.update_background_color()
         self.disable()
+
     def disable(self):
         self.blockSignals(True)
         self.update_background_color(color=GRAY)
@@ -272,4 +279,3 @@ class SavaData(QPushButton):
                            "padding: 6px;"
                            "color: white;"
                            f"background-color: {color};")
-

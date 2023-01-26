@@ -30,7 +30,7 @@ class PathPlotCanvas(FigureCanvas):
             self,
             path: List[Point],
             printer_boundaries: Tuple[float, float, float],
-            antenna_offset: Tuple[float, float, float],
+            antenna_offset: Tuple[float, float],
             antenna_measurement_radius: float,
             highlight: Optional[Point] = None,
     ):
@@ -128,6 +128,7 @@ class MeasurementsPlotCanvas(FigureCanvas):
             values = measurements['m']
         else:
             values = []
+
         filler = (self.min + self.max) / 2
 
         val = []

@@ -33,7 +33,8 @@ from hapmd.src.hameg3010.hameg3010device import Hameg3010Device
 from hapmd.src.hameg3010.hameg3010device_mock import Hameg3010DeviceMock
 from hapmd.src.hameg_ci import get_level
 
-DEBUG_MODE = True
+PRINTER_DEBUG_MODE = True
+ANALYZER_DEBUG_MODE = True
 
 
 class MainWindow(QMainWindow):
@@ -46,16 +47,16 @@ class MainWindow(QMainWindow):
         self.thread = None
         self.printer: Union[MarlinDevice, PrusaDevice, PrinterDeviceMock] = None
 
-        self.antenna_offset = (5, 10, 0)
+        self.antenna_offset = (-52, 0, 0)
         self.antenna_measurement_radius = 2
         self.pass_height = 4
 
-        # if DEBUG_MODE:
-        #     self.printer: PrinterDeviceMock = PrinterDeviceMock.connect_on_port("COM5")
-        # else:
-        self.printer: MarlinDevice = MarlinDevice.connect_on_port("COM5")
+        if PRINTER_DEBUG_MODE:
+            self.printer: PrinterDeviceMock = PrinterDeviceMock.connect_on_port("COM5")
+        else:
+            self.printer: MarlinDevice = MarlinDevice.connect_on_port("COM5")
 
-        self.analyzer = set_up_hamed_device(debug=DEBUG_MODE)
+        self.analyzer = set_up_hamed_device(debug=ANALYZER_DEBUG_MODE)
 
     def innit_ui(self):
 
@@ -101,6 +102,13 @@ class MainWindow(QMainWindow):
 
         self.path_generation_position = TwoParamInput("x:", "y:")
         self.path_generation_size = TwoParamInput("width:", "height:")
+        self.antenna_offset_btn = TwoParamInput("x offset:", "y offset:")
+        self.antenna_offset_btn.set_default((0, 52))
+        self.pass_heigth_measurement_radius_btn = TwoParamInput("pass height:", "measurement radius:")
+        self.pass_heigth_measurement_radius_btn.set_default((4, 5))
+
+        self._left_wing.addWidget(self.antenna_offset_btn)
+        self._left_wing.addWidget(self.pass_heigth_measurement_radius_btn)
 
         self._left_wing.addWidget(self.path_generation_position)
         self._left_wing.addWidget(self.path_generation_size)
@@ -134,17 +142,24 @@ class MainWindow(QMainWindow):
 
     def update_path(self):
 
-        print(self.path_generation_position.get_vals())
-        print(self.path_generation_size.get_vals())
+        print(f"path_generation_position: {self.path_generation_position.get_vals()}")
+        print(f"path_generation_size: {self.path_generation_size.get_vals()}")
+
+        print(f"pass_height_measurement_radius_btn: {self.pass_heigth_measurement_radius_btn.get_vals()}")
+        print(f"antenna_offset_btn: {self.antenna_offset_btn.get_vals()}")
 
         path_x = np.min((self.printer.x_size,
-                         self.path_generation_position.get_vals()[0] + self.path_generation_size.get_vals()[0]))
+                         self.path_generation_position.get_vals()[0] + self.path_generation_size.get_vals()[0] -
+                         self.antenna_offset[0]))
 
         path_y = np.min((self.printer.y_size,
-                         self.path_generation_position.get_vals()[1] + self.path_generation_size.get_vals()[1]))
+                         self.path_generation_position.get_vals()[1] + self.path_generation_size.get_vals()[1] -
+                         self.antenna_offset[1]))
 
         printer_size = (path_x, path_y, self.printer.z_size)
 
+        self.antenna_offset = self.antenna_offset_btn.get_vals()
+        self.pass_height, self.antenna_measurement_radius = self.pass_heigth_measurement_radius_btn.get_vals()
         self.path, no_bins = simple_pass_3d(
             shift_from_0_0=self.path_generation_position.get_vals(),
             printer_size=printer_size,
@@ -344,7 +359,7 @@ class MainWindow(QMainWindow):
 
             self.measurement['x'].append(x - antenna_offset[0])
             self.measurement['y'].append(y - antenna_offset[1])
-            self.measurement['z'].append(z - antenna_offset[2])
+            self.measurement['z'].append(z)
             self.measurement['m'].append(scan_val)
 
             if self.check_for_stop():

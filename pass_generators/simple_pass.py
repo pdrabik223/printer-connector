@@ -28,7 +28,7 @@ def f_range(
 
 def simple_pass(
         printer_size: Tuple[float, float, float],
-        antenna_offset: Tuple[float, float, float],
+        antenna_offset: Tuple[float, float],
         antenna_measurement_radius: float,
 ) -> List[Tuple[float, float]]:
     # antenna diameter
@@ -65,7 +65,7 @@ def simple_pass(
 def simple_pass_3d(
         shift_from_0_0: Tuple[float, float],
         printer_size: Tuple[float, float, float],
-        antenna_offset: Tuple[float, float, float],
+        antenna_offset: Tuple[float, float],
         antenna_measurement_radius: float,
         pass_height: float,
 ) -> Tuple[List[Tuple[float, float, float]], Tuple[List[float], List[float]]]:
