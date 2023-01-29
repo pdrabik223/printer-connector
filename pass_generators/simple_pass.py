@@ -71,8 +71,8 @@ def simple_pass_3d(
 ) -> Tuple[List[Tuple[float, float, float]], Tuple[List[float], List[float]]]:
     # antenna diameter
     antenna_d = antenna_measurement_radius * 2
-    x_ps = printer_size[0]
-    y_ps = printer_size[1]
+    x_ps = printer_size[0] + shift_from_0_0[0]
+    y_ps = printer_size[1] + shift_from_0_0[1]
 
     # list of extruder positions when measurement is done``
     # not shifted by antenna offset
@@ -99,9 +99,46 @@ def simple_pass_3d(
         flip = not flip
 
     # shift by antenna offset
-    path = [(x + antenna_offset[0], y + antenna_offset[1]) for x, y in path]
+    path = [(x - antenna_offset[0], y - antenna_offset[1]) for x, y in path]
 
     # erase all positions that collide with boundaries of printer
     path = [(x, y, pass_height) for x, y in path if x <= x_ps and y <= y_ps]
 
     return path, (x_measurements_coords, y_measurements_coords)
+
+
+def simple_pass_3d_for_gui(
+        sample_shift_from_0_0: Tuple[float, float],
+        sample_size: Tuple[float, float, float],
+        antenna_offset: Tuple[float, float],
+        antenna_measurement_radius: float,
+        pass_height: float,
+) -> Tuple[List[Tuple[float, float, float]], List[Tuple[float, float, float]]]:
+    sample_size_x = sample_size[0]
+    sample_size_y = sample_size[1]
+
+    x_measurements_coords = [
+        x
+        for x in f_range(antenna_measurement_radius, sample_size_x, antenna_measurement_radius * 2, include_end=True)
+    ]
+    y_measurements_coords = [
+        y
+        for y in f_range(antenna_measurement_radius, sample_size_y, antenna_measurement_radius * 2, include_end=True)
+    ]
+
+    path = []
+    flip = False
+    for x in x_measurements_coords:
+        flip = not flip
+        if flip:
+            for id in range(0, len(y_measurements_coords), 1):
+                path.append((x, y_measurements_coords[id]))
+        else:
+            for id in range(len(y_measurements_coords) - 1, -1, -1):
+                path.append((x, y_measurements_coords[id]))
+
+    path = [(x + sample_shift_from_0_0[0], y + sample_shift_from_0_0[1], pass_height) for x, y in path]
+
+    antenna_path = [(x + antenna_offset[0], y + antenna_offset[1], z) for x, y, z in path]
+
+    return path, antenna_path
