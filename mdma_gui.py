@@ -34,7 +34,7 @@ from hapmd.src.hameg3010.hameg3010device import Hameg3010Device
 from hapmd.src.hameg3010.hameg3010device_mock import Hameg3010DeviceMock
 from hapmd.src.hameg_ci import get_level
 
-PRINTER_DEBUG_MODE = True
+PRINTER_DEBUG_MODE = False
 ANALYZER_DEBUG_MODE = True
 
 
@@ -54,9 +54,9 @@ class MainWindow(QMainWindow):
         self.pass_height = 4
 
         if PRINTER_DEBUG_MODE:
-            self.printer: PrinterDeviceMock = PrinterDeviceMock.connect_on_port("COM5")
+            self.printer: PrinterDeviceMock = PrinterDeviceMock.connect_on_port("COM69 for all I care")
         else:
-            self.printer: MarlinDevice = MarlinDevice.connect_on_port("COM5")
+            self.printer: PrusaDevice = PrusaDevice.connect_on_port("COM9")
 
         self.analyzer = set_up_hamed_device(debug=ANALYZER_DEBUG_MODE)
 
@@ -274,8 +274,6 @@ class MainWindow(QMainWindow):
             print("thread is closed")
             self.thread = None
             return
-
-        printer_size = (self.printer.x_size, self.printer.y_size, self.printer.z_size)
 
         self.update_path()
         if len(self.path) == 0:
