@@ -93,7 +93,7 @@ class PathPlotCanvas(FigureCanvas):
 
 
 class MeasurementsPlotCanvas(FigureCanvas):
-    def __init__(self, parent=None, width=9, height=5, dpi=90, min=-22, max=-18):
+    def __init__(self, parent=None, width=9, height=5, dpi=90, min=-20.5, max=-19):
         self.fig = Figure(figsize=(width, height), dpi=dpi)
 
         self.axes = self.fig.add_subplot(111)
@@ -105,17 +105,8 @@ class MeasurementsPlotCanvas(FigureCanvas):
             val.append([])
             for _ in range(10):
                 val[-1].append((min + max) / 2)
-
-        cp = self.axes.imshow(
-            val,
-            cmap="seismic",
-            vmin=np.min(val),
-            vmax=np.max(val),
-            interpolation="none",
-        )
-
-        self.cbar = self.fig.colorbar(cp, ax=self.axes, extend="both")
-        self.cbar.minorticks_on()
+        self.cb = None
+        # self.cbar.minorticks_on()
         super(MeasurementsPlotCanvas, self).__init__(self.fig)
 
     def plot_data(
@@ -124,6 +115,7 @@ class MeasurementsPlotCanvas(FigureCanvas):
             measurements: Optional[Dict[str, List[Tuple[float, float, float, float]]]],
     ):
         self.axes.cla()
+
         x_labels = np.unique([x for x, _, _ in path])
         y_labels = np.unique([y for _, y, _ in path])
 
@@ -144,7 +136,12 @@ class MeasurementsPlotCanvas(FigureCanvas):
                 plot_data[x] = {y: m}
             plot_data[x][y] = m
 
-        print(plot_data)
+        if measurements is not None and len(measurements) > 0:
+            min = np.min(measurements['m'])
+            max = np.max(measurements['m'])
+        else:
+            min = filler
+            max = filler
 
         vec_2d = []
         sorted_x = dict(sorted(plot_data.items()))
@@ -156,9 +153,14 @@ class MeasurementsPlotCanvas(FigureCanvas):
 
         vec_2d = np.array(vec_2d).T
 
-        self.axes.imshow(
-            vec_2d, cmap="seismic", vmin=self.min, vmax=self.max, interpolation="none", origin='lower'
+        cp = self.axes.imshow(
+            vec_2d, cmap="Wistia", vmin=min, vmax=max, interpolation="none", origin='lower'
         )
+        if self.cb != None:
+            self.cb.remove()
+
+        self.cb = self.fig.colorbar(cp, ax=self.axes, extend="both")
+
         self.axes.set_xticks(np.arange(len(x_labels)), labels=x_labels)
         self.axes.set_yticks(np.arange(len(y_labels)), labels=y_labels)
         self.axes.set_xlabel("X [arb. units]")

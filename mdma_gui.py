@@ -1,5 +1,6 @@
 import os
 import threading
+import time
 from tkinter.filedialog import asksaveasfile
 from typing import Union, Dict
 
@@ -35,7 +36,7 @@ from hapmd.src.hameg3010.hameg3010device_mock import Hameg3010DeviceMock
 from hapmd.src.hameg_ci import get_level
 
 PRINTER_DEBUG_MODE = False
-ANALYZER_DEBUG_MODE = True
+ANALYZER_DEBUG_MODE = False
 
 
 class MainWindow(QMainWindow):
@@ -56,7 +57,7 @@ class MainWindow(QMainWindow):
         if PRINTER_DEBUG_MODE:
             self.printer: PrinterDeviceMock = PrinterDeviceMock.connect_on_port("COM69 for all I care")
         else:
-            self.printer: PrusaDevice = PrusaDevice.connect_on_port("COM9")
+            self.printer: MarlinDevice = MarlinDevice.connect_on_port("COM5")
 
         self.analyzer = set_up_hamed_device(debug=ANALYZER_DEBUG_MODE)
 
@@ -235,13 +236,13 @@ class MainWindow(QMainWindow):
         def helper(plot):
             self._graphs_layout.addWidget(plot)
 
-            # toolbar = NavigationToolbar(plot, self)
-            # self._graphs_settings_layout.addWidget(toolbar)
+            toolbar = NavigationToolbar(plot, self)
+            self._graphs_settings_layout.addWidget(toolbar)
 
         self._path_plot_canvas = PathPlotCanvas()
         helper(self._path_plot_canvas)
 
-        # self._path_2d_plot_canvas = Path2DPlotCanvas()
+        # self._path_2d_plot_canvas = PathPlotCanvas()
         # helper(self._path_2d_plot_canvas)
 
         self._measurements_plot_canvas = MeasurementsPlotCanvas()
@@ -265,6 +266,7 @@ class MainWindow(QMainWindow):
         self.printer_head_controller.enable()
         self.recalculate_path.enable()
         self.save_data_btn.enable()
+        self.start_stop_measurement_button.change_state()
 
     def start_thread(self):
         if self.thread is not None:
@@ -331,7 +333,11 @@ class MainWindow(QMainWindow):
             printer_handle.send_and_await(f"G1 X{x} Y{y} Z{z}")
             print(f"\tx:{x}\ty:{y}\tz:{z}")
 
-        for point in self.path:
+        total_path_length = len([x for x, _, _ in self.path])
+        elapsed_time = time.time()
+
+        for id, point in enumerate(self.path):
+            start_time = time.time()
             x, y, z = point
 
             print("Moving...")
@@ -345,7 +351,11 @@ class MainWindow(QMainWindow):
                 return
 
             print("Scanning...")
-            scan_val = get_level(analyzer_handle, 2.622 * (10 ** 9), 1)
+            scan_val = get_level(analyzer_handle, 2.622 * (10 ** 9), 2)
+            while scan_val > -18 or scan_val < -21:
+                print(f"\tmeasurement:{scan_val}")
+                print(f"\trepeting measurement")
+                scan_val = get_level(analyzer_handle, 2.622 * (10 ** 9), 2)
 
             print(f"\tmeasurement:{scan_val}")
 
@@ -373,7 +383,10 @@ class MainWindow(QMainWindow):
 
             if self.check_for_stop():
                 return
-
+            print(
+                f"\t Time of measurement: {round(time.time() - start_time, 2)}s, "
+                f"elapsed time: {round((time.time() - elapsed_time) / 60, 2)}min, "
+                f"left time: {round((time.time() - start_time) * (total_path_length - id - 1) / 60, 2)}min")
         self.close_thread()
 
 

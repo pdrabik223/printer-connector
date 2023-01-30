@@ -222,7 +222,6 @@ class TwoParamInput(QWidget):
         self.input_a.setText(str(vals[0]))
         self.input_b.setText(str(vals[1]))
 
-
     def on_editing_finished_connect(self, function: Callable):
         self.input_a.editingFinished.connect(function)
         self.input_b.editingFinished.connect(function)
