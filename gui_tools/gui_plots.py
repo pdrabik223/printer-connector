@@ -29,8 +29,7 @@ class PathPlotCanvas(FigureCanvas):
     def plot_data(
             self,
             path: List[Point],
-            printer_boundaries: Tuple[float, float, float],
-            antenna_offset: Tuple[float, float],
+            antenna_path: List[Point],
             antenna_measurement_radius: float,
             highlight: Optional[Point] = None,
     ):
@@ -46,17 +45,21 @@ class PathPlotCanvas(FigureCanvas):
         x = [pos[0] for pos in path]
         y = [pos[1] for pos in path]
 
-        antenna_x = [pos[0] - antenna_offset[0] for pos in path]
-        antenna_y = [pos[1] - antenna_offset[1] for pos in path]
+        antenna_x = [pos[0] for pos in antenna_path]
+        antenna_y = [pos[1] for pos in antenna_path]
 
         self.axes2.cla()
+
         PathPlotCanvas.plot_measurement_areas(
             antenna_x, antenna_y, self.axes2, antenna_measurement_radius
         )
+
         self.axes2.plot(
             x_printer_boundaries, y_printer_boundaries, color="black", alpha=0.6
         )
+
         self.axes2.plot(x, y)
+
         self.axes2.scatter(x, y, color="red")
 
         if highlight is not None:
@@ -82,7 +85,8 @@ class PathPlotCanvas(FigureCanvas):
         for x, y in zip(x_values, y_values):
             ax.add_patch(plt.Circle((x, y), radius, color=color, alpha=alpha))
 
-    # def highlight(self, point:Point,point_b:P ):
+    def highlight(self, point: Point, point_b: Point):
+        pass
 
     def show(self):
         self.fig.draw()
@@ -117,38 +121,46 @@ class MeasurementsPlotCanvas(FigureCanvas):
     def plot_data(
             self,
             path: List[Tuple[float, float, float]],
-            measurements: Optional[Dict[str, list]],
+            measurements: Optional[Dict[str, List[Tuple[float, float, float, float]]]],
     ):
         self.axes.cla()
-
-        no_bins_x = np.unique([x for x, _, _ in path])
-        no_bins_y = np.unique([y for _, y, _ in path])
-
-        if measurements is not None:
-            values = measurements['m']
-        else:
-            values = []
+        x_labels = np.unique([x for x, _, _ in path])
+        y_labels = np.unique([y for _, y, _ in path])
 
         filler = (self.min + self.max) / 2
 
-        val = []
-        for _ in no_bins_y:
-            val.append([])
-            for _ in no_bins_x:
-                val[-1].append(filler)
+        plot_data: Dict[float, Dict[float, float]] = {}
 
-        k: int = 0
-        for x in range(len(no_bins_x)):
-            for y in range(len(no_bins_y) - 1, -1, -1):
-                if k >= len(values):
-                    break
-                val[y][x] = values[k]
-                k += 1
+        for id, val in enumerate(path):
+            x = val[0]
+            y = val[1]
+            z = val[2]
+            if measurements is not None and id < len(measurements['m']):
+                m = measurements['m'][id]
+            else:
+                m = filler
+
+            if x not in plot_data.keys():
+                plot_data[x] = {y: m}
+            plot_data[x][y] = m
+
+        print(plot_data)
+
+        vec_2d = []
+        sorted_x = dict(sorted(plot_data.items()))
+        for x in sorted_x:
+            vec_2d.append([])
+            sorted_y = dict(sorted(plot_data[x].items()))
+            for y in sorted_y:
+                vec_2d[-1].append(plot_data[x][y])
+
+        vec_2d = np.array(vec_2d).T
 
         self.axes.imshow(
-            val, cmap="seismic", vmin=self.min, vmax=self.max, interpolation="none"
+            vec_2d, cmap="seismic", vmin=self.min, vmax=self.max, interpolation="none", origin='lower'
         )
-
+        self.axes.set_xticks(np.arange(len(x_labels)), labels=x_labels)
+        self.axes.set_yticks(np.arange(len(y_labels)), labels=y_labels)
         self.axes.set_xlabel("X [arb. units]")
         self.axes.set_ylabel("Y [arb. units]")
         self.axes.set_title("Some thing")

@@ -135,11 +135,17 @@ class MarlinDevice(Device):
             str: response from device
         """
 
+        if 'F' not in command:
+            command += f' F {self.speed}'
+
         command = MarlinDevice.no_line(command)
         command = MarlinDevice.cs_line(command)
 
+
+
         if command[-1] != "\n":
             command += "\n"
+
         print(f"req:  {command}")
         self._device.write(bytearray(command, "ascii"))
 

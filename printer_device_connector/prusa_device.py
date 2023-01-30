@@ -11,6 +11,7 @@ class PrusaDevice(Device):
     _device: Serial = None  # pyserial connector device
 
     def __init__(self, device) -> None:
+        super().__init__()
         self._device = device
 
     # TODO READ on self
@@ -64,6 +65,10 @@ class PrusaDevice(Device):
         device: Optional[Serial] = None
         available_ports = serial.tools.list_ports.comports()
 
+        print("List all available ports:")
+        for port, desc, hwid in sorted(available_ports):
+            print(f"\t port: '{port}', desc: '{desc}', hwid: '{hwid}")
+
         for port, desc, hwid in sorted(available_ports):
             print(f"Scanning port: '{port}', desc: '{desc}', hwid: '{hwid}")
             try:
@@ -72,11 +77,11 @@ class PrusaDevice(Device):
                 )
                 print(f"Serial port is Open'")
 
-                resp: bytes = device.read_all().decode("utf-8")
+                resp = device.readline().decode("utf-8")
                 print(f"Answer: '{resp}'")
 
-                # if resp != "start\n":
-                #     raise SerialException()
+                if resp != 'start':
+                    raise SerialException()
 
                 print(f"Connected on port: '{port}', desc: '{desc}', hwid: '{hwid}")
 
@@ -85,6 +90,7 @@ class PrusaDevice(Device):
             except SerialException:
                 device = None
                 continue
+
         if not device:
             raise SerialException("Device not found")
 
@@ -109,18 +115,23 @@ class PrusaDevice(Device):
         Returns:
             str: response from device
         """
+
+        if 'F' not in command:
+            command += f' F {self.speed}'
+
         if command[-1] != "\n":
             command += "\n"
 
+        print(f"predicted_time_of_execution: {self.predict_time_of_execution(command)}")
         self._device.write(bytearray(command, "utf-8"))
+        time.sleep(self.predict_time_of_execution(command))
 
         if "G1" in command:
             self.set_current_position_from_string(command)
-            time.sleep(5)
 
         elif "G28" in command:
             self.current_position.from_tuple((0, 0, 0))
-            time.sleep(30)
+
 
         resp = ""
         retries = 5

@@ -5,6 +5,7 @@ from typing import Union, Dict
 
 from PyQt6.uic.properties import QtGui
 
+from pass_generators.simple_pass import simple_pass_3d_for_gui
 from printer_device_connector.device_mock import PrinterDeviceMock
 from printer_device_connector.marlin_device import MarlinDevice
 from PyQt6.QtWidgets import (
@@ -33,13 +34,14 @@ from hapmd.src.hameg3010.hameg3010device import Hameg3010Device
 from hapmd.src.hameg3010.hameg3010device_mock import Hameg3010DeviceMock
 from hapmd.src.hameg_ci import get_level
 
-PRINTER_DEBUG_MODE = True
+PRINTER_DEBUG_MODE = False
 ANALYZER_DEBUG_MODE = True
 
 
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
+        self.antenna_path = None
         self.measurement = None
         self.innit_ui()
 
@@ -52,9 +54,9 @@ class MainWindow(QMainWindow):
         self.pass_height = 4
 
         if PRINTER_DEBUG_MODE:
-            self.printer: PrinterDeviceMock = PrinterDeviceMock.connect_on_port("COM5")
+            self.printer: PrinterDeviceMock = PrinterDeviceMock.connect_on_port("COM69 for all I care")
         else:
-            self.printer: MarlinDevice = MarlinDevice.connect_on_port("COM5")
+            self.printer: PrusaDevice = PrusaDevice.connect_on_port("COM9")
 
         self.analyzer = set_up_hamed_device(debug=ANALYZER_DEBUG_MODE)
 
@@ -103,7 +105,7 @@ class MainWindow(QMainWindow):
         self.path_generation_position = TwoParamInput("x:", "y:")
         self.path_generation_size = TwoParamInput("width:", "height:")
         self.antenna_offset_btn = TwoParamInput("x offset:", "y offset:")
-        self.antenna_offset_btn.set_default((0, 52))
+        self.antenna_offset_btn.set_default((0, -52))
         self.pass_heigth_measurement_radius_btn = TwoParamInput("pass height:", "measurement radius:")
         self.pass_heigth_measurement_radius_btn.set_default((4, 5))
 
@@ -148,21 +150,14 @@ class MainWindow(QMainWindow):
         print(f"pass_height_measurement_radius_btn: {self.pass_heigth_measurement_radius_btn.get_vals()}")
         print(f"antenna_offset_btn: {self.antenna_offset_btn.get_vals()}")
 
-        path_x = np.min((self.printer.x_size,
-                         self.path_generation_position.get_vals()[0] + self.path_generation_size.get_vals()[0] -
-                         self.antenna_offset[0]))
-
-        path_y = np.min((self.printer.y_size,
-                         self.path_generation_position.get_vals()[1] + self.path_generation_size.get_vals()[1] -
-                         self.antenna_offset[1]))
-
-        printer_size = (path_x, path_y, self.printer.z_size)
+        sample_size = (
+            self.path_generation_size.get_vals()[0], self.path_generation_size.get_vals()[1], self.printer.z_size)
 
         self.antenna_offset = self.antenna_offset_btn.get_vals()
         self.pass_height, self.antenna_measurement_radius = self.pass_heigth_measurement_radius_btn.get_vals()
-        self.path, no_bins = simple_pass_3d(
-            shift_from_0_0=self.path_generation_position.get_vals(),
-            printer_size=printer_size,
+        self.path, self.antenna_path = simple_pass_3d_for_gui(
+            sample_shift_from_0_0=self.path_generation_position.get_vals(),
+            sample_size=sample_size,
             antenna_measurement_radius=self.antenna_measurement_radius,
             antenna_offset=self.antenna_offset,
             pass_height=self.pass_height,
@@ -170,8 +165,7 @@ class MainWindow(QMainWindow):
 
         self.path_plot_canvas.plot_data(
             self.path,
-            printer_boundaries=printer_size,
-            antenna_offset=self.antenna_offset,
+            self.antenna_path,
             antenna_measurement_radius=self.antenna_measurement_radius,
         )
         self.path_plot_canvas.draw()
@@ -234,7 +228,8 @@ class MainWindow(QMainWindow):
             "CSV File (*.csv);;All Files (*);;Text (*.txt)",
         )
         print(fname)
-        measurement.to_csv(fname[0])
+        if fname != '':
+            measurement.to_csv(fname[0])
 
     def add_plots(self) -> None:
         def helper(plot):
@@ -266,18 +261,19 @@ class MainWindow(QMainWindow):
                 != StartStopContinueButton.State.STOP
         )
 
+    def close_thread(self):
+        self.printer_head_controller.enable()
+        self.recalculate_path.enable()
+        self.save_data_btn.enable()
+
     def start_thread(self):
         if self.thread is not None:
             print("thread is already running")
+            self.close_thread()
             self.thread.join()
             print("thread is closed")
             self.thread = None
-            self.printer_head_controller.enable()
-            self.recalculate_path.enable()
-            self.save_data_btn.enable()
             return
-
-        printer_size = (self.printer.x_size, self.printer.y_size, self.printer.z_size)
 
         self.update_path()
         if len(self.path) == 0:
@@ -297,11 +293,9 @@ class MainWindow(QMainWindow):
         self.thread = threading.Thread(
             target=self.main_loop,
             args=(
-                self.path,
                 self.printer,
                 self.analyzer,
                 self.antenna_offset,
-                printer_size,
                 self.antenna_measurement_radius,
             ),
         )
@@ -309,11 +303,9 @@ class MainWindow(QMainWindow):
 
     def main_loop(
             self,
-            path: List[Point],
             printer_handle: Union[MarlinDevice, PrusaDevice, PrinterDeviceMock],
             analyzer_handle: Union[Hameg3010Device, Hameg3010DeviceMock],
             antenna_offset: Tuple[float, float, float],
-            printer_size: Tuple[float, float, float],
             antenna_measurement_radius: float,
     ):
         printer_handle.startup_procedure()
@@ -323,10 +315,10 @@ class MainWindow(QMainWindow):
                                              'z': [],
                                              'm': []}
 
-        max_x = np.max([x for x, _, _ in path])
-        max_y = np.max([y for _, y, _ in path])
-        min_x = np.min([x for x, _, _ in path])
-        min_y = np.min([y for _, y, _ in path])
+        max_x = np.max([x for x, _, _ in self.path])
+        max_y = np.max([y for _, y, _ in self.path])
+        min_x = np.min([x for x, _, _ in self.path])
+        min_y = np.min([y for _, y, _ in self.path])
 
         print((max_x, max_y, min_x, min_y))
 
@@ -339,7 +331,7 @@ class MainWindow(QMainWindow):
             printer_handle.send_and_await(f"G1 X{x} Y{y} Z{z}")
             print(f"\tx:{x}\ty:{y}\tz:{z}")
 
-        for point in path:
+        for point in self.path:
             x, y, z = point
 
             print("Moving...")
@@ -368,20 +360,21 @@ class MainWindow(QMainWindow):
             print("Updating plots...")
 
             self.path_plot_canvas.plot_data(
-                path,
-                printer_boundaries=printer_size,
-                antenna_offset=antenna_offset,
+                self.path,
+                self.antenna_path,
                 antenna_measurement_radius=antenna_measurement_radius,
                 highlight=(x, y, z),
             )
 
-            self.measurements_plot_canvas.plot_data(path, self.measurement)
+            self.measurements_plot_canvas.plot_data(self.path, self.measurement)
 
             self.path_plot_canvas.draw()
             self.measurements_plot_canvas.draw()
 
             if self.check_for_stop():
                 return
+
+        self.close_thread()
 
 
 if __name__ == "__main__":

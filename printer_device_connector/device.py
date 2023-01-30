@@ -1,3 +1,5 @@
+import math
+import time
 from typing import Optional, Tuple
 
 import serial.tools.list_ports
@@ -46,6 +48,29 @@ class Device:
         self.x_size = 220
         self.y_size = 220
         self.z_size = 200
+        self.speed = 600
+        self.printer_home_time = 30
+
+    def predict_time_of_execution(self, command):
+
+        constant_connection_time = 0.2
+
+        if "G28" in command:
+            return self.printer_home_time
+        if "G1" in command:
+            dest = self.parse_move_command_to_position(command)
+
+            if self.current_position.is_none():
+                return 10
+            else:
+
+                dist_2_dest = math.sqrt(pow(self.current_position.x - dest[0], 2) +
+                                        pow(self.current_position.y - dest[1], 2) +
+                                        pow(self.current_position.z - dest[2], 2))
+
+                return (dist_2_dest / self.speed) * 60 + constant_connection_time
+
+        return 0
 
     def get_current_position(self) -> Optional[Tuple[float, float, float]]:
         return self.current_position.to_tuple()
