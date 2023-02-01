@@ -62,9 +62,14 @@ class PrinterHeadPositionController(QWidget):
         self.center_layout.addLayout(self._main_layout)
         self._center_extruder = QPushButton("Center Extruder")
         self.center_layout.addWidget(self._center_extruder)
+        self.center_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.setLayout(self.center_layout)
 
         self.enable()
+        for btn in self.all_buttons()[:-1]:
+            btn.setMaximumWidth(120)
+
+        self._center_extruder.setMaximumWidth(360)
 
     def all_buttons(self) -> List[QPushButton]:
         return [self._forward,
@@ -191,6 +196,9 @@ class TwoParamInput(QWidget):
         self._main_layout = QHBoxLayout()
 
         self.input_label_a = QLabel(label_a)
+        self.input_label_a.setMaximumWidth(120)
+        self.input_label_a.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
         self.input_a = QLineEdit()
         self.input_a.setValidator(QIntValidator())
         self.input_a.setMaxLength(3)
@@ -199,6 +207,9 @@ class TwoParamInput(QWidget):
         self.input_a.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.input_label_b = QLabel(label_b)
+        self.input_label_b.setMaximumWidth(120)
+        self.input_label_b.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
         self.input_b = QLineEdit()
         self.input_b.setValidator(QIntValidator())
         self.input_b.setMaxLength(3)
@@ -259,6 +270,114 @@ class SavaData(QPushButton):
         self.setText("Save data")
         self.update_background_color()
         self.disable()
+
+    def disable(self):
+        self.blockSignals(True)
+        self.update_background_color(color=GRAY)
+
+    def enable(self):
+        self.blockSignals(False)
+        self.update_background_color(color=CYAN_BLUE)
+
+    def update_background_color(self, color: str = CYAN_BLUE):
+        self.setStyleSheet("border-style: outset;"
+                           "border-width: 2px;"
+                           "border-radius: 10px;"
+                           "border-color: beige;"
+                           "min-width: 2em;"
+                           "padding: 6px;"
+                           "color: white;"
+                           f"background-color: {color};")
+
+
+class ScanType(enum.Enum):
+    ScalarAnalyzer = "Scalar Analyzer"
+    ScalarAnalyzerBackground = "Scalar Analyzer Background"
+    VectorAnalyzer = "Vector Analyzer"
+    VectorAnalyzerBackground = "Vector Analyzer Background"
+
+
+class ScanTypeBtn(QPushButton):
+
+    def __init__(self):
+        super().__init__()
+        self.setText(ScanType.ScalarAnalyzer.value)
+        self.update_background_color()
+        self.enable()
+        self.pressed.connect(self.update_text)
+        self.setMaximumWidth(360)
+
+
+    def update_text(self):
+        if self.text() == ScanType.ScalarAnalyzer.value:
+            self.setText(ScanType.ScalarAnalyzerBackground.value)
+        elif self.text() == ScanType.ScalarAnalyzerBackground.value:
+            self.setText(ScanType.VectorAnalyzer.value)
+        elif self.text() == ScanType.VectorAnalyzer.value:
+            self.setText(ScanType.VectorAnalyzerBackground.value)
+        elif self.text() == ScanType.VectorAnalyzerBackground.value:
+            self.setText(ScanType.ScalarAnalyzer.value)
+        else:
+            raise "invalid scan type"
+
+    def state(self):
+        return ScanType(self.text())
+
+    def disable(self):
+        self.blockSignals(True)
+        self.update_background_color(color=GRAY)
+
+    def enable(self):
+        self.blockSignals(False)
+        self.update_background_color(color=CYAN_BLUE)
+
+    def update_background_color(self, color: str = CYAN_BLUE):
+        self.setStyleSheet("border-style: outset;"
+                           "border-width: 2px;"
+                           "border-radius: 10px;"
+                           "border-color: beige;"
+                           "min-width: 2em;"
+                           "padding: 6px;"
+                           "color: white;"
+                           f"background-color: {color};")
+
+
+class SaveConfig(QPushButton):
+
+    def __init__(self):
+        super().__init__()
+        self.setText("Sava Config")
+        self.update_background_color()
+        self.disable()
+        self.setMaximumWidth(360)
+
+    def disable(self):
+        self.blockSignals(True)
+        self.update_background_color(color=GRAY)
+
+    def enable(self):
+        self.blockSignals(False)
+        self.update_background_color(color=CYAN_BLUE)
+
+    def update_background_color(self, color: str = CYAN_BLUE):
+        self.setStyleSheet("border-style: outset;"
+                           "border-width: 2px;"
+                           "border-radius: 10px;"
+                           "border-color: beige;"
+                           "min-width: 2em;"
+                           "padding: 6px;"
+                           "color: white;"
+                           f"background-color: {color};")
+
+
+class LoadConfig(QPushButton):
+
+    def __init__(self):
+        super().__init__()
+        self.setText("Load Config")
+        self.update_background_color()
+        self.disable()
+        self.setMaximumWidth(360)
 
     def disable(self):
         self.blockSignals(True)

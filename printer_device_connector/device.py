@@ -48,8 +48,8 @@ class Device:
         self.x_size = 220
         self.y_size = 220
         self.z_size = 200
-        self.speed = 600
-        self.printer_home_time = 30
+        self.speed = 900
+        self.printer_home_time = 20
 
     def predict_time_of_execution(self, command):
 

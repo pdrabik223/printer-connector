@@ -144,6 +144,7 @@ class MeasurementsPlotCanvas(FigureCanvas):
             max = filler
 
         vec_2d = []
+
         sorted_x = dict(sorted(plot_data.items()))
         for x in sorted_x:
             vec_2d.append([])
@@ -156,6 +157,7 @@ class MeasurementsPlotCanvas(FigureCanvas):
         cp = self.axes.imshow(
             vec_2d, cmap="Wistia", vmin=min, vmax=max, interpolation="none", origin='lower'
         )
+
         if self.cb != None:
             self.cb.remove()
 
@@ -166,6 +168,31 @@ class MeasurementsPlotCanvas(FigureCanvas):
         self.axes.set_xlabel("X [arb. units]")
         self.axes.set_ylabel("Y [arb. units]")
         self.axes.set_title("Some thing")
+
+        x_start = 0
+        x_end = len(vec_2d)
+        y_start = 0
+        y_end = len(vec_2d[0])
+
+        print(f"x_start: {x_start}")
+        print(f"x_end: {x_end}")
+        print(f"y_start: {y_start}")
+        print(f"y_end: {y_end}")
+
+        size = len(vec_2d[0])
+
+        jump_x = (x_end - x_start) / (2.0 * size)
+        jump_y = (y_end - y_start) / (2.0 * size)
+
+        x_positions = np.linspace(start=x_start, stop=x_end, num=size, endpoint=False)
+        y_positions = np.linspace(start=y_start, stop=y_end, num=size, endpoint=False)
+
+        for y_index, y in enumerate(y_positions):
+            for x_index, x in enumerate(x_positions):
+                label = vec_2d[y_index][x_index]
+                text_x = x + jump_x - 0.5
+                text_y = y + jump_y - 0.5
+                self.axes.text(text_x, text_y, label, color='black', ha='center', va='center')
 
     def show(self):
         self.fig.draw()

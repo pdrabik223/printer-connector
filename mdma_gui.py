@@ -1,3 +1,4 @@
+import enum
 import math
 import os
 import threading
@@ -22,7 +23,7 @@ import sys
 import pandas as pd
 
 from gui_tools.gui_buttons import PrinterHeadPositionController, StartStopContinueButton, TwoParamInput, \
-    RecalculatePath, SavaData
+    RecalculatePath, SavaData, ScanTypeBtn, ScanType
 from gui_tools.gui_plots import *
 from hapmd.src.hameg_ci import set_up_hamed_device
 
@@ -75,9 +76,6 @@ class MainWindow(QMainWindow):
         self._graphs_layout = QHBoxLayout()
         self._graphs_settings_layout = QHBoxLayout()
 
-        self.subtract_background_btn = QPushButton("subtract_back_ground")
-        self.subtract_background_btn.pressed.connect(self.subtract_background)
-
         self.printer_head_controller = PrinterHeadPositionController()
 
         self.printer_head_controller.forward.pressed.connect(
@@ -106,6 +104,8 @@ class MainWindow(QMainWindow):
 
         self._left_wing.addWidget(self.printer_head_controller)
 
+        self.scan_type_btn = ScanTypeBtn()
+        self._left_wing.addWidget(self.scan_type_btn)
         self.add_plots()
 
         self.path_generation_position = TwoParamInput("x:", "y:")
@@ -275,6 +275,7 @@ class MainWindow(QMainWindow):
         self.printer_head_controller.enable()
         self.recalculate_path.enable()
         self.save_data_btn.enable()
+        self.scan_type_btn.enable()
         # self.start_stop_measurement_button.change_state()
 
     def start_thread(self):
@@ -293,7 +294,7 @@ class MainWindow(QMainWindow):
 
         self.printer_head_controller.disable()
         self.recalculate_path.disable()
-
+        self.scan_type_btn.disable()
         self.measurements_plot_canvas.plot_data(self.path, None)
 
         self.path_plot_canvas.draw()
@@ -309,17 +310,7 @@ class MainWindow(QMainWindow):
         )
         self.thread.start()
 
-    def main_loop(
-            self,
-
-    ):
-        self.printer.startup_procedure()
-        print("Measurement loop ")
-        self.measurement: Dict[str, list] = {'x': [],
-                                             'y': [],
-                                             'z': [],
-                                             'm': []}
-
+    def run_outline(self):
         max_x = np.max([x for x, _, _ in self.path])
         max_y = np.max([y for _, y, _ in self.path])
         min_x = np.min([x for x, _, _ in self.path])
@@ -336,6 +327,44 @@ class MainWindow(QMainWindow):
             self.printer.send_and_await(f"G1 X{x} Y{y} Z{z}")
             print(f"\tx:{x}\ty:{y}\tz:{z}")
 
+    def perform_scan(self):
+        scan_val = get_level(self.analyzer, 2.622 * (10 ** 9), 2)
+
+        while scan_val > -17 or scan_val < -22:
+            print(f"\tmeasurement:{scan_val}")
+            print(f"\trepeting measurement")
+            scan_val = get_level(self.analyzer, 2.622 * (10 ** 9), 2)
+
+        return round(scan_val, 4)
+
+    def update_plots(self, highlight):
+        self.path_plot_canvas.plot_data(
+            self.path,
+            self.antenna_path,
+            antenna_measurement_radius=self.antenna_measurement_radius,
+            highlight=highlight
+        )
+
+        self.measurements_plot_canvas.plot_data(self.path, self.measurement)
+
+        self.path_plot_canvas.draw()
+        self.measurements_plot_canvas.draw()
+
+    def main_loop(
+            self,
+    ):
+
+        if self.scan_type_btn.text() == ScanType.ScalarAnalyzer.value:
+            self.measurement: Dict[str, list] = {'x': [],
+                                                 'y': [],
+                                                 'z': [],
+                                                 'm': []}
+
+        self.printer.startup_procedure()
+        print("Measurement loop ")
+        self.run_outline()
+        time.sleep(4)
+
         total_path_length = len([x for x, _, _ in self.path])
         elapsed_time = time.time()
 
@@ -347,52 +376,53 @@ class MainWindow(QMainWindow):
             x = round(x, 3)
             y = round(y, 3)
             z = round(z, 3)
+
             self.printer.send_and_await(f"G1 X{x} Y{y} Z{z}")
+
             print(f"\tx:{x}\ty:{y}\tz:{z}")
 
             if self.check_for_stop():
                 return
 
             print("Scanning...")
-            scan_val = get_level(self.analyzer, 2.622 * (10 ** 9), 2)
 
-            while scan_val > -17 or scan_val < -22:
-                print(f"\tmeasurement:{scan_val}")
-                print(f"\trepeting measurement")
-                scan_val = get_level(self.analyzer, 2.622 * (10 ** 9), 2)
+            scan_val = self.perform_scan()
 
             print(f"\tmeasurement:{scan_val}")
 
-            self.measurement['x'].append(x - self.antenna_offset[0])
-            self.measurement['y'].append(y - self.antenna_offset[1])
-            self.measurement['z'].append(z)
-            self.measurement['m'].append(scan_val)
+            if self.scan_type_btn.text() == ScanType.ScalarAnalyzer.value:
+
+                self.measurement['x'].append(x - self.antenna_offset[0])
+                self.measurement['y'].append(y - self.antenna_offset[1])
+                self.measurement['z'].append(z)
+                self.measurement['m'].append(scan_val)
+
+            elif self.scan_type_btn.text() == ScanType.ScalarAnalyzerBackground.value:
+                if len(self.measurement['m']) < id:
+                    self.measurement['m'][id].append(scan_val)
+                else:
+                    self.measurement['m'][id] -= scan_val
+
+            else:
+                print(f"Scan type: {self.scan_type_btn.state} is not supported")
 
             if self.check_for_stop():
                 return
 
             print("Updating plots...")
 
-            self.path_plot_canvas.plot_data(
-                self.path,
-                self.antenna_path,
-                antenna_measurement_radius=self.antenna_measurement_radius,
-                highlight=(x, y, z),
-            )
-
-            self.measurements_plot_canvas.plot_data(self.path, self.measurement)
-
-            self.path_plot_canvas.draw()
-            self.measurements_plot_canvas.draw()
+            self.update_plots(highlight=(x, y, z))
 
             if self.check_for_stop():
                 return
+
             print(
                 f"\t Time of measurement: {round(time.time() - start_time, 2)}s, "
                 f"elapsed time: {round((time.time() - elapsed_time) / 60, 2)}min, "
-                f"left time: {int(round((time.time() - start_time) * (total_path_length - id - 1) / (60*2), 2))}h "
+                f"left time: {int(round((time.time() - start_time) * (total_path_length - id - 1) / (60 ** 2), 2))}h "
                 f"{int(round((time.time() - start_time) * (total_path_length - id - 1) / 60, 2))}min "
                 f"{int(round((time.time() - start_time) * (total_path_length - id - 1) % 60, 2))}s")
+
         self.close_thread()
 
 
