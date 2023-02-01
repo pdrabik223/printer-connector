@@ -14,10 +14,11 @@ class Hameg3010Device:
         logging.debug(f"connecting do device with pid: {idProduct}, vid: {idVendor}")
 
         device = usb.core.find(idVendor=idVendor, idProduct=idProduct)
+        # device = usb.core.
         if device is None:
-            raise ValueError("Device is not found")
+            raise ValueError(f"Device is not found vid: {hex(idVendor)} pid: {hex(idProduct)}")
 
-        logging.debug(f"connected do device with pid: {idProduct}, vid: {idVendor}")
+        logging.debug(f"connected do device with vid: {hex(idVendor)} pid: {hex(idProduct)}")
         return Hameg3010Device(device)
 
     def _send_str(self, command: str):

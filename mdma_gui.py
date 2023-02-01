@@ -1,3 +1,4 @@
+import math
 import os
 import threading
 import time
@@ -35,13 +36,14 @@ from hapmd.src.hameg3010.hameg3010device import Hameg3010Device
 from hapmd.src.hameg3010.hameg3010device_mock import Hameg3010DeviceMock
 from hapmd.src.hameg_ci import get_level
 
-PRINTER_DEBUG_MODE = False
-ANALYZER_DEBUG_MODE = False
+PRINTER_DEBUG_MODE = True
+ANALYZER_DEBUG_MODE = True
 
 
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
+
         self.antenna_path = None
         self.measurement = None
         self.innit_ui()
@@ -72,6 +74,9 @@ class MainWindow(QMainWindow):
         self._right_wing = QVBoxLayout()
         self._graphs_layout = QHBoxLayout()
         self._graphs_settings_layout = QHBoxLayout()
+
+        self.subtract_background_btn = QPushButton("subtract_back_ground")
+        self.subtract_background_btn.pressed.connect(self.subtract_background)
 
         self.printer_head_controller = PrinterHeadPositionController()
 
@@ -142,6 +147,10 @@ class MainWindow(QMainWindow):
         widget = QWidget()
         widget.setLayout(self._central_layout)
         self.setCentralWidget(widget)
+
+    def subtract_background(self):
+
+        pass
 
     def update_path(self):
 
@@ -266,7 +275,7 @@ class MainWindow(QMainWindow):
         self.printer_head_controller.enable()
         self.recalculate_path.enable()
         self.save_data_btn.enable()
-        self.start_stop_measurement_button.change_state()
+        # self.start_stop_measurement_button.change_state()
 
     def start_thread(self):
         if self.thread is not None:
@@ -295,22 +304,16 @@ class MainWindow(QMainWindow):
         self.thread = threading.Thread(
             target=self.main_loop,
             args=(
-                self.printer,
-                self.analyzer,
-                self.antenna_offset,
-                self.antenna_measurement_radius,
+
             ),
         )
         self.thread.start()
 
     def main_loop(
             self,
-            printer_handle: Union[MarlinDevice, PrusaDevice, PrinterDeviceMock],
-            analyzer_handle: Union[Hameg3010Device, Hameg3010DeviceMock],
-            antenna_offset: Tuple[float, float, float],
-            antenna_measurement_radius: float,
+
     ):
-        printer_handle.startup_procedure()
+        self.printer.startup_procedure()
         print("Measurement loop ")
         self.measurement: Dict[str, list] = {'x': [],
                                              'y': [],
@@ -330,7 +333,7 @@ class MainWindow(QMainWindow):
         z = 10
 
         for x, y in zip(x_printer_boundaries, y_printer_boundaries):
-            printer_handle.send_and_await(f"G1 X{x} Y{y} Z{z}")
+            self.printer.send_and_await(f"G1 X{x} Y{y} Z{z}")
             print(f"\tx:{x}\ty:{y}\tz:{z}")
 
         total_path_length = len([x for x, _, _ in self.path])
@@ -344,23 +347,24 @@ class MainWindow(QMainWindow):
             x = round(x, 3)
             y = round(y, 3)
             z = round(z, 3)
-            printer_handle.send_and_await(f"G1 X{x} Y{y} Z{z}")
+            self.printer.send_and_await(f"G1 X{x} Y{y} Z{z}")
             print(f"\tx:{x}\ty:{y}\tz:{z}")
 
             if self.check_for_stop():
                 return
 
             print("Scanning...")
-            scan_val = get_level(analyzer_handle, 2.622 * (10 ** 9), 2)
-            while scan_val > -18 or scan_val < -21:
+            scan_val = get_level(self.analyzer, 2.622 * (10 ** 9), 2)
+
+            while scan_val > -17 or scan_val < -22:
                 print(f"\tmeasurement:{scan_val}")
                 print(f"\trepeting measurement")
-                scan_val = get_level(analyzer_handle, 2.622 * (10 ** 9), 2)
+                scan_val = get_level(self.analyzer, 2.622 * (10 ** 9), 2)
 
             print(f"\tmeasurement:{scan_val}")
 
-            self.measurement['x'].append(x - antenna_offset[0])
-            self.measurement['y'].append(y - antenna_offset[1])
+            self.measurement['x'].append(x - self.antenna_offset[0])
+            self.measurement['y'].append(y - self.antenna_offset[1])
             self.measurement['z'].append(z)
             self.measurement['m'].append(scan_val)
 
@@ -372,7 +376,7 @@ class MainWindow(QMainWindow):
             self.path_plot_canvas.plot_data(
                 self.path,
                 self.antenna_path,
-                antenna_measurement_radius=antenna_measurement_radius,
+                antenna_measurement_radius=self.antenna_measurement_radius,
                 highlight=(x, y, z),
             )
 
@@ -386,7 +390,9 @@ class MainWindow(QMainWindow):
             print(
                 f"\t Time of measurement: {round(time.time() - start_time, 2)}s, "
                 f"elapsed time: {round((time.time() - elapsed_time) / 60, 2)}min, "
-                f"left time: {round((time.time() - start_time) * (total_path_length - id - 1) / 60, 2)}min")
+                f"left time: {int(round((time.time() - start_time) * (total_path_length - id - 1) / (60*2), 2))}h "
+                f"{int(round((time.time() - start_time) * (total_path_length - id - 1) / 60, 2))}min "
+                f"{int(round((time.time() - start_time) * (total_path_length - id - 1) % 60, 2))}s")
         self.close_thread()
 
 

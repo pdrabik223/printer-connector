@@ -147,7 +147,6 @@ class StartStopContinueButton(QPushButton):
 
     def update_text(self):
 
-        print(f"Button state: {self.state}")
         STATE_MAPPING = {
             self.State.START: {"color": "rgb(40,200,30)", "text": "START"},
             self.State.STOP: {"color": "rgb(200,40,30)", "text": "STOP"},
