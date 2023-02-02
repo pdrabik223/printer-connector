@@ -27,6 +27,5 @@ class TestMarlinDevice:
         ),
     )
     def test_cs_line(self, example):
-
         test, expected_value = example
         assert expected_value == MarlinDevice.cs_line(test)

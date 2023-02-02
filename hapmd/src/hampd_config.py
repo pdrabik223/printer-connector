@@ -8,7 +8,6 @@ Numeric = Union[StrictFloat, StrictInt]
 
 
 class HapmdConfig(BaseModel):
-
     # hameg device must have specified sweep range
     hameg_vid: StrictInt = Field(default=0x0403)
     hameg_pid: StrictInt = Field(default=0xED72)
@@ -79,7 +78,6 @@ Sweep Stop Frequency: {Colors.BOLD}{'{:.3e}'.format(self.hameg_sweep_max_frequen
         )
 
         if self.hameg_frequencies is not None:
-
             print(f"List of measured frequencies:")
             for f in self.hameg_frequencies:
                 print(

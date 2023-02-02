@@ -16,9 +16,13 @@ class Hameg3010Device:
         device = usb.core.find(idVendor=idVendor, idProduct=idProduct)
         # device = usb.core.
         if device is None:
-            raise ValueError(f"Device is not found vid: {hex(idVendor)} pid: {hex(idProduct)}")
+            raise ValueError(
+                f"Device is not found vid: {hex(idVendor)} pid: {hex(idProduct)}"
+            )
 
-        logging.debug(f"connected do device with vid: {hex(idVendor)} pid: {hex(idProduct)}")
+        logging.debug(
+            f"connected do device with vid: {hex(idVendor)} pid: {hex(idProduct)}"
+        )
         return Hameg3010Device(device)
 
     def _send_str(self, command: str):
@@ -41,7 +45,6 @@ class Hameg3010Device:
             raise
 
     def _await_resp(self):
-
         resp = self.device.read(0x81, 1_000_000, 1_000)
 
         # Following lines are hack
@@ -53,7 +56,6 @@ class Hameg3010Device:
 
         counter = 0
         while len(resp) == 2:
-
             resp = self.device.read(0x81, 1_000_000, 1_000)
             # print(resp)
             counter += 1

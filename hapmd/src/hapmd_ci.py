@@ -93,7 +93,6 @@ def set_up_rotor_device(
 
 
 if __name__ == "__main__":
-
     parser = argparse.ArgumentParser(
         description="Horizontal Antenna Pattern measurement device"
     )

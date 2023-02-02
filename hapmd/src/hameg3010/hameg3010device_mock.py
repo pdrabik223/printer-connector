@@ -30,7 +30,6 @@ class Hameg3010DeviceMock:
 
     @static_vars(no_measurement=0)
     def func(self):
-
         new_value = -20 + (2 * ((random.random() * 2) - 1))
 
         Hameg3010DeviceMock.func.no_measurement += 1

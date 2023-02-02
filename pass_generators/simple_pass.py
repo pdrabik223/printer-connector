@@ -2,11 +2,11 @@ from typing import Tuple, List
 
 
 def f_range(
-        start: float = 0,
-        end: float = 1,
-        step: float = 1,
-        include_start=True,
-        include_end=False,
+    start: float = 0,
+    end: float = 1,
+    step: float = 1,
+    include_start=True,
+    include_end=False,
 ):
     range = []
 
@@ -27,9 +27,9 @@ def f_range(
 
 
 def simple_pass(
-        printer_size: Tuple[float, float, float],
-        antenna_offset: Tuple[float, float],
-        antenna_measurement_radius: float,
+    printer_size: Tuple[float, float, float],
+    antenna_offset: Tuple[float, float],
+    antenna_measurement_radius: float,
 ) -> List[Tuple[float, float]]:
     # antenna diameter
     antenna_d = antenna_measurement_radius * 2
@@ -63,11 +63,11 @@ def simple_pass(
 
 
 def simple_pass_3d(
-        shift_from_0_0: Tuple[float, float],
-        printer_size: Tuple[float, float, float],
-        antenna_offset: Tuple[float, float],
-        antenna_measurement_radius: float,
-        pass_height: float,
+    shift_from_0_0: Tuple[float, float],
+    printer_size: Tuple[float, float, float],
+    antenna_offset: Tuple[float, float],
+    antenna_measurement_radius: float,
+    pass_height: float,
 ) -> Tuple[List[Tuple[float, float, float]], Tuple[List[float], List[float]]]:
     # antenna diameter
     antenna_d = antenna_measurement_radius * 2
@@ -108,22 +108,32 @@ def simple_pass_3d(
 
 
 def simple_pass_3d_for_gui(
-        sample_shift_from_0_0: Tuple[float, float],
-        sample_size: Tuple[float, float, float],
-        antenna_offset: Tuple[float, float],
-        antenna_measurement_radius: float,
-        pass_height: float,
+    sample_shift_from_0_0: Tuple[float, float],
+    sample_size: Tuple[float, float, float],
+    antenna_offset: Tuple[float, float],
+    antenna_measurement_radius: float,
+    pass_height: float,
 ) -> Tuple[List[Tuple[float, float, float]], List[Tuple[float, float, float]]]:
     sample_size_x = sample_size[0]
     sample_size_y = sample_size[1]
 
     x_measurements_coords = [
         x
-        for x in f_range(antenna_measurement_radius, sample_size_x, antenna_measurement_radius * 2, include_end=True)
+        for x in f_range(
+            antenna_measurement_radius,
+            sample_size_x,
+            antenna_measurement_radius * 2,
+            include_end=True,
+        )
     ]
     y_measurements_coords = [
         y
-        for y in f_range(antenna_measurement_radius, sample_size_y, antenna_measurement_radius * 2, include_end=True)
+        for y in f_range(
+            antenna_measurement_radius,
+            sample_size_y,
+            antenna_measurement_radius * 2,
+            include_end=True,
+        )
     ]
 
     path = []
@@ -137,8 +147,13 @@ def simple_pass_3d_for_gui(
             for id in range(len(y_measurements_coords) - 1, -1, -1):
                 path.append((x, y_measurements_coords[id]))
 
-    path = [(x + sample_shift_from_0_0[0], y + sample_shift_from_0_0[1], pass_height) for x, y in path]
+    path = [
+        (x + sample_shift_from_0_0[0], y + sample_shift_from_0_0[1], pass_height)
+        for x, y in path
+    ]
 
-    antenna_path = [(x + antenna_offset[0], y + antenna_offset[1], z) for x, y, z in path]
+    antenna_path = [
+        (x + antenna_offset[0], y + antenna_offset[1], z) for x, y, z in path
+    ]
 
     return path, antenna_path

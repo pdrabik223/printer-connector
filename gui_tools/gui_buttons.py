@@ -13,7 +13,8 @@ from PyQt6.QtWidgets import (
     QLabel,
     QInputDialog,
     QLineEdit,
-    QDialog, QMessageBox
+    QDialog,
+    QMessageBox,
 )
 
 from PyQt6.QtWidgets import QPushButton, QGridLayout, QWidget, QVBoxLayout
@@ -73,14 +74,16 @@ class PrinterHeadPositionController(QWidget):
         self.setMaximumWidth(360)
 
     def all_buttons(self) -> List[QPushButton]:
-        return [self._forward,
-                self._up,
-                self._left,
-                self._home,
-                self._right,
-                self._back,
-                self._down,
-                self._center_extruder]
+        return [
+            self._forward,
+            self._up,
+            self._left,
+            self._home,
+            self._right,
+            self._back,
+            self._down,
+            self._center_extruder,
+        ]
 
     @property
     def forward(self) -> QPushButton:
@@ -115,27 +118,27 @@ class PrinterHeadPositionController(QWidget):
         return self._center_extruder
 
     def disable(self):
-
         for button in self.all_buttons():
             button.blockSignals(True)
         self.update_background_color(color=GRAY)
 
     def enable(self):
-
         for button in self.all_buttons():
             button.blockSignals(False)
         self.update_background_color(color=CYAN_BLUE)
 
     def update_background_color(self, color: str = GRAY):
         for button in self.all_buttons():
-            button.setStyleSheet("border-style: outset;"
-                                 "border-width: 2px;"
-                                 "border-radius: 10px;"
-                                 "border-color: beige;"
-                                 "min-width: 2em;"
-                                 "padding: 6px;"
-                                 "color: white;"
-                                 f"background-color: {color};")
+            button.setStyleSheet(
+                "border-style: outset;"
+                "border-width: 2px;"
+                "border-radius: 10px;"
+                "border-color: beige;"
+                "min-width: 2em;"
+                "padding: 6px;"
+                "color: white;"
+                f"background-color: {color};"
+            )
 
 
 class StartStopContinueButton(QPushButton):
@@ -153,7 +156,6 @@ class StartStopContinueButton(QPushButton):
         self.setMaximumWidth(360)
 
     def update_text(self):
-
         STATE_MAPPING = {
             self.State.START: {"color": "rgb(40,200,30)", "text": "START"},
             self.State.STOP: {"color": "rgb(200,40,30)", "text": "STOP"},
@@ -161,27 +163,27 @@ class StartStopContinueButton(QPushButton):
         }
 
         self.setText(STATE_MAPPING[self.state]["text"])
-        self.update_background_color(STATE_MAPPING[self.state]['color'])
+        self.update_background_color(STATE_MAPPING[self.state]["color"])
 
     def disable(self):
         self.blockSignals(True)
         self.update_background_color(color=GRAY)
 
     def enable(self):
-
         self.blockSignals(False)
         self.update_background_color(color=CYAN_BLUE)
 
     def update_background_color(self, color: str = GRAY):
-
-        self.setStyleSheet("border-style: outset;"
-                           "border-width: 2px;"
-                           "border-radius: 10px;"
-                           "border-color: beige;"
-                           "min-width: 2em;"
-                           "padding: 6px;"
-                           "color: white;"
-                           f"background-color: {color};")
+        self.setStyleSheet(
+            "border-style: outset;"
+            "border-width: 2px;"
+            "border-radius: 10px;"
+            "border-color: beige;"
+            "min-width: 2em;"
+            "padding: 6px;"
+            "color: white;"
+            f"background-color: {color};"
+        )
 
     def change_state(self):
         if self.state == StartStopContinueButton.State.START:
@@ -244,7 +246,6 @@ class TwoParamInput(QWidget):
 
 
 class RecalculatePath(QPushButton):
-
     def __init__(self):
         super().__init__()
         self.setText("Recalculate path")
@@ -260,18 +261,19 @@ class RecalculatePath(QPushButton):
         self.update_background_color(color=CYAN_BLUE)
 
     def update_background_color(self, color: str = CYAN_BLUE):
-        self.setStyleSheet("border-style: outset;"
-                           "border-width: 2px;"
-                           "border-radius: 10px;"
-                           "border-color: beige;"
-                           "min-width: 2em;"
-                           "padding: 6px;"
-                           "color: white;"
-                           f"background-color: {color};")
+        self.setStyleSheet(
+            "border-style: outset;"
+            "border-width: 2px;"
+            "border-radius: 10px;"
+            "border-color: beige;"
+            "min-width: 2em;"
+            "padding: 6px;"
+            "color: white;"
+            f"background-color: {color};"
+        )
 
 
 class SaveData(QPushButton):
-
     def __init__(self):
         super().__init__()
         self.setText("Save data")
@@ -288,14 +290,16 @@ class SaveData(QPushButton):
         self.update_background_color(color=CYAN_BLUE)
 
     def update_background_color(self, color: str = CYAN_BLUE):
-        self.setStyleSheet("border-style: outset;"
-                           "border-width: 2px;"
-                           "border-radius: 10px;"
-                           "border-color: beige;"
-                           "min-width: 2em;"
-                           "padding: 6px;"
-                           "color: white;"
-                           f"background-color: {color};")
+        self.setStyleSheet(
+            "border-style: outset;"
+            "border-width: 2px;"
+            "border-radius: 10px;"
+            "border-color: beige;"
+            "min-width: 2em;"
+            "padding: 6px;"
+            "color: white;"
+            f"background-color: {color};"
+        )
 
 
 class ScanType(enum.Enum):
@@ -306,7 +310,6 @@ class ScanType(enum.Enum):
 
 
 class ScanTypeBtn(QPushButton):
-
     def __init__(self):
         super().__init__()
         self.setText(ScanType.ScalarAnalyzer.value)
@@ -339,18 +342,19 @@ class ScanTypeBtn(QPushButton):
         self.update_background_color(color=CYAN_BLUE)
 
     def update_background_color(self, color: str = CYAN_BLUE):
-        self.setStyleSheet("border-style: outset;"
-                           "border-width: 2px;"
-                           "border-radius: 10px;"
-                           "border-color: beige;"
-                           "min-width: 2em;"
-                           "padding: 6px;"
-                           "color: white;"
-                           f"background-color: {color};")
+        self.setStyleSheet(
+            "border-style: outset;"
+            "border-width: 2px;"
+            "border-radius: 10px;"
+            "border-color: beige;"
+            "min-width: 2em;"
+            "padding: 6px;"
+            "color: white;"
+            f"background-color: {color};"
+        )
 
 
 class SaveConfig(QPushButton):
-
     def __init__(self):
         super().__init__()
         self.setText("Save Config")
@@ -367,18 +371,19 @@ class SaveConfig(QPushButton):
         self.update_background_color(color=CYAN_BLUE)
 
     def update_background_color(self, color: str = CYAN_BLUE):
-        self.setStyleSheet("border-style: outset;"
-                           "border-width: 2px;"
-                           "border-radius: 10px;"
-                           "border-color: beige;"
-                           "min-width: 2em;"
-                           "padding: 6px;"
-                           "color: white;"
-                           f"background-color: {color};")
+        self.setStyleSheet(
+            "border-style: outset;"
+            "border-width: 2px;"
+            "border-radius: 10px;"
+            "border-color: beige;"
+            "min-width: 2em;"
+            "padding: 6px;"
+            "color: white;"
+            f"background-color: {color};"
+        )
 
 
 class LoadConfig(QPushButton):
-
     def __init__(self):
         super().__init__()
         self.setText("Load Config")
@@ -395,11 +400,13 @@ class LoadConfig(QPushButton):
         self.update_background_color(color=CYAN_BLUE)
 
     def update_background_color(self, color: str = CYAN_BLUE):
-        self.setStyleSheet("border-style: outset;"
-                           "border-width: 2px;"
-                           "border-radius: 10px;"
-                           "border-color: beige;"
-                           "min-width: 2em;"
-                           "padding: 6px;"
-                           "color: white;"
-                           f"background-color: {color};")
+        self.setStyleSheet(
+            "border-style: outset;"
+            "border-width: 2px;"
+            "border-radius: 10px;"
+            "border-color: beige;"
+            "min-width: 2em;"
+            "padding: 6px;"
+            "color: white;"
+            f"background-color: {color};"
+        )

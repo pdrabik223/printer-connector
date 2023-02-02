@@ -80,7 +80,7 @@ class PrusaDevice(Device):
                 resp = device.readline().decode("utf-8")
                 print(f"Answer: '{resp}'")
 
-                if resp != 'start':
+                if resp != "start":
                     raise SerialException()
 
                 print(f"Connected on port: '{port}', desc: '{desc}', hwid: '{hwid}")
@@ -105,7 +105,6 @@ class PrusaDevice(Device):
         READY = "ready"
 
     def send_and_await(self, command: str) -> str:
-
         """
         send command to Prusa device, then await response
 
@@ -116,8 +115,8 @@ class PrusaDevice(Device):
             str: response from device
         """
 
-        if 'F' not in command:
-            command += f' F {self.speed}'
+        if "F" not in command:
+            command += f" F {self.speed}"
 
         if command[-1] != "\n":
             command += "\n"
@@ -131,7 +130,6 @@ class PrusaDevice(Device):
 
         elif "G28" in command:
             self.current_position.from_tuple((0, 0, 0))
-
 
         resp = ""
         retries = 5

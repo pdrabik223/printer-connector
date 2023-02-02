@@ -9,7 +9,6 @@ from configs.exceptions import (
 
 
 class GCodeFile:
-
     file_name: StrictStr = ""
     # TODO what is the type of filehandler?
     file_handle = None
@@ -58,7 +57,6 @@ class GCodeFile:
             return SlicerVendor.PrusaSlicer
 
         while GCodeFile.is_empty(line) or GCodeFile.is_comment(line):
-
             line: str = self.file_handle.readline()
             if len(line) == 0:
                 raise UnsupportedSlicerVendor("Slicer Vendor can not be read from file")

@@ -5,9 +5,8 @@ from printer_device_connector.device import Device, static_vars
 
 class PrinterDeviceMock(Device):
     def send_and_await(self, command: str) -> str:
-
-        if 'F' not in command:
-            command += f' F {self.speed}'
+        if "F" not in command:
+            command += f" F {self.speed}"
 
         if command[-1] != "\n":
             command += "\n"
@@ -23,7 +22,7 @@ class PrinterDeviceMock(Device):
         return "this is mock"
 
     def connect_on_port(
-            port: str, baudrate: int = 250000, timeout: int = 5
+        port: str, baudrate: int = 250000, timeout: int = 5
     ) -> "PrinterDeviceMock":
         print(f"Connected on port: '{69}', desc: 'table', hwid: 'kazooooo")
         return PrinterDeviceMock()

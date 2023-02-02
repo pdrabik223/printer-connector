@@ -6,7 +6,6 @@ Numeric = Union[StrictInt, StrictFloat]
 
 
 class PrinterDeviceConfig(BaseModel):
-
     name: StrictStr = Field(default="Unknown printer")
 
     com_port: StrictStr = Field(...)

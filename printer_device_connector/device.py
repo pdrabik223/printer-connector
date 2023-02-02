@@ -52,21 +52,22 @@ class Device:
         self.printer_home_time = 20
 
     def predict_time_of_execution(self, command):
-
         constant_connection_time = 0.2
 
         if "G28" in command:
             return self.printer_home_time
+
         if "G1" in command:
             dest = self.parse_move_command_to_position(command)
 
             if self.current_position.is_none():
                 return 10
             else:
-
-                dist_2_dest = math.sqrt(pow(self.current_position.x - dest[0], 2) +
-                                        pow(self.current_position.y - dest[1], 2) +
-                                        pow(self.current_position.z - dest[2], 2))
+                dist_2_dest = math.sqrt(
+                    pow(self.current_position.x - dest[0], 2)
+                    + pow(self.current_position.y - dest[1], 2)
+                    + pow(self.current_position.z - dest[2], 2)
+                )
 
                 return (dist_2_dest / self.speed) * 60 + constant_connection_time
 
@@ -83,45 +84,46 @@ class Device:
         self.current_position.from_tuple((x, y, z))
 
     @staticmethod
-    def parse_move_command_to_position(command: str) -> Optional[Tuple[float, float, float]]:
+    def parse_move_command_to_position(
+        command: str,
+    ) -> Optional[Tuple[float, float, float]]:
         # Fuck me, get uot with this weak ass shit
-        command = command.casefold() + ' '
+        command = command.casefold() + " "
 
         if "x" in command:
-
-            x_val_begin = command.find('x')
-            if command[x_val_begin + 1] != ' ':
-                command = command[:x_val_begin] + ' ' + command[x_val_begin:]
+            x_val_begin = command.find("x")
+            if command[x_val_begin + 1] != " ":
+                command = command[:x_val_begin] + " " + command[x_val_begin:]
 
             x_val_begin += 2
 
             x_val_end = command[x_val_begin:].find(" ")
-            x = float(command[x_val_begin: x_val_end + x_val_begin])
+            x = float(command[x_val_begin : x_val_end + x_val_begin])
 
         else:
             x = None
 
         if "y" in command:
-            y_val_begin = command.find('y')
+            y_val_begin = command.find("y")
 
-            if command[y_val_begin + 1] != ' ':
-                command = command[:y_val_begin] + ' ' + command[y_val_begin:]
+            if command[y_val_begin + 1] != " ":
+                command = command[:y_val_begin] + " " + command[y_val_begin:]
 
             y_val_begin += 2
             y_val_end = command[y_val_begin:].find(" ")
-            y = float(command[y_val_begin: y_val_end + y_val_begin])
+            y = float(command[y_val_begin : y_val_end + y_val_begin])
 
         else:
             y = None
 
         if "z" in command:
-            z_val_begin = command.find('z')
-            if command[z_val_begin + 1] != ' ':
-                command = command[:z_val_begin] + ' ' + command[z_val_begin:]
+            z_val_begin = command.find("z")
+            if command[z_val_begin + 1] != " ":
+                command = command[:z_val_begin] + " " + command[z_val_begin:]
 
             z_val_begin += 2
             z_val_end = command[z_val_begin:].find(" ")
-            z = float(command[z_val_begin: z_val_end + z_val_begin])
+            z = float(command[z_val_begin : z_val_end + z_val_begin])
 
         else:
             z = None
@@ -148,9 +150,7 @@ def send_and_await(self, command: str) -> str:
     pass
 
 
-def connect_on_port(
-        port: str, baudrate: int = 250000, timeout: int = 5
-) -> "Device":
+def connect_on_port(port: str, baudrate: int = 250000, timeout: int = 5) -> "Device":
     """
     **Connects to device on specified port.**
 

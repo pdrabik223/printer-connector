@@ -135,8 +135,8 @@ class MarlinDevice(Device):
             str: response from device
         """
 
-        if 'F' not in command:
-            command += f' F {self.speed}'
+        if "F" not in command:
+            command += f" F {self.speed}"
 
         command = MarlinDevice.no_line(command)
         command = MarlinDevice.cs_line(command)
@@ -144,11 +144,14 @@ class MarlinDevice(Device):
         if command[-1] != "\n":
             command += "\n"
 
+        print(f"req:  {command}")
         print(f"predicted_time_of_execution: {self.predict_time_of_execution(command)}")
 
-        print(f"req:  {command}")
         self._device.write(bytearray(command, "ascii"))
         time.sleep(self.predict_time_of_execution(command))
+
+        resp = str(self._device.readline())
+        print(f"resp: {resp}")
 
         if "G1" in command:
             self.set_current_position_from_string(command)
@@ -156,8 +159,6 @@ class MarlinDevice(Device):
         elif "G28" in command:
             self.current_position.from_tuple((0, 0, 0))
 
-        resp = str(self._device.readline())
-        print(f"resp: {resp}")
         return (resp, resp[2:-3])
 
     @staticmethod
@@ -175,11 +176,10 @@ class MarlinDevice(Device):
     @staticmethod
     @static_vars(line_counter=1)
     def no_line(line: str) -> str:
-
         line = (
-                f"N{MarlinDevice.no_line.line_counter} "
-                + line
-                + f" N{MarlinDevice.no_line.line_counter}"
+            f"N{MarlinDevice.no_line.line_counter} "
+            + line
+            + f" N{MarlinDevice.no_line.line_counter}"
         )
         MarlinDevice.no_line.line_counter += 1
 

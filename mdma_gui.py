@@ -18,13 +18,23 @@ from PyQt6.QtWidgets import (
     QMainWindow,
     QVBoxLayout,
     QHBoxLayout,
-    QPushButton, QFileDialog,
+    QPushButton,
+    QFileDialog,
 )
 import sys
 import pandas as pd
 
-from gui_tools.gui_buttons import PrinterHeadPositionController, StartStopContinueButton, TwoParamInput, \
-    RecalculatePath, SaveData, ScanTypeBtn, ScanType, SaveConfig, LoadConfig
+from gui_tools.gui_buttons import (
+    PrinterHeadPositionController,
+    StartStopContinueButton,
+    TwoParamInput,
+    RecalculatePath,
+    SaveData,
+    ScanTypeBtn,
+    ScanType,
+    SaveConfig,
+    LoadConfig,
+)
 from gui_tools.gui_plots import *
 from hapmd.src.hameg_ci import set_up_hamed_device
 
@@ -59,14 +69,15 @@ class MainWindow(QMainWindow):
         self.pass_height = 4
 
         if PRINTER_DEBUG_MODE:
-            self.printer: PrinterDeviceMock = PrinterDeviceMock.connect_on_port("COM69 for all I care")
+            self.printer: PrinterDeviceMock = PrinterDeviceMock.connect_on_port(
+                "COM69 for all I care"
+            )
         else:
             self.printer: MarlinDevice = MarlinDevice.connect_on_port("COM5")
 
         self.analyzer = set_up_hamed_device(debug=ANALYZER_DEBUG_MODE)
 
     def innit_ui(self):
-
         self._measurements_plot_canvas = None
         self._path_plot_canvas = None
         self._path_2d_plot_canvas = None
@@ -80,28 +91,36 @@ class MainWindow(QMainWindow):
         self.printer_head_controller = PrinterHeadPositionController()
 
         self.printer_head_controller.forward.pressed.connect(
-            lambda: self.move_extruder(PrinterHeadPositionController.Direction.FORWARD))
+            lambda: self.move_extruder(PrinterHeadPositionController.Direction.FORWARD)
+        )
 
         self.printer_head_controller.up.pressed.connect(
-            lambda: self.move_extruder(PrinterHeadPositionController.Direction.UP))
+            lambda: self.move_extruder(PrinterHeadPositionController.Direction.UP)
+        )
 
         self.printer_head_controller.left.pressed.connect(
-            lambda: self.move_extruder(PrinterHeadPositionController.Direction.LEFT))
+            lambda: self.move_extruder(PrinterHeadPositionController.Direction.LEFT)
+        )
 
         self.printer_head_controller.home.pressed.connect(
-            lambda: self.move_extruder(PrinterHeadPositionController.Direction.HOME))
+            lambda: self.move_extruder(PrinterHeadPositionController.Direction.HOME)
+        )
 
         self.printer_head_controller.right.pressed.connect(
-            lambda: self.move_extruder(PrinterHeadPositionController.Direction.RIGHT))
+            lambda: self.move_extruder(PrinterHeadPositionController.Direction.RIGHT)
+        )
 
         self.printer_head_controller.back.pressed.connect(
-            lambda: self.move_extruder(PrinterHeadPositionController.Direction.BACK))
+            lambda: self.move_extruder(PrinterHeadPositionController.Direction.BACK)
+        )
 
         self.printer_head_controller.down.pressed.connect(
-            lambda: self.move_extruder(PrinterHeadPositionController.Direction.DOWN))
+            lambda: self.move_extruder(PrinterHeadPositionController.Direction.DOWN)
+        )
 
         self.printer_head_controller.center_extruder.pressed.connect(
-            lambda: self.move_extruder(PrinterHeadPositionController.Direction.CENTER))
+            lambda: self.move_extruder(PrinterHeadPositionController.Direction.CENTER)
+        )
 
         self._left_wing.addWidget(self.printer_head_controller)
 
@@ -115,7 +134,9 @@ class MainWindow(QMainWindow):
 
         self.antenna_offset_btn = TwoParamInput("x offset:", "y offset:")
         self.antenna_offset_btn.set_default_from_tuple((0, -52))
-        self.pass_heigth_measurement_radius_btn = TwoParamInput("pass height:", "measurement radius:")
+        self.pass_heigth_measurement_radius_btn = TwoParamInput(
+            "pass height:", "measurement radius:"
+        )
         self.pass_heigth_measurement_radius_btn.set_default_from_tuple((4, 5))
 
         self._left_wing.addWidget(self.antenna_offset_btn)
@@ -160,18 +181,25 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(widget)
 
     def update_path(self):
-
         print(f"path_generation_position: {self.path_generation_position.get_vals()}")
         print(f"path_generation_size: {self.path_generation_size.get_vals()}")
 
-        print(f"pass_height_measurement_radius_btn: {self.pass_heigth_measurement_radius_btn.get_vals()}")
+        print(
+            f"pass_height_measurement_radius_btn: {self.pass_heigth_measurement_radius_btn.get_vals()}"
+        )
         print(f"antenna_offset_btn: {self.antenna_offset_btn.get_vals()}")
 
         sample_size = (
-            self.path_generation_size.get_vals()[0], self.path_generation_size.get_vals()[1], self.printer.z_size)
+            self.path_generation_size.get_vals()[0],
+            self.path_generation_size.get_vals()[1],
+            self.printer.z_size,
+        )
 
         self.antenna_offset = self.antenna_offset_btn.get_vals()
-        self.pass_height, self.antenna_measurement_radius = self.pass_heigth_measurement_radius_btn.get_vals()
+        (
+            self.pass_height,
+            self.antenna_measurement_radius,
+        ) = self.pass_heigth_measurement_radius_btn.get_vals()
         self.path, self.antenna_path = simple_pass_3d_for_gui(
             sample_shift_from_0_0=self.path_generation_position.get_vals(),
             sample_size=sample_size,
@@ -188,7 +216,9 @@ class MainWindow(QMainWindow):
         self.path_plot_canvas.draw()
 
     def move_extruder(self, direction: PrinterHeadPositionController.Direction):
-        print(f"moving extruder: {direction}, current position: {self.printer.current_position.to_tuple()}")
+        print(
+            f"moving extruder: {direction}, current position: {self.printer.current_position.to_tuple()}"
+        )
 
         new_position = self.printer.current_position
 
@@ -218,16 +248,19 @@ class MainWindow(QMainWindow):
             if self.printer.current_position.z < 10:
                 new_position.z = 10
                 self.printer.send_and_await(
-                    f"G1 X {self.printer.current_position.x} Y {self.printer.current_position.y} Z {new_position.z}")
+                    f"G1 X {self.printer.current_position.x} Y {self.printer.current_position.y} Z {new_position.z}"
+                )
 
             self.printer.send_and_await(
-                f"G1 X {self.printer.x_size / 2} Y {self.printer.y_size / 2} Z {new_position.z}")
+                f"G1 X {self.printer.x_size / 2} Y {self.printer.y_size / 2} Z {new_position.z}"
+            )
 
             print(f"new position: {self.printer.current_position.to_tuple()}")
             return
 
         self.printer.send_and_await(
-            f"G1 X {new_position.x} Y {new_position.y} Z {new_position.z}")
+            f"G1 X {new_position.x} Y {new_position.y} Z {new_position.z}"
+        )
 
         print(f"new position: {self.printer.current_position.to_tuple()}")
 
@@ -245,11 +278,10 @@ class MainWindow(QMainWindow):
             "CSV File (*.csv);;All Files (*);;Text (*.txt)",
         )
         print(fname)
-        if fname != '':
+        if fname != "":
             measurement.to_csv(fname[0])
 
     def save_config(self):
-
         fname = QFileDialog.getSaveFileName(
             self,
             "Save config",
@@ -258,25 +290,31 @@ class MainWindow(QMainWindow):
         )
         fname = fname[0]
         print(fname)
-        if fname != '':
-            print(f"path_generation_position: {self.path_generation_position.get_vals()}")
+        if fname != "":
+            print(
+                f"path_generation_position: {self.path_generation_position.get_vals()}"
+            )
             print(f"path_generation_size: {self.path_generation_size.get_vals()}")
 
-            print(f"pass_height_measurement_radius_btn: {self.pass_heigth_measurement_radius_btn.get_vals()}")
+            print(
+                f"pass_height_measurement_radius_btn: {self.pass_heigth_measurement_radius_btn.get_vals()}"
+            )
             print(f"antenna_offset_btn: {self.antenna_offset_btn.get_vals()}")
 
             data = {
                 "x_offset": self.antenna_offset_btn.get_vals()[0],
                 "y_offset": self.antenna_offset_btn.get_vals()[1],
                 "pass_height": self.pass_heigth_measurement_radius_btn.get_vals()[0],
-                "measurement_radius": self.pass_heigth_measurement_radius_btn.get_vals()[1],
+                "measurement_radius": self.pass_heigth_measurement_radius_btn.get_vals()[
+                    1
+                ],
                 "x": self.path_generation_position.get_vals()[0],
                 "y": self.path_generation_position.get_vals()[1],
                 "width": self.path_generation_size.get_vals()[0],
                 "height": self.path_generation_size.get_vals()[1],
             }
             try:
-                with open(fname, 'w', encoding='utf-8') as f:
+                with open(fname, "w", encoding="utf-8") as f:
                     json.dump(data, f, ensure_ascii=False, indent=4)
             except Exception as ex:
                 print("saving failed")
@@ -292,12 +330,14 @@ class MainWindow(QMainWindow):
         )
         fname = fname[0]
         print(fname)
-        if fname != '':
+        if fname != "":
             data = {
                 "x_offset": self.antenna_offset_btn.get_vals()[0],
                 "y_offset": self.antenna_offset_btn.get_vals()[1],
                 "pass_height": self.pass_heigth_measurement_radius_btn.get_vals()[0],
-                "measurement_radius": self.pass_heigth_measurement_radius_btn.get_vals()[1],
+                "measurement_radius": self.pass_heigth_measurement_radius_btn.get_vals()[
+                    1
+                ],
                 "x": self.path_generation_position.get_vals()[0],
                 "y": self.path_generation_position.get_vals()[1],
                 "width": self.path_generation_size.get_vals()[0],
@@ -316,13 +356,14 @@ class MainWindow(QMainWindow):
 
             self.antenna_offset_btn.set_values(data["x_offset"], data["y_offset"])
             self.antenna_offset_btn.update()
-            self.pass_heigth_measurement_radius_btn.set_values(data["pass_height"], data["measurement_radius"])
+            self.pass_heigth_measurement_radius_btn.set_values(
+                data["pass_height"], data["measurement_radius"]
+            )
             self.pass_heigth_measurement_radius_btn.update()
             self.path_generation_position.set_values(data["x"], data["y"])
             self.path_generation_position.update()
             self.path_generation_size.set_values(data["width"], data["height"])
             self.path_generation_size.update()
-
 
     def add_plots(self) -> None:
         def helper(plot):
@@ -333,9 +374,6 @@ class MainWindow(QMainWindow):
 
         self._path_plot_canvas = PathPlotCanvas()
         helper(self._path_plot_canvas)
-
-        # self._path_2d_plot_canvas = PathPlotCanvas()
-        # helper(self._path_2d_plot_canvas)
 
         self._measurements_plot_canvas = MeasurementsPlotCanvas()
         helper(self._measurements_plot_canvas)
@@ -350,8 +388,8 @@ class MainWindow(QMainWindow):
 
     def check_for_stop(self):
         return (
-                self.start_stop_measurement_button.state
-                != StartStopContinueButton.State.STOP
+            self.start_stop_measurement_button.state
+            != StartStopContinueButton.State.STOP
         )
 
     def close_thread(self):
@@ -361,7 +399,6 @@ class MainWindow(QMainWindow):
         self.scan_type_btn.enable()
         self.save_config_btn.enable()
         self.load_config_btn.enable()
-        # self.start_stop_measurement_button.change_state()
 
     def start_thread(self):
         if self.thread is not None:
@@ -391,9 +428,7 @@ class MainWindow(QMainWindow):
 
         self.thread = threading.Thread(
             target=self.main_loop,
-            args=(
-
-            ),
+            args=(),
         )
         self.thread.start()
 
@@ -415,12 +450,12 @@ class MainWindow(QMainWindow):
             print(f"\tx:{x}\ty:{y}\tz:{z}")
 
     def perform_scan(self):
-        scan_val = get_level(self.analyzer, 2.622 * (10 ** 9), 2)
+        scan_val = get_level(self.analyzer, 2.622 * (10**9), 2)
 
         while scan_val > -17 or scan_val < -22:
             print(f"\tmeasurement:{scan_val}")
             print(f"\trepeting measurement")
-            scan_val = get_level(self.analyzer, 2.622 * (10 ** 9), 2)
+            scan_val = get_level(self.analyzer, 2.622 * (10**9), 2)
 
         return round(scan_val, 4)
 
@@ -429,7 +464,7 @@ class MainWindow(QMainWindow):
             self.path,
             self.antenna_path,
             antenna_measurement_radius=self.antenna_measurement_radius,
-            highlight=highlight
+            highlight=highlight,
         )
 
         self.measurements_plot_canvas.plot_data(self.path, self.measurement)
@@ -437,15 +472,9 @@ class MainWindow(QMainWindow):
         self.path_plot_canvas.draw()
         self.measurements_plot_canvas.draw()
 
-    def main_loop(
-            self,
-    ):
-
+    def main_loop(self):
         if self.scan_type_btn.text() == ScanType.ScalarAnalyzer.value:
-            self.measurement: Dict[str, list] = {'x': [],
-                                                 'y': [],
-                                                 'z': [],
-                                                 'm': []}
+            self.measurement: Dict[str, list] = {"x": [], "y": [], "z": [], "m": []}
 
         self.printer.startup_procedure()
         print("Measurement loop ")
@@ -478,17 +507,16 @@ class MainWindow(QMainWindow):
             print(f"\tmeasurement:{scan_val}")
 
             if self.scan_type_btn.text() == ScanType.ScalarAnalyzer.value:
-
-                self.measurement['x'].append(x - self.antenna_offset[0])
-                self.measurement['y'].append(y - self.antenna_offset[1])
-                self.measurement['z'].append(z)
-                self.measurement['m'].append(scan_val)
+                self.measurement["x"].append(x - self.antenna_offset[0])
+                self.measurement["y"].append(y - self.antenna_offset[1])
+                self.measurement["z"].append(z)
+                self.measurement["m"].append(scan_val)
 
             elif self.scan_type_btn.text() == ScanType.ScalarAnalyzerBackground.value:
-                if len(self.measurement['m']) < id:
-                    self.measurement['m'][id].append(scan_val)
+                if len(self.measurement["m"]) < id:
+                    self.measurement["m"][id].append(scan_val)
                 else:
-                    self.measurement['m'][id] -= scan_val
+                    self.measurement["m"][id] -= scan_val
 
             else:
                 print(f"Scan type: {self.scan_type_btn.state} is not supported")
@@ -508,7 +536,8 @@ class MainWindow(QMainWindow):
                 f"elapsed time: {round((time.time() - elapsed_time) / 60, 2)}min, "
                 f"left time: {int(round((time.time() - start_time) * (total_path_length - id - 1) / (60 ** 2), 2))}h "
                 f"{int(round((time.time() - start_time) * (total_path_length - id - 1) / 60, 2))}min "
-                f"{int(round((time.time() - start_time) * (total_path_length - id - 1) % 60, 2))}s")
+                f"{int(round((time.time() - start_time) * (total_path_length - id - 1) % 60, 2))}s"
+            )
 
         self.close_thread()
 
