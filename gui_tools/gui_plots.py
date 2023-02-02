@@ -14,6 +14,8 @@ from pass_generators.simple_pass import simple_pass_3d
 matplotlib.use("Qt5Agg")
 
 Point = Tuple[float, float, float]
+
+
 # TODO make plots faster with : https://www.geeksforgeeks.org/how-to-update-a-plot-in-matplotlib/
 
 class PathPlotCanvas(FigureCanvas):

@@ -56,17 +56,14 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
+        self.path = None
         self.antenna_path = None
+
         self.measurement = None
         self.innit_ui()
 
-        self.path = None
         self.thread = None
         self.printer: Union[MarlinDevice, PrusaDevice, PrinterDeviceMock] = None
-
-        self.antenna_offset = (-52, 0, 0)
-        self.antenna_measurement_radius = 2
-        self.pass_height = 4
 
         if PRINTER_DEBUG_MODE:
             self.printer: PrinterDeviceMock = PrinterDeviceMock.connect_on_port(
@@ -195,24 +192,24 @@ class MainWindow(QMainWindow):
             self.printer.z_size,
         )
 
-        self.antenna_offset = self.antenna_offset_btn.get_vals()
+        antenna_offset = self.antenna_offset_btn.get_vals()
         (
-            self.pass_height,
-            self.antenna_measurement_radius,
+            pass_height,
+            antenna_measurement_radius,
         ) = self.pass_heigth_measurement_radius_btn.get_vals()
 
         self.path, self.antenna_path = simple_pass_3d_for_gui(
             sample_shift_from_0_0=self.path_generation_position.get_vals(),
             sample_size=sample_size,
-            antenna_measurement_radius=self.antenna_measurement_radius,
-            antenna_offset=self.antenna_offset,
-            pass_height=self.pass_height,
+            antenna_measurement_radius=antenna_measurement_radius,
+            antenna_offset=antenna_offset,
+            pass_height=pass_height,
         )
 
         self.path_plot_canvas.plot_data(
             self.path,
             self.antenna_path,
-            antenna_measurement_radius=self.antenna_measurement_radius,
+            antenna_measurement_radius=antenna_measurement_radius,
         )
         self.path_plot_canvas.draw()
 
@@ -454,10 +451,12 @@ class MainWindow(QMainWindow):
         return round(scan_val, 4)
 
     def update_plots(self, highlight):
+        antenna_measurement_radius = self.pass_heigth_measurement_radius_btn.get_vals()[1]
+
         self.path_plot_canvas.plot_data(
             self.path,
             self.antenna_path,
-            antenna_measurement_radius=self.antenna_measurement_radius,
+            antenna_measurement_radius=antenna_measurement_radius,
             highlight=highlight,
         )
 
@@ -501,9 +500,9 @@ class MainWindow(QMainWindow):
             print(f"\tmeasurement:{scan_val}")
 
             if self.scan_type_btn.text() == ScanType.ScalarAnalyzer.value:
-                self.measurement["x"].append(x - self.antenna_offset[0])
-                self.measurement["y"].append(y - self.antenna_offset[1])
-                self.measurement["z"].append(z)
+                self.measurement["x"].append(self.antenna_path[id][0])
+                self.measurement["y"].append(self.antenna_path[id][1])
+                self.measurement["z"].append(self.antenna_path[id][2])
                 self.measurement["m"].append(scan_val)
 
             elif self.scan_type_btn.text() == ScanType.ScalarAnalyzerBackground.value:

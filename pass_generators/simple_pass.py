@@ -147,13 +147,13 @@ def simple_pass_3d_for_gui(
             for id in range(len(y_measurements_coords) - 1, -1, -1):
                 path.append((x, y_measurements_coords[id]))
 
-    path = [
-        (x + sample_shift_from_0_0[0], y + sample_shift_from_0_0[1], pass_height)
-        for x, y in path
+    antenna_path = [
+        (x + sample_shift_from_0_0[0], y + sample_shift_from_0_0[1], pass_height) for x, y in path
     ]
 
-    antenna_path = [
-        (x + antenna_offset[0], y + antenna_offset[1], z) for x, y, z in path
+    path = [
+        (x + antenna_offset[0], y + antenna_offset[1], pass_height)
+        for x, y, z in antenna_path
     ]
 
     return path, antenna_path

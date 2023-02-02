@@ -38,5 +38,5 @@ also
 
 ## PRINTER DEVICE
 
-- [ ] **improve send and await** it should estimate time needed for completion of requested movement
+- [x] **improve send and await** it should estimate time needed for completion of requested movement
 - [ ] **connected devices** scanner, that detects all devices connected to the pc
