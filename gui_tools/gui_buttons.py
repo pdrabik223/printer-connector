@@ -230,9 +230,13 @@ class TwoParamInput(QWidget):
     def get_vals(self) -> Tuple[int, int]:
         return int(self.input_a.text()), int(self.input_b.text())
 
-    def set_default(self, vals: Tuple[int, int]):
+    def set_default_from_tuple(self, vals: Tuple[int, int]):
         self.input_a.setText(str(vals[0]))
         self.input_b.setText(str(vals[1]))
+
+    def set_values(self, val_a, val_b):
+        self.input_a.setText(str(val_a))
+        self.input_b.setText(str(val_b))
 
     def on_editing_finished_connect(self, function: Callable):
         self.input_a.editingFinished.connect(function)
@@ -266,7 +270,7 @@ class RecalculatePath(QPushButton):
                            f"background-color: {color};")
 
 
-class SavaData(QPushButton):
+class SaveData(QPushButton):
 
     def __init__(self):
         super().__init__()
@@ -349,9 +353,9 @@ class SaveConfig(QPushButton):
 
     def __init__(self):
         super().__init__()
-        self.setText("Sava Config")
+        self.setText("Save Config")
         self.update_background_color()
-        self.disable()
+        self.enable()
         self.setMaximumWidth(360)
 
     def disable(self):
@@ -379,7 +383,7 @@ class LoadConfig(QPushButton):
         super().__init__()
         self.setText("Load Config")
         self.update_background_color()
-        self.disable()
+        self.enable()
         self.setMaximumWidth(360)
 
     def disable(self):

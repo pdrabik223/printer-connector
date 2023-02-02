@@ -1,4 +1,5 @@
 import enum
+import json
 import math
 import os
 import threading
@@ -23,7 +24,7 @@ import sys
 import pandas as pd
 
 from gui_tools.gui_buttons import PrinterHeadPositionController, StartStopContinueButton, TwoParamInput, \
-    RecalculatePath, SavaData, ScanTypeBtn, ScanType
+    RecalculatePath, SaveData, ScanTypeBtn, ScanType, SaveConfig, LoadConfig
 from gui_tools.gui_plots import *
 from hapmd.src.hameg_ci import set_up_hamed_device
 
@@ -113,9 +114,9 @@ class MainWindow(QMainWindow):
         self.path_generation_size = TwoParamInput("width:", "height:")
 
         self.antenna_offset_btn = TwoParamInput("x offset:", "y offset:")
-        self.antenna_offset_btn.set_default((0, -52))
+        self.antenna_offset_btn.set_default_from_tuple((0, -52))
         self.pass_heigth_measurement_radius_btn = TwoParamInput("pass height:", "measurement radius:")
-        self.pass_heigth_measurement_radius_btn.set_default((4, 5))
+        self.pass_heigth_measurement_radius_btn.set_default_from_tuple((4, 5))
 
         self._left_wing.addWidget(self.antenna_offset_btn)
         self._left_wing.addWidget(self.pass_heigth_measurement_radius_btn)
@@ -127,9 +128,17 @@ class MainWindow(QMainWindow):
         self.recalculate_path.pressed.connect(self.update_path)
         self._left_wing.addWidget(self.recalculate_path)
 
-        self.save_data_btn = SavaData()
+        self.save_data_btn = SaveData()
         self.save_data_btn.pressed.connect(self.save_data)
         self._left_wing.addWidget(self.save_data_btn)
+
+        self.save_config_btn = SaveConfig()
+        self.save_config_btn.pressed.connect(self.save_config)
+        self._left_wing.addWidget(self.save_config_btn)
+
+        self.load_config_btn = LoadConfig()
+        self.load_config_btn.pressed.connect(self.load_config)
+        self._left_wing.addWidget(self.load_config_btn)
 
         self.start_stop_measurement_button = StartStopContinueButton()
         self.start_stop_measurement_button.pressed.connect(self.start_thread)
@@ -239,6 +248,82 @@ class MainWindow(QMainWindow):
         if fname != '':
             measurement.to_csv(fname[0])
 
+    def save_config(self):
+
+        fname = QFileDialog.getSaveFileName(
+            self,
+            "Save config",
+            os.getcwd(),
+            "JSON (*.json);;All Files (*);;Text (*.txt)",
+        )
+        fname = fname[0]
+        print(fname)
+        if fname != '':
+            print(f"path_generation_position: {self.path_generation_position.get_vals()}")
+            print(f"path_generation_size: {self.path_generation_size.get_vals()}")
+
+            print(f"pass_height_measurement_radius_btn: {self.pass_heigth_measurement_radius_btn.get_vals()}")
+            print(f"antenna_offset_btn: {self.antenna_offset_btn.get_vals()}")
+
+            data = {
+                "x_offset": self.antenna_offset_btn.get_vals()[0],
+                "y_offset": self.antenna_offset_btn.get_vals()[1],
+                "pass_height": self.pass_heigth_measurement_radius_btn.get_vals()[0],
+                "measurement_radius": self.pass_heigth_measurement_radius_btn.get_vals()[1],
+                "x": self.path_generation_position.get_vals()[0],
+                "y": self.path_generation_position.get_vals()[1],
+                "width": self.path_generation_size.get_vals()[0],
+                "height": self.path_generation_size.get_vals()[1],
+            }
+            try:
+                with open(fname, 'w', encoding='utf-8') as f:
+                    json.dump(data, f, ensure_ascii=False, indent=4)
+            except Exception as ex:
+                print("saving failed")
+                print(ex)
+                pass
+
+    def load_config(self):
+        fname = QFileDialog.getOpenFileName(
+            self,
+            "Load config",
+            os.getcwd(),
+            "JSON (*.json);;All Files (*);;Text (*.txt)",
+        )
+        fname = fname[0]
+        print(fname)
+        if fname != '':
+            data = {
+                "x_offset": self.antenna_offset_btn.get_vals()[0],
+                "y_offset": self.antenna_offset_btn.get_vals()[1],
+                "pass_height": self.pass_heigth_measurement_radius_btn.get_vals()[0],
+                "measurement_radius": self.pass_heigth_measurement_radius_btn.get_vals()[1],
+                "x": self.path_generation_position.get_vals()[0],
+                "y": self.path_generation_position.get_vals()[1],
+                "width": self.path_generation_size.get_vals()[0],
+                "height": self.path_generation_size.get_vals()[1],
+            }
+            try:
+                with open(fname) as file:
+                    new_data = json.load(file)
+                    for param in data.keys():
+                        if param in new_data:
+                            data[param] = new_data[param]
+            except Exception as ex:
+                print("loading failed")
+                print(ex)
+                pass
+
+            self.antenna_offset_btn.set_values(data["x_offset"], data["y_offset"])
+            self.antenna_offset_btn.update()
+            self.pass_heigth_measurement_radius_btn.set_values(data["pass_height"], data["measurement_radius"])
+            self.pass_heigth_measurement_radius_btn.update()
+            self.path_generation_position.set_values(data["x"], data["y"])
+            self.path_generation_position.update()
+            self.path_generation_size.set_values(data["width"], data["height"])
+            self.path_generation_size.update()
+
+
     def add_plots(self) -> None:
         def helper(plot):
             self._graphs_layout.addWidget(plot)
@@ -274,6 +359,8 @@ class MainWindow(QMainWindow):
         self.recalculate_path.enable()
         self.save_data_btn.enable()
         self.scan_type_btn.enable()
+        self.save_config_btn.enable()
+        self.load_config_btn.enable()
         # self.start_stop_measurement_button.change_state()
 
     def start_thread(self):
@@ -293,6 +380,8 @@ class MainWindow(QMainWindow):
         self.printer_head_controller.disable()
         self.recalculate_path.disable()
         self.scan_type_btn.disable()
+        self.load_config_btn.disable()
+        self.save_config_btn.disable()
         self.measurements_plot_canvas.plot_data(self.path, None)
 
         self.path_plot_canvas.draw()
