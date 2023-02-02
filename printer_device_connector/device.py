@@ -134,8 +134,9 @@ class Device:
 def send_and_await(self, command: str) -> str:
     """
     **Send command and await response.**
-    Depending on used software, response might be returned as soon as command is acknowledged by the device, or after completion.
-    Function will block thread and wait for response, after predefined tine function will return received message or 'no message received' error.
+    Depending on used software, response might be returned as soon as command is acknowledged by the device,
+    or after completion. Function will block thread and wait for response,
+    after predefined tine function will return received message or 'no message received' error.
 
     Parameters
     ----------

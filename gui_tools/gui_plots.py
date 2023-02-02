@@ -9,7 +9,8 @@ import matplotlib
 from typing import Tuple, List, Optional, Dict
 
 from printer_device_connector.prusa_device import PrusaDevice
-from pass_generators.simple_pass import simple_pass_3d
+
+# from pass_generators.simple_pass import simple_pass_3d
 
 matplotlib.use("Qt5Agg")
 
@@ -17,6 +18,7 @@ Point = Tuple[float, float, float]
 
 
 # TODO make plots faster with : https://www.geeksforgeeks.org/how-to-update-a-plot-in-matplotlib/
+
 
 class PathPlotCanvas(FigureCanvas):
     def __init__(self, parent=None, width=9, height=5, dpi=90):
@@ -29,11 +31,11 @@ class PathPlotCanvas(FigureCanvas):
         super(PathPlotCanvas, self).__init__(self.fig)
 
     def plot_data(
-            self,
-            path: List[Point],
-            antenna_path: List[Point],
-            antenna_measurement_radius: float,
-            highlight: Optional[Point] = None,
+        self,
+        path: List[Point],
+        antenna_path: List[Point],
+        antenna_measurement_diameter: float,
+        highlight: Optional[Point] = None,
     ):
         max_x = np.max([point[0] for point in path])
         max_y = np.max([point[1] for point in path])
@@ -52,7 +54,7 @@ class PathPlotCanvas(FigureCanvas):
         self.axes2.cla()
 
         PathPlotCanvas.plot_measurement_areas(
-            antenna_x, antenna_y, self.axes2, antenna_measurement_radius
+            antenna_x, antenna_y, self.axes2, antenna_measurement_diameter / 2
         )
 
         self.axes2.plot(
@@ -65,23 +67,23 @@ class PathPlotCanvas(FigureCanvas):
 
         if highlight is not None:
             self.axes2.add_patch(
-                plt.Circle((highlight[0], highlight[1]), 2, color="black", alpha=1)
+                plt.Circle((highlight[0], highlight[1]), 1.5, color="black", alpha=1)
             )
 
         self.axes2.axis("square")
         self.axes2.grid()
-        self.axes2.set_xlabel("X [arb. units]")
-        self.axes2.set_ylabel("Y [arb. units]")
-        self.axes2.set_title("Some thing")
+        self.axes2.set_xlabel("X [millimeters]")
+        self.axes2.set_ylabel("Y [millimeters]")
+        self.axes2.set_title("Extruder path")
 
     @staticmethod
     def plot_measurement_areas(
-            x_values: List[float],
-            y_values: List[float],
-            ax: plt.Axes,
-            radius: float,
-            color: str = "orange",
-            alpha: float = 0.2,
+        x_values: List[float],
+        y_values: List[float],
+        ax: plt.Axes,
+        radius: float,
+        color: str = "orange",
+        alpha: float = 0.2,
     ) -> None:
         for x, y in zip(x_values, y_values):
             ax.add_patch(plt.Circle((x, y), radius, color=color, alpha=alpha))
@@ -97,7 +99,7 @@ class MeasurementsPlotCanvas(FigureCanvas):
     def __init__(self, parent=None, width=9, height=5, dpi=90, min=-20.5, max=-19):
         self.cp = None
         self.fig = Figure(figsize=(width, height), dpi=dpi)
-
+        self.fig.tight_layout()
         self.axes = self.fig.add_subplot(111)
         self.min = min
         self.max = max
@@ -111,9 +113,9 @@ class MeasurementsPlotCanvas(FigureCanvas):
         super(MeasurementsPlotCanvas, self).__init__(self.fig)
 
     def plot_data(
-            self,
-            path: List[Tuple[float, float, float]],
-            measurements: Optional[Dict[str, List[Tuple[float, float, float, float]]]],
+        self,
+        path: List[Tuple[float, float, float]],
+        measurements: Optional[Dict[str, List[Tuple[float, float, float, float]]]],
     ):
         self.axes.cla()
 
@@ -171,9 +173,9 @@ class MeasurementsPlotCanvas(FigureCanvas):
 
         self.axes.set_xticks(np.arange(len(x_labels)), labels=x_labels)
         self.axes.set_yticks(np.arange(len(y_labels)), labels=y_labels)
-        self.axes.set_xlabel("X [arb. units]")
-        self.axes.set_ylabel("Y [arb. units]")
-        self.axes.set_title("Some thing")
+        self.axes.set_xlabel("X [millimeters]")
+        self.axes.set_ylabel("Y [millimeters]")
+        self.axes.set_title("Scalar spectrum analyzer readouts\nfor 2.622 Ghz")
 
         # x_start = 0
         # x_end = len(vec_2d)

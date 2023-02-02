@@ -125,16 +125,22 @@ class MainWindow(QMainWindow):
         self._left_wing.addWidget(self.scan_type_btn)
         self.add_plots()
 
-        self.path_generation_position = TwoParamInput("x:", "y:")
-
-        self.path_generation_size = TwoParamInput("width:", "height:")
-
-        self.antenna_offset_btn = TwoParamInput("x offset:", "y offset:")
-        self.antenna_offset_btn.set_default_from_tuple((0, -52))
-        self.pass_heigth_measurement_radius_btn = TwoParamInput(
-            "pass height:", "measurement radius:"
+        self.path_generation_position = TwoParamInput(
+            "sample\nx offset:", "sample\ny offset:"
         )
-        self.pass_heigth_measurement_radius_btn.set_default_from_tuple((4, 5))
+
+        self.path_generation_size = TwoParamInput("sample\nwidth:", "sample\nheight:")
+
+        self.antenna_offset_btn = TwoParamInput(
+            "antenna\nx offset:", "antenna\ny offset:"
+        )
+
+        self.antenna_offset_btn.set_default_from_tuple((0, 52))
+
+        self.pass_heigth_measurement_radius_btn = TwoParamInput(
+            "pass height:", "distance between\nmeasurements:"
+        )
+        self.pass_heigth_measurement_radius_btn.set_default_from_tuple((4, 10))
 
         self._left_wing.addWidget(self.antenna_offset_btn)
         self._left_wing.addWidget(self.pass_heigth_measurement_radius_btn)
@@ -187,9 +193,9 @@ class MainWindow(QMainWindow):
         print(f"antenna_offset_btn: {self.antenna_offset_btn.get_vals()}")
 
         sample_size = (
-            self.path_generation_size.get_vals()[0],
-            self.path_generation_size.get_vals()[1],
-            self.printer.z_size,
+            self.path_generation_size.val_a,
+            self.path_generation_size.val_b,
+            4,
         )
 
         antenna_offset = self.antenna_offset_btn.get_vals()
@@ -209,7 +215,7 @@ class MainWindow(QMainWindow):
         self.path_plot_canvas.plot_data(
             self.path,
             self.antenna_path,
-            antenna_measurement_radius=antenna_measurement_radius,
+            antenna_measurement_diameter=antenna_measurement_radius,
         )
         self.path_plot_canvas.draw()
 
@@ -281,14 +287,14 @@ class MainWindow(QMainWindow):
 
     def get_config_dict(self):
         return {
-            "x_offset": self.antenna_offset_btn.get_vals()[0],
-            "y_offset": self.antenna_offset_btn.get_vals()[1],
-            "pass_height": self.pass_heigth_measurement_radius_btn.get_vals()[0],
-            "measurement_radius": self.pass_heigth_measurement_radius_btn.get_vals()[1],
-            "x": self.path_generation_position.get_vals()[0],
-            "y": self.path_generation_position.get_vals()[1],
-            "width": self.path_generation_size.get_vals()[0],
-            "height": self.path_generation_size.get_vals()[1],
+            "x_offset": self.antenna_offset_btn.val_a,
+            "y_offset": self.antenna_offset_btn.val_b,
+            "pass_height": self.pass_heigth_measurement_radius_btn.val_a,
+            "measurement_radius": self.pass_heigth_measurement_radius_btn.val_b,
+            "x": self.path_generation_position.val_a,
+            "y": self.path_generation_position.val_b,
+            "width": self.path_generation_size.val_a,
+            "height": self.path_generation_size.val_b,
         }
 
     def save_config(self):
@@ -376,8 +382,8 @@ class MainWindow(QMainWindow):
 
     def check_for_stop(self):
         return (
-                self.start_stop_measurement_button.state
-                != StartStopContinueButton.State.STOP
+            self.start_stop_measurement_button.state
+            != StartStopContinueButton.State.STOP
         )
 
     def close_thread(self):
@@ -387,14 +393,21 @@ class MainWindow(QMainWindow):
         self.scan_type_btn.enable()
         self.save_config_btn.enable()
         self.load_config_btn.enable()
+        if self.thread is not None:
+            self.start_stop_measurement_button.change_state()
 
     def start_thread(self):
         if self.thread is not None:
             print("thread is already running")
-            self.close_thread()
             self.thread.join()
             print("thread is closed")
             self.thread = None
+
+        if (
+            self.start_stop_measurement_button.state
+            == StartStopContinueButton.State.START
+        ):
+            self.close_thread()
             return
 
         self.update_path()
@@ -431,7 +444,7 @@ class MainWindow(QMainWindow):
         x_printer_boundaries = (min_x, min_x, max_x, max_x, min_x)
         y_printer_boundaries = (min_y, max_y, max_y, min_y, min_y)
 
-        z = self.pass_heigth_measurement_radius_btn.get_vals()[0] + 5
+        z = self.pass_heigth_measurement_radius_btn.val_a + 5
         self.printer.speed = 1500
 
         for x, y in zip(x_printer_boundaries, y_printer_boundaries):
@@ -441,22 +454,22 @@ class MainWindow(QMainWindow):
         self.printer.speed = 800
 
     def perform_scan(self):
-        scan_val = get_level(self.analyzer, 2.622 * (10 ** 9), 2)
+        scan_val = get_level(self.analyzer, 2.622 * (10**9), 2)
 
         while scan_val > -17 or scan_val < -22:
             print(f"\tmeasurement:{scan_val}")
             print(f"\trepeating measurement")
-            scan_val = get_level(self.analyzer, 2.622 * (10 ** 9), 2)
+            scan_val = get_level(self.analyzer, 2.622 * (10**9), 2)
 
         return round(scan_val, 4)
 
     def update_plots(self, highlight):
-        antenna_measurement_radius = self.pass_heigth_measurement_radius_btn.get_vals()[1]
+        antenna_measurement_radius = self.pass_heigth_measurement_radius_btn.val_b
 
         self.path_plot_canvas.plot_data(
             self.path,
             self.antenna_path,
-            antenna_measurement_radius=antenna_measurement_radius,
+            antenna_measurement_diameter=antenna_measurement_radius,
             highlight=highlight,
         )
 

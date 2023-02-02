@@ -21,6 +21,7 @@ from PyQt6.QtWidgets import QPushButton, QGridLayout, QWidget, QVBoxLayout
 
 CYAN_BLUE = "rgb(98,170,252)"
 GRAY = "rgb(160,160,160)"
+BUTTON_STYLING = "border-style: outset; border-width: 2px; border-radius: 10px; border-color: beige; min-width: 2em; padding: 6px; color: white;"
 
 
 class PrinterHeadPositionController(QWidget):
@@ -68,9 +69,8 @@ class PrinterHeadPositionController(QWidget):
 
         self.enable()
         for btn in self.all_buttons()[:-1]:
-            btn.setMaximumWidth(120)
+            btn.setMaximumWidth(200)
 
-        self._center_extruder.setMaximumWidth(360)
         self.setMaximumWidth(360)
 
     def all_buttons(self) -> List[QPushButton]:
@@ -129,16 +129,7 @@ class PrinterHeadPositionController(QWidget):
 
     def update_background_color(self, color: str = GRAY):
         for button in self.all_buttons():
-            button.setStyleSheet(
-                "border-style: outset;"
-                "border-width: 2px;"
-                "border-radius: 10px;"
-                "border-color: beige;"
-                "min-width: 2em;"
-                "padding: 6px;"
-                "color: white;"
-                f"background-color: {color};"
-            )
+            button.setStyleSheet(BUTTON_STYLING + f"background-color: {color};")
 
 
 class StartStopContinueButton(QPushButton):
@@ -174,16 +165,7 @@ class StartStopContinueButton(QPushButton):
         self.update_background_color(color=CYAN_BLUE)
 
     def update_background_color(self, color: str = GRAY):
-        self.setStyleSheet(
-            "border-style: outset;"
-            "border-width: 2px;"
-            "border-radius: 10px;"
-            "border-color: beige;"
-            "min-width: 2em;"
-            "padding: 6px;"
-            "color: white;"
-            f"background-color: {color};"
-        )
+        self.setStyleSheet(BUTTON_STYLING + f"background-color: {color};")
 
     def change_state(self):
         if self.state == StartStopContinueButton.State.START:
@@ -229,8 +211,18 @@ class TwoParamInput(QWidget):
         self.setLayout(self._main_layout)
         self.setMaximumWidth(360)
 
+    @property
+    def val_a(self):
+        return float(self.input_a.text().replace(",", "."))
+
+    @property
+    def val_b(self):
+        return float(self.input_b.text().replace(",", "."))
+
     def get_vals(self) -> Tuple[float, float]:
-        return float(self.input_a.text().replace(',', '.')), float(self.input_b.text().replace(',', '.'))
+        return float(self.input_a.text().replace(",", ".")), float(
+            self.input_b.text().replace(",", ".")
+        )
 
     def set_default_from_tuple(self, vals: Tuple[float, float]):
         self.input_a.setText(str(vals[0]))
@@ -261,16 +253,7 @@ class RecalculatePath(QPushButton):
         self.update_background_color(color=CYAN_BLUE)
 
     def update_background_color(self, color: str = CYAN_BLUE):
-        self.setStyleSheet(
-            "border-style: outset;"
-            "border-width: 2px;"
-            "border-radius: 10px;"
-            "border-color: beige;"
-            "min-width: 2em;"
-            "padding: 6px;"
-            "color: white;"
-            f"background-color: {color};"
-        )
+        self.setStyleSheet(BUTTON_STYLING + f"background-color: {color};")
 
 
 class SaveData(QPushButton):
@@ -290,16 +273,7 @@ class SaveData(QPushButton):
         self.update_background_color(color=CYAN_BLUE)
 
     def update_background_color(self, color: str = CYAN_BLUE):
-        self.setStyleSheet(
-            "border-style: outset;"
-            "border-width: 2px;"
-            "border-radius: 10px;"
-            "border-color: beige;"
-            "min-width: 2em;"
-            "padding: 6px;"
-            "color: white;"
-            f"background-color: {color};"
-        )
+        self.setStyleSheet(BUTTON_STYLING + f"background-color: {color};")
 
 
 class ScanType(enum.Enum):
@@ -342,16 +316,7 @@ class ScanTypeBtn(QPushButton):
         self.update_background_color(color=CYAN_BLUE)
 
     def update_background_color(self, color: str = CYAN_BLUE):
-        self.setStyleSheet(
-            "border-style: outset;"
-            "border-width: 2px;"
-            "border-radius: 10px;"
-            "border-color: beige;"
-            "min-width: 2em;"
-            "padding: 6px;"
-            "color: white;"
-            f"background-color: {color};"
-        )
+        self.setStyleSheet(BUTTON_STYLING + f"background-color: {color};")
 
 
 class SaveConfig(QPushButton):
@@ -371,16 +336,7 @@ class SaveConfig(QPushButton):
         self.update_background_color(color=CYAN_BLUE)
 
     def update_background_color(self, color: str = CYAN_BLUE):
-        self.setStyleSheet(
-            "border-style: outset;"
-            "border-width: 2px;"
-            "border-radius: 10px;"
-            "border-color: beige;"
-            "min-width: 2em;"
-            "padding: 6px;"
-            "color: white;"
-            f"background-color: {color};"
-        )
+        self.setStyleSheet(BUTTON_STYLING + f"background-color: {color};")
 
 
 class LoadConfig(QPushButton):
@@ -400,13 +356,4 @@ class LoadConfig(QPushButton):
         self.update_background_color(color=CYAN_BLUE)
 
     def update_background_color(self, color: str = CYAN_BLUE):
-        self.setStyleSheet(
-            "border-style: outset;"
-            "border-width: 2px;"
-            "border-radius: 10px;"
-            "border-color: beige;"
-            "min-width: 2em;"
-            "padding: 6px;"
-            "color: white;"
-            f"background-color: {color};"
-        )
+        self.setStyleSheet(BUTTON_STYLING + f"background-color: {color};")
