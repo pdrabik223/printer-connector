@@ -70,6 +70,7 @@ class PrinterHeadPositionController(QWidget):
             btn.setMaximumWidth(120)
 
         self._center_extruder.setMaximumWidth(360)
+        self.setMaximumWidth(360)
 
     def all_buttons(self) -> List[QPushButton]:
         return [self._forward,
@@ -149,6 +150,7 @@ class StartStopContinueButton(QPushButton):
         self.update_text()
         self.pressed.connect(self.change_state)
         # self.clicked.connect(self.start_thread)
+        self.setMaximumWidth(360)
 
     def update_text(self):
 
@@ -194,7 +196,6 @@ class TwoParamInput(QWidget):
     def __init__(self, label_a: str, label_b: str, val_a: int = 50, val_b: int = 50):
         super().__init__()
         self._main_layout = QHBoxLayout()
-
         self.input_label_a = QLabel(label_a)
         self.input_label_a.setMaximumWidth(120)
         self.input_label_a.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -224,6 +225,7 @@ class TwoParamInput(QWidget):
         self._main_layout.addWidget(self.input_b)
 
         self.setLayout(self._main_layout)
+        self.setMaximumWidth(360)
 
     def get_vals(self) -> Tuple[int, int]:
         return int(self.input_a.text()), int(self.input_b.text())
@@ -243,6 +245,7 @@ class RecalculatePath(QPushButton):
         super().__init__()
         self.setText("Recalculate path")
         self.update_background_color()
+        self.setMaximumWidth(360)
 
     def disable(self):
         self.blockSignals(True)
@@ -270,6 +273,7 @@ class SavaData(QPushButton):
         self.setText("Save data")
         self.update_background_color()
         self.disable()
+        self.setMaximumWidth(360)
 
     def disable(self):
         self.blockSignals(True)
@@ -306,7 +310,6 @@ class ScanTypeBtn(QPushButton):
         self.enable()
         self.pressed.connect(self.update_text)
         self.setMaximumWidth(360)
-
 
     def update_text(self):
         if self.text() == ScanType.ScalarAnalyzer.value:

@@ -70,20 +70,20 @@ def set_up_hamed_device(debug: bool = False):
     )
     print("all devices: ")
 
-    dev = usb.core.find(find_all=True)
-
-    # loop through devices, printing vendor and product ids in decimal and hex
-
-    no_devices_found = 0
-    for cfg in dev:
-        no_devices_found += 1
-        print(f'Decimal VendorID= {cfg.idVendor} ProductID= {cfg.idProduct}')
-        print(f'Hexadecimal VendorID= {hex(cfg.idVendor)} ProductID= {hex(cfg.idProduct)}')
-    print(f"no devices found: {no_devices_found}")
 
     if debug:
         hameg_device_handle = Hameg3010DeviceMock()
     else:
+        dev = usb.core.find(find_all=True)
+
+        # loop through devices, printing vendor and product ids in decimal and hex
+
+        no_devices_found = 0
+        for cfg in dev:
+            no_devices_found += 1
+            print(f'Decimal VendorID= {cfg.idVendor} ProductID= {cfg.idProduct}')
+            print(f'Hexadecimal VendorID= {hex(cfg.idVendor)} ProductID= {hex(cfg.idProduct)}')
+        print(f"no devices found: {no_devices_found}")
         hameg_device_handle = Hameg3010Device.connect_using_vid_pid(
             idVendor=0x403, idProduct=0xed72
         )

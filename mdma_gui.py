@@ -109,7 +109,9 @@ class MainWindow(QMainWindow):
         self.add_plots()
 
         self.path_generation_position = TwoParamInput("x:", "y:")
+
         self.path_generation_size = TwoParamInput("width:", "height:")
+
         self.antenna_offset_btn = TwoParamInput("x offset:", "y offset:")
         self.antenna_offset_btn.set_default((0, -52))
         self.pass_heigth_measurement_radius_btn = TwoParamInput("pass height:", "measurement radius:")
@@ -147,10 +149,6 @@ class MainWindow(QMainWindow):
         widget = QWidget()
         widget.setLayout(self._central_layout)
         self.setCentralWidget(widget)
-
-    def subtract_background(self):
-
-        pass
 
     def update_path(self):
 
