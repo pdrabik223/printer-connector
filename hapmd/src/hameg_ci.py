@@ -7,9 +7,9 @@ import usb.util
 
 
 def get_level(
-    device: Union[Hameg3010Device, Hameg3010DeviceMock],
-    frequency: int,
-    measurement_time: int = 1,
+        device: Union[Hameg3010Device, Hameg3010DeviceMock],
+        frequency: int,
+        measurement_time: int = 1,
 ) -> float:
     device.send_await_resp(f"rmode:mtime {measurement_time}")
     device.send_await_resp(f"rmode:frequency {frequency}")
@@ -19,7 +19,7 @@ def get_level(
     else:
         time.sleep(measurement_time)
     level_raw: str = device.send_await_resp("rmode:level?")[1][2:-1]
-    level = level_raw[level_raw.find(",") + 1 :]
+    level = level_raw[level_raw.find(",") + 1:]
     value = float(level)
     return value
 
@@ -34,7 +34,7 @@ def hameg_console_loop(hameg_handle: Union[Hameg3010Device, Hameg3010DeviceMock]
                 command = command[4:]
                 if "ghz" in command.casefold():
                     val = float(command[:-3])
-                    val *= 10**9
+                    val *= 10 ** 9
                 else:
                     val = int(command)
 

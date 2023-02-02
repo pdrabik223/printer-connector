@@ -2,7 +2,7 @@ import enum
 from typing import List, Tuple, Callable
 
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QIntValidator
+from PyQt6.QtGui import QIntValidator, QDoubleValidator
 from PyQt6.QtWidgets import (
     QApplication,
     QWidget,
@@ -203,7 +203,7 @@ class TwoParamInput(QWidget):
         self.input_label_a.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.input_a = QLineEdit()
-        self.input_a.setValidator(QIntValidator())
+        self.input_a.setValidator(QDoubleValidator())
         self.input_a.setMaxLength(3)
         self.input_a.setMaximumWidth(38)
         self.input_a.setText(str(val_a))
@@ -214,7 +214,7 @@ class TwoParamInput(QWidget):
         self.input_label_b.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.input_b = QLineEdit()
-        self.input_b.setValidator(QIntValidator())
+        self.input_b.setValidator(QDoubleValidator())
         self.input_b.setMaxLength(3)
         self.input_b.setMaximumWidth(38)
         self.input_b.setText(str(val_b))
@@ -229,10 +229,10 @@ class TwoParamInput(QWidget):
         self.setLayout(self._main_layout)
         self.setMaximumWidth(360)
 
-    def get_vals(self) -> Tuple[int, int]:
-        return int(self.input_a.text()), int(self.input_b.text())
+    def get_vals(self) -> Tuple[float, float]:
+        return float(self.input_a.text().replace(',', '.')), float(self.input_b.text().replace(',', '.'))
 
-    def set_default_from_tuple(self, vals: Tuple[int, int]):
+    def set_default_from_tuple(self, vals: Tuple[float, float]):
         self.input_a.setText(str(vals[0]))
         self.input_b.setText(str(vals[1]))
 

@@ -200,6 +200,7 @@ class MainWindow(QMainWindow):
             self.pass_height,
             self.antenna_measurement_radius,
         ) = self.pass_heigth_measurement_radius_btn.get_vals()
+
         self.path, self.antenna_path = simple_pass_3d_for_gui(
             sample_shift_from_0_0=self.path_generation_position.get_vals(),
             sample_size=sample_size,
@@ -305,9 +306,7 @@ class MainWindow(QMainWindow):
                 "x_offset": self.antenna_offset_btn.get_vals()[0],
                 "y_offset": self.antenna_offset_btn.get_vals()[1],
                 "pass_height": self.pass_heigth_measurement_radius_btn.get_vals()[0],
-                "measurement_radius": self.pass_heigth_measurement_radius_btn.get_vals()[
-                    1
-                ],
+                "measurement_radius": self.pass_heigth_measurement_radius_btn.get_vals()[1],
                 "x": self.path_generation_position.get_vals()[0],
                 "y": self.path_generation_position.get_vals()[1],
                 "width": self.path_generation_size.get_vals()[0],
@@ -388,8 +387,8 @@ class MainWindow(QMainWindow):
 
     def check_for_stop(self):
         return (
-            self.start_stop_measurement_button.state
-            != StartStopContinueButton.State.STOP
+                self.start_stop_measurement_button.state
+                != StartStopContinueButton.State.STOP
         )
 
     def close_thread(self):
@@ -443,19 +442,19 @@ class MainWindow(QMainWindow):
         x_printer_boundaries = (min_x, min_x, max_x, max_x, min_x)
         y_printer_boundaries = (min_y, max_y, max_y, min_y, min_y)
 
-        z = 10
+        z = self.pass_heigth_measurement_radius_btn.get_vals()[0] + 5
 
         for x, y in zip(x_printer_boundaries, y_printer_boundaries):
             self.printer.send_and_await(f"G1 X{x} Y{y} Z{z}")
             print(f"\tx:{x}\ty:{y}\tz:{z}")
 
     def perform_scan(self):
-        scan_val = get_level(self.analyzer, 2.622 * (10**9), 2)
+        scan_val = get_level(self.analyzer, 2.622 * (10 ** 9), 2)
 
         while scan_val > -17 or scan_val < -22:
             print(f"\tmeasurement:{scan_val}")
-            print(f"\trepeting measurement")
-            scan_val = get_level(self.analyzer, 2.622 * (10**9), 2)
+            print(f"\trepeating measurement")
+            scan_val = get_level(self.analyzer, 2.622 * (10 ** 9), 2)
 
         return round(scan_val, 4)
 
@@ -532,7 +531,7 @@ class MainWindow(QMainWindow):
                 return
 
             print(
-                f"\t Time of measurement: {round(time.time() - start_time, 2)}s, "
+                f"Time of measurement: {round(time.time() - start_time, 2)}s, "
                 f"elapsed time: {round((time.time() - elapsed_time) / 60, 2)}min, "
                 f"left time: {int(round((time.time() - start_time) * (total_path_length - id - 1) / (60 ** 2), 2))}h "
                 f"{int(round((time.time() - start_time) * (total_path_length - id - 1) / 60, 2))}min "
