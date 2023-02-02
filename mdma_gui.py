@@ -282,6 +282,18 @@ class MainWindow(QMainWindow):
         if fname != "":
             measurement.to_csv(fname[0])
 
+    def get_config_dict(self):
+        return {
+            "x_offset": self.antenna_offset_btn.get_vals()[0],
+            "y_offset": self.antenna_offset_btn.get_vals()[1],
+            "pass_height": self.pass_heigth_measurement_radius_btn.get_vals()[0],
+            "measurement_radius": self.pass_heigth_measurement_radius_btn.get_vals()[1],
+            "x": self.path_generation_position.get_vals()[0],
+            "y": self.path_generation_position.get_vals()[1],
+            "width": self.path_generation_size.get_vals()[0],
+            "height": self.path_generation_size.get_vals()[1],
+        }
+
     def save_config(self):
         fname = QFileDialog.getSaveFileName(
             self,
@@ -302,16 +314,7 @@ class MainWindow(QMainWindow):
             )
             print(f"antenna_offset_btn: {self.antenna_offset_btn.get_vals()}")
 
-            data = {
-                "x_offset": self.antenna_offset_btn.get_vals()[0],
-                "y_offset": self.antenna_offset_btn.get_vals()[1],
-                "pass_height": self.pass_heigth_measurement_radius_btn.get_vals()[0],
-                "measurement_radius": self.pass_heigth_measurement_radius_btn.get_vals()[1],
-                "x": self.path_generation_position.get_vals()[0],
-                "y": self.path_generation_position.get_vals()[1],
-                "width": self.path_generation_size.get_vals()[0],
-                "height": self.path_generation_size.get_vals()[1],
-            }
+            data = self.get_config_dict()
             try:
                 with open(fname, "w", encoding="utf-8") as f:
                     json.dump(data, f, ensure_ascii=False, indent=4)
@@ -330,18 +333,7 @@ class MainWindow(QMainWindow):
         fname = fname[0]
         print(fname)
         if fname != "":
-            data = {
-                "x_offset": self.antenna_offset_btn.get_vals()[0],
-                "y_offset": self.antenna_offset_btn.get_vals()[1],
-                "pass_height": self.pass_heigth_measurement_radius_btn.get_vals()[0],
-                "measurement_radius": self.pass_heigth_measurement_radius_btn.get_vals()[
-                    1
-                ],
-                "x": self.path_generation_position.get_vals()[0],
-                "y": self.path_generation_position.get_vals()[1],
-                "width": self.path_generation_size.get_vals()[0],
-                "height": self.path_generation_size.get_vals()[1],
-            }
+            data = self.get_config_dict()
             try:
                 with open(fname) as file:
                     new_data = json.load(file)
@@ -443,10 +435,13 @@ class MainWindow(QMainWindow):
         y_printer_boundaries = (min_y, max_y, max_y, min_y, min_y)
 
         z = self.pass_heigth_measurement_radius_btn.get_vals()[0] + 5
+        self.printer.speed = 1500
 
         for x, y in zip(x_printer_boundaries, y_printer_boundaries):
             self.printer.send_and_await(f"G1 X{x} Y{y} Z{z}")
             print(f"\tx:{x}\ty:{y}\tz:{z}")
+
+        self.printer.speed = 800
 
     def perform_scan(self):
         scan_val = get_level(self.analyzer, 2.622 * (10 ** 9), 2)
@@ -512,10 +507,7 @@ class MainWindow(QMainWindow):
                 self.measurement["m"].append(scan_val)
 
             elif self.scan_type_btn.text() == ScanType.ScalarAnalyzerBackground.value:
-                if len(self.measurement["m"]) < id:
-                    self.measurement["m"][id].append(scan_val)
-                else:
-                    self.measurement["m"][id] -= scan_val
+                self.measurement["m"][id] -= scan_val
 
             else:
                 print(f"Scan type: {self.scan_type_btn.state} is not supported")

@@ -14,7 +14,7 @@ from pass_generators.simple_pass import simple_pass_3d
 matplotlib.use("Qt5Agg")
 
 Point = Tuple[float, float, float]
-
+# TODO make plots faster with : https://www.geeksforgeeks.org/how-to-update-a-plot-in-matplotlib/
 
 class PathPlotCanvas(FigureCanvas):
     def __init__(self, parent=None, width=9, height=5, dpi=90):
@@ -27,11 +27,11 @@ class PathPlotCanvas(FigureCanvas):
         super(PathPlotCanvas, self).__init__(self.fig)
 
     def plot_data(
-        self,
-        path: List[Point],
-        antenna_path: List[Point],
-        antenna_measurement_radius: float,
-        highlight: Optional[Point] = None,
+            self,
+            path: List[Point],
+            antenna_path: List[Point],
+            antenna_measurement_radius: float,
+            highlight: Optional[Point] = None,
     ):
         max_x = np.max([point[0] for point in path])
         max_y = np.max([point[1] for point in path])
@@ -74,12 +74,12 @@ class PathPlotCanvas(FigureCanvas):
 
     @staticmethod
     def plot_measurement_areas(
-        x_values: List[float],
-        y_values: List[float],
-        ax: plt.Axes,
-        radius: float,
-        color: str = "orange",
-        alpha: float = 0.2,
+            x_values: List[float],
+            y_values: List[float],
+            ax: plt.Axes,
+            radius: float,
+            color: str = "orange",
+            alpha: float = 0.2,
     ) -> None:
         for x, y in zip(x_values, y_values):
             ax.add_patch(plt.Circle((x, y), radius, color=color, alpha=alpha))
@@ -93,6 +93,7 @@ class PathPlotCanvas(FigureCanvas):
 
 class MeasurementsPlotCanvas(FigureCanvas):
     def __init__(self, parent=None, width=9, height=5, dpi=90, min=-20.5, max=-19):
+        self.cp = None
         self.fig = Figure(figsize=(width, height), dpi=dpi)
 
         self.axes = self.fig.add_subplot(111)
@@ -105,13 +106,12 @@ class MeasurementsPlotCanvas(FigureCanvas):
             for _ in range(10):
                 val[-1].append((min + max) / 2)
         self.cb = None
-        # self.cbar.minorticks_on()
         super(MeasurementsPlotCanvas, self).__init__(self.fig)
 
     def plot_data(
-        self,
-        path: List[Tuple[float, float, float]],
-        measurements: Optional[Dict[str, List[Tuple[float, float, float, float]]]],
+            self,
+            path: List[Tuple[float, float, float]],
+            measurements: Optional[Dict[str, List[Tuple[float, float, float, float]]]],
     ):
         self.axes.cla()
 
@@ -153,7 +153,7 @@ class MeasurementsPlotCanvas(FigureCanvas):
 
         vec_2d = np.array(vec_2d).T
 
-        cp = self.axes.imshow(
+        self.cp = self.axes.imshow(
             vec_2d,
             cmap="Wistia",
             vmin=min,
@@ -165,7 +165,7 @@ class MeasurementsPlotCanvas(FigureCanvas):
         if self.cb != None:
             self.cb.remove()
 
-        self.cb = self.fig.colorbar(cp, ax=self.axes, extend="both")
+        self.cb = self.fig.colorbar(self.cp, ax=self.axes, extend="both")
 
         self.axes.set_xticks(np.arange(len(x_labels)), labels=x_labels)
         self.axes.set_yticks(np.arange(len(y_labels)), labels=y_labels)
@@ -173,32 +173,40 @@ class MeasurementsPlotCanvas(FigureCanvas):
         self.axes.set_ylabel("Y [arb. units]")
         self.axes.set_title("Some thing")
 
-        x_start = 0
-        x_end = len(vec_2d)
-        y_start = 0
-        y_end = len(vec_2d[0])
+        # x_start = 0
+        # x_end = len(vec_2d)
+        # y_start = 0
+        # y_end = len(vec_2d[0])
+        #
+        # print(f"x_start: {x_start}")
+        # print(f"x_end: {x_end}")
+        # print(f"y_start: {y_start}")
+        # print(f"y_end: {y_end}")
+        #
+        # size = len(vec_2d[0])
+        #
+        # if size > 10:
+        #     return
+        #
+        # jump_x = (x_end - x_start) / (2.0 * size)
+        # jump_y = (y_end - y_start) / (2.0 * size)
+        #
+        # x_positions = np.linspace(start=x_start, stop=x_end, num=size, endpoint=False)
+        # y_positions = np.linspace(start=y_start, stop=y_end, num=size, endpoint=False)
+        #
+        # for y_index, y in enumerate(y_positions):
+        #     for x_index, x in enumerate(x_positions):
+        #         label = vec_2d[y_index][x_index]
+        #         text_x = x + jump_x - 0.5
+        #         text_y = y + jump_y - 0.5
+        #         self.axes.text(
+        #             text_x, text_y, label, color="black", ha="center", va="center"
+        #         )
 
-        print(f"x_start: {x_start}")
-        print(f"x_end: {x_end}")
-        print(f"y_start: {y_start}")
-        print(f"y_end: {y_end}")
-
-        size = len(vec_2d[0])
-
-        jump_x = (x_end - x_start) / (2.0 * size)
-        jump_y = (y_end - y_start) / (2.0 * size)
-
-        x_positions = np.linspace(start=x_start, stop=x_end, num=size, endpoint=False)
-        y_positions = np.linspace(start=y_start, stop=y_end, num=size, endpoint=False)
-
-        for y_index, y in enumerate(y_positions):
-            for x_index, x in enumerate(x_positions):
-                label = vec_2d[y_index][x_index]
-                text_x = x + jump_x - 0.5
-                text_y = y + jump_y - 0.5
-                self.axes.text(
-                    text_x, text_y, label, color="black", ha="center", va="center"
-                )
+    def add_measurement(self, measurement: Tuple[float, float, float, float]):
+        if self.cp is not None:
+            self.cp.set_ydata
+            pass
 
     def show(self):
         self.fig.draw()
