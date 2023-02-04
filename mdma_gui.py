@@ -33,7 +33,7 @@ from gui_tools.gui_buttons import (
     ScanTypeBtn,
     ScanType,
     SaveConfig,
-    LoadConfig,
+    LoadConfig, MaskFunction,
 )
 from gui_tools.gui_plots import *
 from hapmd.src.hameg_ci import set_up_hamed_device
@@ -81,10 +81,10 @@ class MainWindow(QMainWindow):
 
         self.setWindowTitle("MDMA gui")
         self._left_wing = QVBoxLayout()
+        self._center_wing = QVBoxLayout()
         self._right_wing = QVBoxLayout()
         self._graphs_layout = QHBoxLayout()
         self._graphs_settings_layout = QHBoxLayout()
-
         self.printer_head_controller = PrinterHeadPositionController()
 
         self.printer_head_controller.forward.pressed.connect(
@@ -173,10 +173,21 @@ class MainWindow(QMainWindow):
 
         self._central_layout = QHBoxLayout()
 
-        self._right_wing.addLayout(self._graphs_settings_layout)
-        self._right_wing.addLayout(self._graphs_layout)
+        self._center_wing.addLayout(self._graphs_settings_layout)
+        self._center_wing.addLayout(self._graphs_layout)
+
+        self.logarithmic_radicalization_function = MaskFunction("Logarithmic Radicalization")
+        self.logarithmic_radicalization_function.pressed.connect(
+            lambda: self.switch_mask_function(self.logarithmic_radicalization_function.text()))
+        self._right_wing.addWidget(self.logarithmic_radicalization_function)
+
+        self.automatic_cut_off = MaskFunction("Automatic Cut-off")
+        self.automatic_cut_off.pressed.connect(
+            lambda: self.switch_mask_function(self.automatic_cut_off.text()))
+        self._right_wing.addWidget(self.automatic_cut_off)
 
         self._central_layout.addLayout(self._left_wing)
+        self._central_layout.addLayout(self._center_wing)
         self._central_layout.addLayout(self._right_wing)
 
         widget = QWidget()
@@ -248,6 +259,7 @@ class MainWindow(QMainWindow):
             self.printer.send_and_await("G28")
             print(f"new position: {self.printer.current_position.to_tuple()}")
             return
+
         elif direction == PrinterHeadPositionController.Direction.CENTER:
             if self.printer.current_position.z < 10:
                 new_position.z = 10
@@ -284,6 +296,15 @@ class MainWindow(QMainWindow):
         print(fname)
         if fname != "":
             measurement.to_csv(fname[0])
+
+    def switch_mask_function(self, pressed_button_text: str = "nothing was clicked, all should be grayed out"):
+        for i in range(self._right_wing.count()):
+            widget: MaskFunction = self._right_wing.itemAt(i)
+            if widget.isChecked():
+                if widget.text() != pressed_button_text:
+                    widget.nadir()
+                else:
+                    widget.highlight()
 
     def get_config_dict(self):
         return {
@@ -382,8 +403,8 @@ class MainWindow(QMainWindow):
 
     def check_for_stop(self):
         return (
-            self.start_stop_measurement_button.state
-            != StartStopContinueButton.State.STOP
+                self.start_stop_measurement_button.state
+                != StartStopContinueButton.State.STOP
         )
 
     def close_thread(self):
@@ -404,8 +425,8 @@ class MainWindow(QMainWindow):
             self.thread = None
 
         if (
-            self.start_stop_measurement_button.state
-            == StartStopContinueButton.State.START
+                self.start_stop_measurement_button.state
+                == StartStopContinueButton.State.START
         ):
             self.close_thread()
             return
@@ -454,12 +475,12 @@ class MainWindow(QMainWindow):
         self.printer.speed = 800
 
     def perform_scan(self):
-        scan_val = get_level(self.analyzer, 2.622 * (10**9), 2)
+        scan_val = get_level(self.analyzer, 2.622 * (10 ** 9), 2)
 
         while scan_val > -17 or scan_val < -22:
             print(f"\tmeasurement:{scan_val}")
             print(f"\trepeating measurement")
-            scan_val = get_level(self.analyzer, 2.622 * (10**9), 2)
+            scan_val = get_level(self.analyzer, 2.622 * (10 ** 9), 2)
 
         return round(scan_val, 4)
 

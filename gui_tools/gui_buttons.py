@@ -357,3 +357,21 @@ class LoadConfig(QPushButton):
 
     def update_background_color(self, color: str = CYAN_BLUE):
         self.setStyleSheet(BUTTON_STYLING + f"background-color: {color};")
+
+
+class MaskFunction(QPushButton):
+    def __init__(self, title):
+        super().__init__()
+        self.setText(title)
+        self.update_background_color()
+        # self.setMinimumWidth(180)
+        self.setMaximumWidth(300)
+
+    def update_background_color(self, color: str = CYAN_BLUE):
+        self.setStyleSheet(BUTTON_STYLING + f"background-color: {color};")
+
+    def nadir(self):
+        self.update_background_color(color=GRAY)
+
+    def highlight(self):
+        self.update_background_color(color=CYAN_BLUE)

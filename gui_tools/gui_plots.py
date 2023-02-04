@@ -31,11 +31,11 @@ class PathPlotCanvas(FigureCanvas):
         super(PathPlotCanvas, self).__init__(self.fig)
 
     def plot_data(
-        self,
-        path: List[Point],
-        antenna_path: List[Point],
-        antenna_measurement_diameter: float,
-        highlight: Optional[Point] = None,
+            self,
+            path: List[Point],
+            antenna_path: List[Point],
+            antenna_measurement_diameter: float,
+            highlight: Optional[Point] = None,
     ):
         max_x = np.max([point[0] for point in path])
         max_y = np.max([point[1] for point in path])
@@ -78,12 +78,12 @@ class PathPlotCanvas(FigureCanvas):
 
     @staticmethod
     def plot_measurement_areas(
-        x_values: List[float],
-        y_values: List[float],
-        ax: plt.Axes,
-        radius: float,
-        color: str = "orange",
-        alpha: float = 0.2,
+            x_values: List[float],
+            y_values: List[float],
+            ax: plt.Axes,
+            radius: float,
+            color: str = "orange",
+            alpha: float = 0.2,
     ) -> None:
         for x, y in zip(x_values, y_values):
             ax.add_patch(plt.Circle((x, y), radius, color=color, alpha=alpha))
@@ -113,9 +113,9 @@ class MeasurementsPlotCanvas(FigureCanvas):
         super(MeasurementsPlotCanvas, self).__init__(self.fig)
 
     def plot_data(
-        self,
-        path: List[Tuple[float, float, float]],
-        measurements: Optional[Dict[str, List[Tuple[float, float, float, float]]]],
+            self,
+            path: List[Tuple[float, float, float]],
+            measurements: Optional[Dict[str, List[Tuple[float, float, float, float]]]],
     ):
         self.axes.cla()
 
