@@ -48,8 +48,8 @@ from hapmd.src.hameg3010.hameg3010device import Hameg3010Device
 from hapmd.src.hameg3010.hameg3010device_mock import Hameg3010DeviceMock
 from hapmd.src.hameg_ci import get_level
 
-PRINTER_DEBUG_MODE = True
-ANALYZER_DEBUG_MODE = True
+PRINTER_DEBUG_MODE = False
+ANALYZER_DEBUG_MODE = False
 
 
 class MainWindow(QMainWindow):
@@ -61,7 +61,7 @@ class MainWindow(QMainWindow):
 
         self.measurement = None
         self.innit_ui()
-
+        self.counter = 0
         self.thread = None
         self.printer: Union[MarlinDevice, PrusaDevice, PrinterDeviceMock] = None
 
@@ -475,29 +475,33 @@ class MainWindow(QMainWindow):
         self.printer.speed = 800
 
     def perform_scan(self):
-        scan_val = get_level(self.analyzer, 2.622 * (10 ** 9), 2)
+        scan_val = get_level(self.analyzer, 2.622 * (10 ** 9), 1)
 
         while scan_val > -17 or scan_val < -22:
             print(f"\tmeasurement:{scan_val}")
             print(f"\trepeating measurement")
-            scan_val = get_level(self.analyzer, 2.622 * (10 ** 9), 2)
+            scan_val = get_level(self.analyzer, 2.622 * (10 ** 9), 1)
 
         return round(scan_val, 4)
 
-    def update_plots(self, highlight):
-        antenna_measurement_radius = self.pass_heigth_measurement_radius_btn.val_b
 
-        self.path_plot_canvas.plot_data(
-            self.path,
-            self.antenna_path,
-            antenna_measurement_diameter=antenna_measurement_radius,
-            highlight=highlight,
-        )
+
+    def update_plots(self, highlight):
+        if self.counter % 10 == 0:
+
+            antenna_measurement_radius = self.pass_heigth_measurement_radius_btn.val_b
+
+            self.path_plot_canvas.plot_data(
+                self.path,
+                self.antenna_path,
+                antenna_measurement_diameter=antenna_measurement_radius,
+                highlight=highlight,
+            )
+            self.path_plot_canvas.draw()
 
         self.measurements_plot_canvas.plot_data(self.path, self.measurement)
-
-        self.path_plot_canvas.draw()
         self.measurements_plot_canvas.draw()
+        self.counter += 1
 
     def main_loop(self):
         if self.scan_type_btn.text() == ScanType.ScalarAnalyzer.value:
