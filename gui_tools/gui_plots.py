@@ -1,3 +1,5 @@
+import math
+
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
@@ -18,6 +20,33 @@ Point = Tuple[float, float, float]
 
 
 # TODO make plots faster with : https://www.geeksforgeeks.org/how-to-update-a-plot-in-matplotlib/
+
+def normalize(min: float, max: float, val) -> float:
+    if min == max:
+        return 1
+    return (val - min) / (max - min)
+
+
+def logarithmic_radicalization(measurements_array: list) -> list:
+    min = np.min(measurements_array)
+    max = np.max(measurements_array)
+    measurements_array = [normalize(min, max, m) for m in measurements_array]
+
+    return [math.log(m + 0.01) + 1 for m in measurements_array]
+
+
+def automatic_cut_off(measurements_array: Dict[str, list]) -> Dict[str, list]:
+    min = np.min(measurements_array)
+    max = np.max(measurements_array)
+    measurements_array = [normalize(min, max, m) for m in measurements_array]
+
+    def cut_or_pass(val):
+        if val < 0.5:
+            return 0
+        else:
+            return val
+
+    return [cut_or_pass(m) for m in measurements_array]
 
 
 class PathPlotCanvas(FigureCanvas):

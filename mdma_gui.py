@@ -4,6 +4,7 @@ import math
 import os
 import threading
 import time
+from copy import copy
 from tkinter.filedialog import asksaveasfile
 from typing import Union, Dict
 
@@ -33,7 +34,7 @@ from gui_tools.gui_buttons import (
     ScanTypeBtn,
     ScanType,
     SaveConfig,
-    LoadConfig, MaskFunction,
+    LoadConfig, MaskFunction, MaskFunctionState, LoadData,
 )
 from gui_tools.gui_plots import *
 from hapmd.src.hameg_ci import set_up_hamed_device
@@ -48,8 +49,8 @@ from hapmd.src.hameg3010.hameg3010device import Hameg3010Device
 from hapmd.src.hameg3010.hameg3010device_mock import Hameg3010DeviceMock
 from hapmd.src.hameg_ci import get_level
 
-PRINTER_DEBUG_MODE = False
-ANALYZER_DEBUG_MODE = False
+PRINTER_DEBUG_MODE = True
+ANALYZER_DEBUG_MODE = True
 
 
 class MainWindow(QMainWindow):
@@ -58,11 +59,10 @@ class MainWindow(QMainWindow):
 
         self.path = None
         self.antenna_path = None
-
-        self.measurement = None
-        self.innit_ui()
-        self.counter = 0
         self.thread = None
+        self.measurement = None
+
+        self.innit_ui()
         self.printer: Union[MarlinDevice, PrusaDevice, PrinterDeviceMock] = None
 
         if PRINTER_DEBUG_MODE:
@@ -156,6 +156,10 @@ class MainWindow(QMainWindow):
         self.save_data_btn.pressed.connect(self.save_data)
         self._left_wing.addWidget(self.save_data_btn)
 
+        self.load_data_btn = LoadData()
+        self.load_data_btn.pressed.connect(self.load_data)
+        self._left_wing.addWidget(self.load_data_btn)
+
         self.save_config_btn = SaveConfig()
         self.save_config_btn.pressed.connect(self.save_config)
         self._left_wing.addWidget(self.save_config_btn)
@@ -177,13 +181,16 @@ class MainWindow(QMainWindow):
         self._center_wing.addLayout(self._graphs_layout)
 
         self.logarithmic_radicalization_function = MaskFunction("Logarithmic Radicalization")
+
         self.logarithmic_radicalization_function.pressed.connect(
             lambda: self.switch_mask_function(self.logarithmic_radicalization_function.text()))
+        self.logarithmic_radicalization_function.pressed.connect(self.update_plots)
         self._right_wing.addWidget(self.logarithmic_radicalization_function)
 
         self.automatic_cut_off = MaskFunction("Automatic Cut-off")
         self.automatic_cut_off.pressed.connect(
             lambda: self.switch_mask_function(self.automatic_cut_off.text()))
+        self.automatic_cut_off.pressed.connect(self.update_plots)
         self._right_wing.addWidget(self.automatic_cut_off)
 
         self._central_layout.addLayout(self._left_wing)
@@ -297,14 +304,39 @@ class MainWindow(QMainWindow):
         if fname != "":
             measurement.to_csv(fname[0])
 
+    def load_data(self):
+
+        fname = QFileDialog.getOpenFileName(
+            self,
+            "Load config",
+            os.getcwd(),
+            "CSV File (*.csv);;All Files (*);;Text (*.txt)",
+        )
+        fname = fname[0]
+        print(fname)
+        if fname != "" or fname is None:
+            return
+
+        df = pd.read_csv(fname)
+        self.measurement = {
+            "x": df['x'],
+            "y": df['y'],
+            "z": df['z'],
+            "m": df['m']
+        }
+        self.update_plots()
+
     def switch_mask_function(self, pressed_button_text: str = "nothing was clicked, all should be grayed out"):
+
         for i in range(self._right_wing.count()):
-            widget: MaskFunction = self._right_wing.itemAt(i)
-            if widget.isChecked():
-                if widget.text() != pressed_button_text:
-                    widget.nadir()
-                else:
+            widget: MaskFunction = self._right_wing.itemAt(i).widget()
+            if widget.text() != pressed_button_text:
+                widget.nadir()
+            else:
+                if widget.state == MaskFunctionState.OFF:
                     widget.highlight()
+                else:
+                    widget.nadir()
 
     def get_config_dict(self):
         return {
@@ -484,24 +516,34 @@ class MainWindow(QMainWindow):
 
         return round(scan_val, 4)
 
+    def update_plots(self, highlight: Optional[Point] = None):
+        antenna_measurement_radius = self.pass_heigth_measurement_radius_btn.val_b
 
+        btn_2_function = {
+            'Logarithmic Radicalization': logarithmic_radicalization,
+            'Automatic Cut-off': automatic_cut_off
+        }
 
-    def update_plots(self, highlight):
-        if self.counter % 10 == 0:
+        self.path_plot_canvas.plot_data(
+            self.path,
+            self.antenna_path,
+            antenna_measurement_diameter=antenna_measurement_radius,
+            highlight=highlight,
+        )
+        self.path_plot_canvas.draw()
 
-            antenna_measurement_radius = self.pass_heigth_measurement_radius_btn.val_b
+        if self.measurement is not None:
+            for i in range(self._right_wing.count()):
+                widget: MaskFunction = self._right_wing.itemAt(i).widget()
+                if widget.state == MaskFunctionState.ON:
+                    measurement_copy = copy(self.measurement)
+                    measurement_copy['m'] = btn_2_function[widget.text()](copy(self.measurement['m']))
+                    self.measurements_plot_canvas.plot_data(self.path, measurement_copy)
+                    break
+                if i == self._right_wing.count() - 1:
+                    self.measurements_plot_canvas.plot_data(self.path, self.measurement)
 
-            self.path_plot_canvas.plot_data(
-                self.path,
-                self.antenna_path,
-                antenna_measurement_diameter=antenna_measurement_radius,
-                highlight=highlight,
-            )
-            self.path_plot_canvas.draw()
-
-        self.measurements_plot_canvas.plot_data(self.path, self.measurement)
-        self.measurements_plot_canvas.draw()
-        self.counter += 1
+            self.measurements_plot_canvas.draw()
 
     def main_loop(self):
         if self.scan_type_btn.text() == ScanType.ScalarAnalyzer.value:

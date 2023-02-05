@@ -275,6 +275,25 @@ class SaveData(QPushButton):
     def update_background_color(self, color: str = CYAN_BLUE):
         self.setStyleSheet(BUTTON_STYLING + f"background-color: {color};")
 
+class LoadData(QPushButton):
+    def __init__(self):
+        super().__init__()
+        self.setText("Load data")
+        self.update_background_color()
+        self.enable()
+        self.setMaximumWidth(360)
+
+    def disable(self):
+        self.blockSignals(True)
+        self.update_background_color(color=GRAY)
+
+    def enable(self):
+        self.blockSignals(False)
+        self.update_background_color(color=CYAN_BLUE)
+
+    def update_background_color(self, color: str = CYAN_BLUE):
+        self.setStyleSheet(BUTTON_STYLING + f"background-color: {color};")
+
 
 class ScanType(enum.Enum):
     ScalarAnalyzer = "Scalar Analyzer"
@@ -359,19 +378,27 @@ class LoadConfig(QPushButton):
         self.setStyleSheet(BUTTON_STYLING + f"background-color: {color};")
 
 
+class MaskFunctionState(enum.Enum):
+    ON = "on"
+    OFF = "off"
+
+
 class MaskFunction(QPushButton):
     def __init__(self, title):
         super().__init__()
         self.setText(title)
-        self.update_background_color()
         # self.setMinimumWidth(180)
         self.setMaximumWidth(300)
+        self.state: MaskFunctionState = MaskFunctionState.OFF
+        self.nadir()
 
     def update_background_color(self, color: str = CYAN_BLUE):
         self.setStyleSheet(BUTTON_STYLING + f"background-color: {color};")
 
     def nadir(self):
+        self.state = MaskFunctionState.OFF
         self.update_background_color(color=GRAY)
 
     def highlight(self):
+        self.state = MaskFunctionState.ON
         self.update_background_color(color=CYAN_BLUE)
