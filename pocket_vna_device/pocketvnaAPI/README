@@ -1,0 +1,99 @@
+API is tested on
+ -- OpenSUSE 42
+ -- Knopix 7
+ -- CentOS7 both 32/64bit
+ -- CentOS6.8 both 32/64
+ -- Fedora 23 64bit
+ -- Ubuntu 12 LTS 32bit
+ -- Ubuntu 17
+ -- Ubuntu 14
+ -- Ubuntu 15
+ -- Ubuntu 10 LTS but may work improperly :(
+And some others
+
+MacOS (tested for 10.12 Sierra) it is provided 64bit. 32 bit is obsolete and available on demand only
+
+Windows 7/8/10 both 32bit and 64 bit. Probably works on Windows XP
+
+It seems to be work on raspbian starting from stretch and jessie
+
+For Linux there are 4 variants: 
+  -- 32 bit and for 64bit
+  -- for older and newer systems with libudev0 or libudev1. For example Ubuntu 14 -- has libudev1 whereas Ubuntu12 had libudev0.
+
+ * Content of archive:
+ * permissions folder -- rule file (to gain permissions for reading device) and script to install it. See README
+
+ * libPocketVnaApi (so/dll/dylib, x64/x32) -- shared object/dynamic library for our API
+
+ * cpp-example.cpp                 -- Example of using libPocketVnaAPI on C++
+ * pocketvna-octave.cc             -- example of octave module
+ * * compile-pocketvna-octave.sh   -- script to compile it
+ * * octave_usage_example.m        -- and example how to call it
+ * pocketvna.h                     -- header c/c++ file for API
+ * pocketvna.py                    -- kind of binding for python.
+ *  * python_example.py            -- example of using API. Should work on pythons starting from 2.7 
+ *  * pyth_unittests.py            -- mostly for internal use. I'v added it as an additional example of python API use
+ *  * make_solt_standard.py        -- script to collect measurements for SOLT/TOSM calibration
+ *  * make_lmr16_standard.py       -- script to take calibration standards for LMR16
+ *  * make_simple_compensation_standard.py -- script to collect data for simple compensation
+ *  * skrf_solt_calibration.py     -- example of performing SOLT (from SKRF)
+ *  * skrf_LMR16_calibration.py    --  example of performing LMR16 (from SKRF)
+ *  * simple_compensation_calibration.py -- example of performing Simple Compensation (per network parameter separately)
+ *  * enter-dfu-mode.py            -- script to enter device into DeviceFirmwareUpdate mode
+ *  * force-unlock-devices.py      -- reset semaphore responsible for locking device
+ *  * python_simplified_example.py -- example of using simplified connection 'pocketvna_get_first_device_handle'
+ *  * python_choose_interface.py   -- choose interface by code or open by descriptor
+
+ * CSharp_PocketVNA_Example           -- visual studio (2015) C# project
+ *	* PocketVNA.cs                         -- wrapper for a DLL
+ *  * PocketVNADevice.cs                   -- wrapper for a PocketVNA.cs
+ *  * CompensationExample.cs               -- example of taking and performing compensation
+ *  * CompensationCollector.cs             -- example of collecting data for simple compensation
+ *  * CompensationAlgorithm.cs             -- example of applying compensation
+ *  * UsingSimpleAPIExample.cs             -- using PocketVNA.cs example
+ *  * UsingBuiltInCalibrationExample.cs    -- using compensation formulae exposed in pocketVNA.dll
+ *  * ChooseInterfaceByDescriptorExample.cs-- open connection by an interface code or a descriptor
+ * Example_CollectFullCalibrationData -- C# project, example how to collect calibration data
+ * Example_TakeMeasurementsAndCalibrateOverDumpedData - C# project. Calibrate measurements over calibration data taken in Example_CollectFullCalibrationData
+ * Example_OpenDeviceLocally          -- One more demonstration. How to open device and close after usage immediately
+ * Example_TakeMeasurementsAndPlot    -- C# GUI simple example
+
+
++ dfu-program binary  -- application to reprogram pocketVNA device (for linux only)
++ firmware.hex -- latest firmware version
++ permissions (for linux)
++    README(README_PERMISSION) -- information regarding permissions  for USB devices
++    installPocketVNArule.sh   -- automation script to install/uninstall permissions see README(README_PERMISSION)
++    98-pocketvna-udev.rules   -- rule file
+
+
+HidAPI library is used. It is distributed under HidAPI license:
+
+	Copyright (c) 2010, Alan Ott, Signal 11 Software
+	All rights reserved.
+
+	Redistribution and use in source and binary forms, with or without
+	modification, are permitted provided that the following conditions are met:
+
+	    * Redistributions of source code must retain the above copyright notice,
+	      this list of conditions and the following disclaimer.
+	    * Redistributions in binary form must reproduce the above copyright
+	      notice, this list of conditions and the following disclaimer in the
+	      documentation and/or other materials provided with the distribution.
+	    * Neither the name of Signal 11 Software nor the names of its
+	      contributors may be used to endorse or promote products derived from
+	      this software without specific prior written permission.
+
+	THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+	AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+	IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+	ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+	LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+	CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+	SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+	INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+	CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+	ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+	POSSIBILITY OF SUCH DAMAGE.
+

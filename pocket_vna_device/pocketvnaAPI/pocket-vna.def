@@ -1,0 +1,48 @@
+LIBRARY PocketVnaApi
+
+EXPORTS
+        pocketvna_driver_version
+        pocketvna_close
+        pocketvna_result_string
+        pocketvna_set_option
+
+        pocketvna_list_devices
+        pocketvna_free_list
+
+        pocketvna_helper_descriptors_count
+        pocketvna_helper_descriptor_get_path
+        pocketvna_helper_descriptor_get_vid
+        pocketvna_helper_descriptor_get_pid
+        pocketvna_helper_descriptor_get_interface
+        pocketvna_helper_descriptor_get_SN
+        pocketvna_helper_descriptor_get_handler
+
+        pocketvna_get_device_handle_for
+        pocketvna_release_handle
+        pocketvna_get_first_device_handle
+
+        pocketvna_is_transmission_supported
+        pocketvna_is_valid
+        pocketvna_version
+        pocketvna_get_characteristic_impedance
+        pocketvna_get_valid_frequency_range
+        pocketvna_get_reasonable_frequency_range
+
+        pocketvna_single_query
+        pocketvna_multi_query
+        pocketvna_multi_query_with_cproc
+        pocketvna_range_query
+        pocketvna_range_query_with_cproc
+        pocketvna_enter_dfu_mode
+
+        pocketvna_info_get_firmware_version
+        pocketvna_info_get_param_supported
+        pocketvna_info_get_temperature
+
+        pocketvna_debug_request
+        pocketvna_debug_read_buffer
+        pocketvna_debug_response
+
+        pocketvna_rfmath_calibrate_transmission
+        pocketvna_rfmath_calibrate_reflection
+        pocketvna_force_unlock_devices

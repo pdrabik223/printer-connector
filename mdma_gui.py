@@ -48,9 +48,10 @@ from gui_tools.gui_plots import Point
 from hapmd.src.hameg3010.hameg3010device import Hameg3010Device
 from hapmd.src.hameg3010.hameg3010device_mock import Hameg3010DeviceMock
 from hapmd.src.hameg_ci import get_level
+from pocket_vna_device.main import PocketVnaDevice
 
-PRINTER_DEBUG_MODE = True
-ANALYZER_DEBUG_MODE = True
+PRINTER_DEBUG_MODE = False
+ANALYZER_DEBUG_MODE = False
 
 
 class MainWindow(QMainWindow):
@@ -71,8 +72,6 @@ class MainWindow(QMainWindow):
             )
         else:
             self.printer: MarlinDevice = MarlinDevice.connect_on_port("COM5")
-
-        self.analyzer = set_up_hamed_device(debug=ANALYZER_DEBUG_MODE)
 
     def innit_ui(self):
         self._measurements_plot_canvas = None
@@ -150,6 +149,7 @@ class MainWindow(QMainWindow):
 
         self.recalculate_path = RecalculatePath()
         self.recalculate_path.pressed.connect(self.update_path)
+        self.recalculate_path.pressed.connect(self.update_plots)
         self._left_wing.addWidget(self.recalculate_path)
 
         self.save_data_btn = SaveData()
@@ -230,13 +230,6 @@ class MainWindow(QMainWindow):
             pass_height=pass_height,
         )
 
-        self.path_plot_canvas.plot_data(
-            self.path,
-            self.antenna_path,
-            antenna_measurement_diameter=antenna_measurement_radius,
-        )
-        self.path_plot_canvas.draw()
-
     def move_extruder(self, direction: PrinterHeadPositionController.Direction):
         print(
             f"moving extruder: {direction}, current position: {self.printer.current_position.to_tuple()}"
@@ -314,7 +307,7 @@ class MainWindow(QMainWindow):
         )
         fname = fname[0]
         print(fname)
-        if fname != "" or fname is None:
+        if fname == "" or fname is None:
             return
 
         df = pd.read_csv(fname)
@@ -324,6 +317,7 @@ class MainWindow(QMainWindow):
             "z": df['z'],
             "m": df['m']
         }
+        self.update_path()
         self.update_plots()
 
     def switch_mask_function(self, pressed_button_text: str = "nothing was clicked, all should be grayed out"):
@@ -475,6 +469,11 @@ class MainWindow(QMainWindow):
         self.save_config_btn.disable()
         self.measurements_plot_canvas.plot_data(self.path, None)
 
+        if self.scan_type_btn.text() in (ScanType.ScalarAnalyzer.value, ScanType.ScalarAnalyzerBackground.value):
+            self.analyzer = set_up_hamed_device(debug=ANALYZER_DEBUG_MODE)
+        elif self.scan_type_btn.text() in (ScanType.VectorAnalyzer.value, ScanType.VectorAnalyzerBackground.value):
+            self.analyzer = PocketVnaDevice()
+
         self.path_plot_canvas.draw()
         self.measurements_plot_canvas.draw()
 
@@ -507,12 +506,12 @@ class MainWindow(QMainWindow):
         self.printer.speed = 800
 
     def perform_scan(self):
-        scan_val = get_level(self.analyzer, 2.622 * (10 ** 9), 1)
+        scan_val = get_level(self.analyzer, 2.622 * (10 ** 9), 2)
 
         while scan_val > -17 or scan_val < -22:
             print(f"\tmeasurement:{scan_val}")
             print(f"\trepeating measurement")
-            scan_val = get_level(self.analyzer, 2.622 * (10 ** 9), 1)
+            scan_val = get_level(self.analyzer, 2.622 * (10 ** 9), 2)
 
         return round(scan_val, 4)
 

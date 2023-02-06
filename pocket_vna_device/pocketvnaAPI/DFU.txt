@@ -1,0 +1,25 @@
+How to update firmware
+
+** Windows, Flip softwrare ** 
+http://www.microchip.com/developmenttools/ProductDetails.aspx?PartNO=FLIP
+
+* Select ATXmega32A4U as target device
+* Make sure EEPROM is selected
+* Select HEX file
+* Put a device into DFU mode (in our application or through python script)
+* If Flip software has not detected a device click on “Select a communication medium” => “USB”
+* Push “Run”. All 4 steps should (erase/blank check/Program/Verify) should be completed and highlighted with green.
+* Click on “Start Application” (with --reset) checked
+
+
+** Using dfu-programmer **
+http://dfu-programmer.github.io/#
+
+* Enter into DFU mode in GUI application (or by enter_dfu_mode.py script, or by calling api function pocketvna_enter_dfu_mode)
+* Execute following sequence
+* > ./dfu-programmer atxmega32a4u  erase
+* > ./dfu-programmer atxmega32a4u  flash ../firmware_hex/SmartVNA1.5.hex
+* > ./dfu-programmer atxmega32a4u  reset
+
+Profit
+
