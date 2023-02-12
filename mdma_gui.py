@@ -48,10 +48,10 @@ from gui_tools.gui_plots import Point
 from hapmd.src.hameg3010.hameg3010device import Hameg3010Device
 from hapmd.src.hameg3010.hameg3010device_mock import Hameg3010DeviceMock
 from hapmd.src.hameg_ci import get_level
-from pocket_vna_device.main import PocketVnaDevice
+from pocket_vna_device.main import PocketVnaDevice, PocketVnaDeviceMock
 
-PRINTER_DEBUG_MODE = False
-ANALYZER_DEBUG_MODE = False
+PRINTER_DEBUG_MODE = True
+ANALYZER_DEBUG_MODE = True
 
 
 class MainWindow(QMainWindow):
@@ -62,6 +62,7 @@ class MainWindow(QMainWindow):
         self.antenna_path = None
         self.thread = None
         self.measurement = None
+        self.analyzer = None
 
         self.innit_ui()
         self.printer: Union[MarlinDevice, PrusaDevice, PrinterDeviceMock] = None
@@ -443,6 +444,16 @@ class MainWindow(QMainWindow):
         if self.thread is not None:
             self.start_stop_measurement_button.change_state()
 
+    def connect_to_analyzer_device(self):
+
+        if self.scan_type_btn.text() in (ScanType.ScalarAnalyzer.value, ScanType.ScalarAnalyzerBackground.value):
+            self.analyzer = set_up_hamed_device(debug=ANALYZER_DEBUG_MODE)
+        elif self.scan_type_btn.text() in (ScanType.VectorAnalyzer.value, ScanType.VectorAnalyzerBackground.value):
+            if ANALYZER_DEBUG_MODE:
+                self.analyzer = PocketVnaDeviceMock()
+            else:
+                self.analyzer = PocketVnaDevice()
+
     def start_thread(self):
         if self.thread is not None:
             print("thread is already running")
@@ -450,12 +461,11 @@ class MainWindow(QMainWindow):
             print("thread is closed")
             self.thread = None
 
-        if (
-                self.start_stop_measurement_button.state
-                == StartStopContinueButton.State.START
-        ):
+        if self.start_stop_measurement_button.state == StartStopContinueButton.State.START:
             self.close_thread()
             return
+
+        self.connect_to_analyzer_device()
 
         self.update_path()
         if len(self.path) == 0:
@@ -468,11 +478,6 @@ class MainWindow(QMainWindow):
         self.load_config_btn.disable()
         self.save_config_btn.disable()
         self.measurements_plot_canvas.plot_data(self.path, None)
-
-        if self.scan_type_btn.text() in (ScanType.ScalarAnalyzer.value, ScanType.ScalarAnalyzerBackground.value):
-            self.analyzer = set_up_hamed_device(debug=ANALYZER_DEBUG_MODE)
-        elif self.scan_type_btn.text() in (ScanType.VectorAnalyzer.value, ScanType.VectorAnalyzerBackground.value):
-            self.analyzer = PocketVnaDevice()
 
         self.path_plot_canvas.draw()
         self.measurements_plot_canvas.draw()
