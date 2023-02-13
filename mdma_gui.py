@@ -1,29 +1,19 @@
-import enum
 import json
-import math
 import os
 import threading
 import time
 from copy import copy
-from tkinter.filedialog import asksaveasfile
-from typing import Union, Dict
-
-from PyQt6.uic.properties import QtGui
 
 from pass_generators.simple_pass import simple_pass_3d_for_gui
-from printer_device_connector.device_mock import PrinterDeviceMock
-from printer_device_connector.marlin_device import MarlinDevice
 from PyQt6.QtWidgets import (
     QApplication,
     QWidget,
     QMainWindow,
     QVBoxLayout,
     QHBoxLayout,
-    QPushButton,
     QFileDialog,
 )
 import sys
-import pandas as pd
 
 from gui_tools.gui_buttons import (
     PrinterHeadPositionController,
@@ -39,7 +29,7 @@ from gui_tools.gui_buttons import (
 from gui_tools.gui_plots import *
 from hapmd.src.hameg_ci import set_up_hamed_device
 
-from typing import List, Tuple, Union
+from typing import Union
 
 from printer_device_connector.device_mock import PrinterDeviceMock
 from printer_device_connector.marlin_device import MarlinDevice
@@ -48,10 +38,10 @@ from gui_tools.gui_plots import Point
 from hapmd.src.hameg3010.hameg3010device import Hameg3010Device
 from hapmd.src.hameg3010.hameg3010device_mock import Hameg3010DeviceMock
 from hapmd.src.hameg_ci import get_level
-from pocket_vna_device.main import PocketVnaDevice, PocketVnaDeviceMock
+from pocket_vna_main import PocketVnaDevice, PocketVnaDeviceMock
 
-PRINTER_DEBUG_MODE = True
-ANALYZER_DEBUG_MODE = True
+PRINTER_DEBUG_MODE = False
+ANALYZER_DEBUG_MODE = False
 
 
 class MainWindow(QMainWindow):
@@ -445,6 +435,9 @@ class MainWindow(QMainWindow):
             self.start_stop_measurement_button.change_state()
 
     def connect_to_analyzer_device(self):
+        if self.analyzer is not None:
+            if isinstance(self.analyzer, (PocketVnaDevice, PocketVnaDeviceMock)):
+                return
 
         if self.scan_type_btn.text() in (ScanType.ScalarAnalyzer.value, ScanType.ScalarAnalyzerBackground.value):
             self.analyzer = set_up_hamed_device(debug=ANALYZER_DEBUG_MODE)
@@ -511,14 +504,18 @@ class MainWindow(QMainWindow):
         self.printer.speed = 800
 
     def perform_scan(self):
-        scan_val = get_level(self.analyzer, 2.622 * (10 ** 9), 2)
-
-        while scan_val > -17 or scan_val < -22:
-            print(f"\tmeasurement:{scan_val}")
-            print(f"\trepeating measurement")
+        if isinstance(self.analyzer, (PocketVnaDevice, PocketVnaDeviceMock)):
+            return self.analyzer.scan()
+        elif isinstance(self.analyzer, (Hameg3010Device, Hameg3010DeviceMock)):
             scan_val = get_level(self.analyzer, 2.622 * (10 ** 9), 2)
 
-        return round(scan_val, 4)
+            while scan_val > -17 or scan_val < -22:
+                print(f"\tmeasurement:{scan_val}")
+                print(f"\trepeating measurement")
+                scan_val = get_level(self.analyzer, 2.622 * (10 ** 9), 2)
+
+            return round(scan_val, 4)
+        raise Exception("da fuck")
 
     def update_plots(self, highlight: Optional[Point] = None):
         antenna_measurement_radius = self.pass_heigth_measurement_radius_btn.val_b
@@ -550,7 +547,7 @@ class MainWindow(QMainWindow):
             self.measurements_plot_canvas.draw()
 
     def main_loop(self):
-        if self.scan_type_btn.text() == ScanType.ScalarAnalyzer.value:
+        if self.scan_type_btn.text() in (ScanType.ScalarAnalyzer.value, ScanType.VectorAnalyzer.value):
             self.measurement: Dict[str, list] = {"x": [], "y": [], "z": [], "m": []}
 
         self.printer.startup_procedure()
@@ -583,13 +580,14 @@ class MainWindow(QMainWindow):
 
             print(f"\tmeasurement:{scan_val}")
 
-            if self.scan_type_btn.text() == ScanType.ScalarAnalyzer.value:
+            if self.scan_type_btn.text() in (ScanType.ScalarAnalyzer.value, ScanType.VectorAnalyzer.value):
                 self.measurement["x"].append(self.antenna_path[id][0])
                 self.measurement["y"].append(self.antenna_path[id][1])
                 self.measurement["z"].append(self.antenna_path[id][2])
                 self.measurement["m"].append(scan_val)
 
-            elif self.scan_type_btn.text() == ScanType.ScalarAnalyzerBackground.value:
+            elif self.scan_type_btn.text() in (
+                    ScanType.ScalarAnalyzerBackground.value, ScanType.VectorAnalyzerBackground.value):
                 self.measurement["m"][id] -= scan_val
 
             else:

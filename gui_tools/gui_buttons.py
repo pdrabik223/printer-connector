@@ -186,7 +186,7 @@ class TwoParamInput(QWidget):
 
         self.input_a = QLineEdit()
         self.input_a.setValidator(QDoubleValidator())
-        self.input_a.setMaxLength(3)
+        self.input_a.setMaxLength(4)
         self.input_a.setMaximumWidth(38)
         self.input_a.setText(str(val_a))
         self.input_a.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -197,7 +197,7 @@ class TwoParamInput(QWidget):
 
         self.input_b = QLineEdit()
         self.input_b.setValidator(QDoubleValidator())
-        self.input_b.setMaxLength(3)
+        self.input_b.setMaxLength(4)
         self.input_b.setMaximumWidth(38)
         self.input_b.setText(str(val_b))
         self.input_b.setAlignment(Qt.AlignmentFlag.AlignCenter)
