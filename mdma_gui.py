@@ -175,13 +175,13 @@ class MainWindow(QMainWindow):
 
         self.logarithmic_radicalization_function.pressed.connect(
             lambda: self.switch_mask_function(self.logarithmic_radicalization_function.text()))
-        self.logarithmic_radicalization_function.pressed.connect(self.update_plots)
+        self.logarithmic_radicalization_function.pressed.connect(self.update_mask)
         self._right_wing.addWidget(self.logarithmic_radicalization_function)
 
         self.automatic_cut_off = MaskFunction("Automatic Cut-off")
         self.automatic_cut_off.pressed.connect(
             lambda: self.switch_mask_function(self.automatic_cut_off.text()))
-        self.automatic_cut_off.pressed.connect(self.update_plots)
+        self.automatic_cut_off.pressed.connect(self.update_mask)
         self._right_wing.addWidget(self.automatic_cut_off)
 
         self._central_layout.addLayout(self._left_wing)
@@ -191,6 +191,12 @@ class MainWindow(QMainWindow):
         widget = QWidget()
         widget.setLayout(self._central_layout)
         self.setCentralWidget(widget)
+
+    def update_mask(self):
+        if self.measurement is None:
+            return
+        if not self.check_for_stop():
+            return
 
     def update_path(self):
         print(f"path_generation_position: {self.path_generation_position.get_vals()}")
@@ -518,6 +524,7 @@ class MainWindow(QMainWindow):
         raise Exception("da fuck")
 
     def update_plots(self, highlight: Optional[Point] = None):
+
         antenna_measurement_radius = self.pass_heigth_measurement_radius_btn.val_b
 
         btn_2_function = {
