@@ -21,6 +21,7 @@ Point = Tuple[float, float, float]
 
 # TODO make plots faster with : https://www.geeksforgeeks.org/how-to-update-a-plot-in-matplotlib/
 
+
 def normalize(min: float, max: float, val) -> float:
     if min == max:
         return 1
@@ -60,11 +61,11 @@ class PathPlotCanvas(FigureCanvas):
         super(PathPlotCanvas, self).__init__(self.fig)
 
     def plot_data(
-            self,
-            path: List[Point],
-            antenna_path: List[Point],
-            antenna_measurement_diameter: float,
-            highlight: Optional[Point] = None,
+        self,
+        path: List[Point],
+        antenna_path: List[Point],
+        antenna_measurement_diameter: float,
+        highlight: Optional[Point] = None,
     ):
         max_x = np.max([point[0] for point in path])
         max_y = np.max([point[1] for point in path])
@@ -107,12 +108,12 @@ class PathPlotCanvas(FigureCanvas):
 
     @staticmethod
     def plot_measurement_areas(
-            x_values: List[float],
-            y_values: List[float],
-            ax: plt.Axes,
-            radius: float,
-            color: str = "orange",
-            alpha: float = 0.2,
+        x_values: List[float],
+        y_values: List[float],
+        ax: plt.Axes,
+        radius: float,
+        color: str = "orange",
+        alpha: float = 0.2,
     ) -> None:
         for x, y in zip(x_values, y_values):
             ax.add_patch(plt.Circle((x, y), radius, color=color, alpha=alpha))
@@ -142,9 +143,10 @@ class MeasurementsPlotCanvas(FigureCanvas):
         super(MeasurementsPlotCanvas, self).__init__(self.fig)
 
     def plot_data(
-            self,
-            path: List[Tuple[float, float, float]],
-            measurements: Optional[Dict[str, List[Tuple[float, float, float, float]]]],
+        self,
+        path: List[Tuple[float, float, float]],
+        measurements: Optional[Dict[str, List[Tuple[float, float, float, float]]]],
+        plot_title: str = "Some Measurement using Unknown analyzer at 69 Hz",
     ):
         self.axes.cla()
 
@@ -168,7 +170,7 @@ class MeasurementsPlotCanvas(FigureCanvas):
                 plot_data[x] = {y: m}
             plot_data[x][y] = m
 
-        if measurements is not None and len(measurements) > 0:
+        if measurements is not None and len(measurements["m"]) > 0:
             min = np.min(measurements["m"])
             max = np.max(measurements["m"])
         else:
@@ -204,7 +206,7 @@ class MeasurementsPlotCanvas(FigureCanvas):
         self.axes.set_yticks(np.arange(len(y_labels)), labels=y_labels)
         self.axes.set_xlabel("X [millimeters]")
         self.axes.set_ylabel("Y [millimeters]")
-        self.axes.set_title("Scalar spectrum analyzer readouts\nfor 2.622 Ghz")
+        self.axes.set_title(plot_title)
 
         # x_start = 0
         # x_end = len(vec_2d)

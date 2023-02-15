@@ -24,7 +24,11 @@ from gui_tools.gui_buttons import (
     ScanTypeBtn,
     ScanType,
     SaveConfig,
-    LoadConfig, MaskFunction, MaskFunctionState, LoadData,
+    LoadConfig,
+    MaskFunction,
+    MaskFunctionState,
+    LoadData,
+    SingleParamInput,
 )
 from gui_tools.gui_plots import *
 from hapmd.src.hameg_ci import set_up_hamed_device
@@ -138,6 +142,9 @@ class MainWindow(QMainWindow):
         self._left_wing.addWidget(self.path_generation_position)
         self._left_wing.addWidget(self.path_generation_size)
 
+        self.measure_freq_btn = SingleParamInput("Measurement freq", 1.32)
+        self._left_wing.addWidget(self.measure_freq_btn)
+
         self.recalculate_path = RecalculatePath()
         self.recalculate_path.pressed.connect(self.update_path)
         self.recalculate_path.pressed.connect(self.update_plots)
@@ -171,16 +178,22 @@ class MainWindow(QMainWindow):
         self._center_wing.addLayout(self._graphs_settings_layout)
         self._center_wing.addLayout(self._graphs_layout)
 
-        self.logarithmic_radicalization_function = MaskFunction("Logarithmic Radicalization")
+        self.logarithmic_radicalization_function = MaskFunction(
+            "Logarithmic Radicalization"
+        )
 
         self.logarithmic_radicalization_function.pressed.connect(
-            lambda: self.switch_mask_function(self.logarithmic_radicalization_function.text()))
+            lambda: self.switch_mask_function(
+                self.logarithmic_radicalization_function.text()
+            )
+        )
         self.logarithmic_radicalization_function.pressed.connect(self.update_mask)
         self._right_wing.addWidget(self.logarithmic_radicalization_function)
 
         self.automatic_cut_off = MaskFunction("Automatic Cut-off")
         self.automatic_cut_off.pressed.connect(
-            lambda: self.switch_mask_function(self.automatic_cut_off.text()))
+            lambda: self.switch_mask_function(self.automatic_cut_off.text())
+        )
         self.automatic_cut_off.pressed.connect(self.update_mask)
         self._right_wing.addWidget(self.automatic_cut_off)
 
@@ -295,10 +308,9 @@ class MainWindow(QMainWindow):
             measurement.to_csv(fname[0])
 
     def load_data(self):
-
         fname = QFileDialog.getOpenFileName(
             self,
-            "Load config",
+            "Load data",
             os.getcwd(),
             "CSV File (*.csv);;All Files (*);;Text (*.txt)",
         )
@@ -308,17 +320,13 @@ class MainWindow(QMainWindow):
             return
 
         df = pd.read_csv(fname)
-        self.measurement = {
-            "x": df['x'],
-            "y": df['y'],
-            "z": df['z'],
-            "m": df['m']
-        }
+        self.measurement = {"x": df["x"], "y": df["y"], "z": df["z"], "m": df["m"]}
         self.update_path()
         self.update_plots()
 
-    def switch_mask_function(self, pressed_button_text: str = "nothing was clicked, all should be grayed out"):
-
+    def switch_mask_function(
+            self, pressed_button_text: str = "nothing was clicked, all should be grayed out"
+    ):
         for i in range(self._right_wing.count()):
             widget: MaskFunction = self._right_wing.itemAt(i).widget()
             if widget.text() != pressed_button_text:
@@ -331,6 +339,7 @@ class MainWindow(QMainWindow):
 
     def get_config_dict(self):
         return {
+            "function": self.scan_type_btn.text(),
             "x_offset": self.antenna_offset_btn.val_a,
             "y_offset": self.antenna_offset_btn.val_b,
             "pass_height": self.pass_heigth_measurement_radius_btn.val_a,
@@ -339,6 +348,7 @@ class MainWindow(QMainWindow):
             "y": self.path_generation_position.val_b,
             "width": self.path_generation_size.val_a,
             "height": self.path_generation_size.val_b,
+            "measurement_frequency": self.measure_freq_btn.val_a,
         }
 
     def save_config(self):
@@ -392,6 +402,7 @@ class MainWindow(QMainWindow):
                 print(ex)
                 pass
 
+            self.scan_type_btn.set_state(data["function"])
             self.antenna_offset_btn.set_values(data["x_offset"], data["y_offset"])
             self.antenna_offset_btn.update()
             self.pass_heigth_measurement_radius_btn.set_values(
@@ -401,9 +412,10 @@ class MainWindow(QMainWindow):
             self.path_generation_position.set_values(data["x"], data["y"])
             self.path_generation_position.update()
             self.path_generation_size.set_values(data["width"], data["height"])
+            self.measure_freq_btn.set_values(data["measurement_frequency"] / 10 ** 9)
             self.path_generation_size.update()
 
-    def add_plots(self) -> None:
+    def add_plots(self, plot_title: str = None) -> None:
         def helper(plot):
             self._graphs_layout.addWidget(plot)
 
@@ -445,9 +457,15 @@ class MainWindow(QMainWindow):
             if isinstance(self.analyzer, (PocketVnaDevice, PocketVnaDeviceMock)):
                 return
 
-        if self.scan_type_btn.text() in (ScanType.ScalarAnalyzer.value, ScanType.ScalarAnalyzerBackground.value):
+        if self.scan_type_btn.text() in (
+                ScanType.ScalarAnalyzer.value,
+                ScanType.ScalarAnalyzerBackground.value,
+        ):
             self.analyzer = set_up_hamed_device(debug=ANALYZER_DEBUG_MODE)
-        elif self.scan_type_btn.text() in (ScanType.VectorAnalyzer.value, ScanType.VectorAnalyzerBackground.value):
+        elif self.scan_type_btn.text() in (
+                ScanType.VectorAnalyzer.value,
+                ScanType.VectorAnalyzerBackground.value,
+        ):
             if ANALYZER_DEBUG_MODE:
                 self.analyzer = PocketVnaDeviceMock()
             else:
@@ -460,7 +478,10 @@ class MainWindow(QMainWindow):
             print("thread is closed")
             self.thread = None
 
-        if self.start_stop_measurement_button.state == StartStopContinueButton.State.START:
+        if (
+                self.start_stop_measurement_button.state
+                == StartStopContinueButton.State.START
+        ):
             self.close_thread()
             return
 
@@ -476,7 +497,11 @@ class MainWindow(QMainWindow):
         self.scan_type_btn.disable()
         self.load_config_btn.disable()
         self.save_config_btn.disable()
-        self.measurements_plot_canvas.plot_data(self.path, None)
+        self.measurements_plot_canvas.plot_data(
+            self.path,
+            self.measurement,
+            plot_title=f"{self.scan_type_btn.text()}, {self.measure_freq_btn.val_a / 10 ** 9}GHz",
+        )
 
         self.path_plot_canvas.draw()
         self.measurements_plot_canvas.draw()
@@ -503,6 +528,10 @@ class MainWindow(QMainWindow):
         z = self.pass_heigth_measurement_radius_btn.val_a + 5
         self.printer.speed = 1500
 
+        self.printer.send_and_await(
+            f"G1 X{self.printer.current_position.x} Y{self.printer.current_position.y} Z{z}"
+        )
+
         for x, y in zip(x_printer_boundaries, y_printer_boundaries):
             self.printer.send_and_await(f"G1 X{x} Y{y} Z{z}")
             print(f"\tx:{x}\ty:{y}\tz:{z}")
@@ -511,52 +540,65 @@ class MainWindow(QMainWindow):
 
     def perform_scan(self):
         if isinstance(self.analyzer, (PocketVnaDevice, PocketVnaDeviceMock)):
-            return self.analyzer.scan()
+            return self.analyzer.scan(int(self.measure_freq_btn.val_a))
+
         elif isinstance(self.analyzer, (Hameg3010Device, Hameg3010DeviceMock)):
-            scan_val = get_level(self.analyzer, 2.622 * (10 ** 9), 2)
+            scan_val = get_level(self.analyzer, self.measure_freq_btn.val_a, 2)
 
             while scan_val > -17 or scan_val < -22:
                 print(f"\tmeasurement:{scan_val}")
                 print(f"\trepeating measurement")
-                scan_val = get_level(self.analyzer, 2.622 * (10 ** 9), 2)
+                scan_val = get_level(self.analyzer, self.measure_freq_btn.val_a, 2)
 
             return round(scan_val, 4)
         raise Exception("da fuck")
 
-    def update_plots(self, highlight: Optional[Point] = None):
-
+    def update_plots(self, highlight: Optional[Point] = None, draw_all_plots: bool = True):
         antenna_measurement_radius = self.pass_heigth_measurement_radius_btn.val_b
 
         btn_2_function = {
-            'Logarithmic Radicalization': logarithmic_radicalization,
-            'Automatic Cut-off': automatic_cut_off
+            "Logarithmic Radicalization": logarithmic_radicalization,
+            "Automatic Cut-off": automatic_cut_off,
         }
-
-        self.path_plot_canvas.plot_data(
-            self.path,
-            self.antenna_path,
-            antenna_measurement_diameter=antenna_measurement_radius,
-            highlight=highlight,
-        )
-        self.path_plot_canvas.draw()
+        if draw_all_plots:
+            self.path_plot_canvas.plot_data(
+                self.path,
+                self.antenna_path,
+                antenna_measurement_diameter=antenna_measurement_radius,
+                highlight=highlight,
+            )
+            self.path_plot_canvas.draw()
 
         if self.measurement is not None:
             for i in range(self._right_wing.count()):
                 widget: MaskFunction = self._right_wing.itemAt(i).widget()
                 if widget.state == MaskFunctionState.ON:
                     measurement_copy = copy(self.measurement)
-                    measurement_copy['m'] = btn_2_function[widget.text()](copy(self.measurement['m']))
-                    self.measurements_plot_canvas.plot_data(self.path, measurement_copy)
+                    measurement_copy["m"] = btn_2_function[widget.text()](
+                        copy(self.measurement["m"])
+                    )
+                    self.measurements_plot_canvas.plot_data(
+                        self.path,
+                        measurement_copy,
+                        plot_title=f"{self.scan_type_btn.text()},{self.measure_freq_btn.val_a / 10 ** 9}GHz",
+                    )
                     break
                 if i == self._right_wing.count() - 1:
-                    self.measurements_plot_canvas.plot_data(self.path, self.measurement)
+                    self.measurements_plot_canvas.plot_data(
+                        self.path,
+                        self.measurement,
+                        plot_title=f"{self.scan_type_btn.text()},{self.measure_freq_btn.val_a / 10 ** 9}GHz",
+                    )
 
             self.measurements_plot_canvas.draw()
 
     def main_loop(self):
-        if self.scan_type_btn.text() in (ScanType.ScalarAnalyzer.value, ScanType.VectorAnalyzer.value):
+        if self.scan_type_btn.text() in (
+                ScanType.ScalarAnalyzer.value,
+                ScanType.VectorAnalyzer.value,
+        ):
             self.measurement: Dict[str, list] = {"x": [], "y": [], "z": [], "m": []}
-
+        self.update_plots()
         self.printer.startup_procedure()
         print("Measurement loop ")
         self.run_outline()
@@ -587,14 +629,19 @@ class MainWindow(QMainWindow):
 
             print(f"\tmeasurement:{scan_val}")
 
-            if self.scan_type_btn.text() in (ScanType.ScalarAnalyzer.value, ScanType.VectorAnalyzer.value):
+            if self.scan_type_btn.text() in (
+                    ScanType.ScalarAnalyzer.value,
+                    ScanType.VectorAnalyzer.value,
+            ):
                 self.measurement["x"].append(self.antenna_path[id][0])
                 self.measurement["y"].append(self.antenna_path[id][1])
                 self.measurement["z"].append(self.antenna_path[id][2])
                 self.measurement["m"].append(scan_val)
 
             elif self.scan_type_btn.text() in (
-                    ScanType.ScalarAnalyzerBackground.value, ScanType.VectorAnalyzerBackground.value):
+                    ScanType.ScalarAnalyzerBackground.value,
+                    ScanType.VectorAnalyzerBackground.value,
+            ):
                 self.measurement["m"][id] -= scan_val
 
             else:
@@ -605,7 +652,7 @@ class MainWindow(QMainWindow):
 
             print("Updating plots...")
 
-            self.update_plots(highlight=(x, y, z))
+            self.update_plots(highlight=(x, y, z), draw_all_plots=False)
 
             if self.check_for_stop():
                 return
@@ -613,9 +660,9 @@ class MainWindow(QMainWindow):
             print(
                 f"Time of measurement: {round(time.time() - start_time, 2)}s, "
                 f"elapsed time: {round((time.time() - elapsed_time) / 60, 2)}min, "
-                f"left time: {int(round((time.time() - start_time) * (total_path_length - id - 1) / (60 ** 2), 2))}h "
-                f"{int(round((time.time() - start_time) * (total_path_length - id - 1) / 60, 2))}min "
-                f"{int(round((time.time() - start_time) * (total_path_length - id - 1) % 60, 2))}s"
+                f"left time: {int(round(((time.time() - start_time) * (total_path_length - id - 1)) / (60 ** 2), 2))}h "
+                f"{int(round(((time.time() - start_time) * (total_path_length - id - 1)) / 60, 2))}min "
+                f"{int(round(((time.time() - start_time) * (total_path_length - id - 1)) % 60, 2))}s"
             )
 
         self.close_thread()

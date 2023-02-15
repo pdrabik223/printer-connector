@@ -5,17 +5,19 @@ import math
 
 MAX_ATTEMPT_COUNT = 10
 AVERAGE = 5
-CALLBACK= None
+CALLBACK = None
+
 
 def open_device():
     device_handler = None
 
     for attempt in range(0, MAX_ATTEMPT_COUNT):
-       device_handler = pocketvna.get_first_available_device_handler()
-       if device_handler is not None:
-           break
+        device_handler = pocketvna.get_first_available_device_handler()
+        if device_handler is not None:
+            break
 
     return device_handler
+
 
 try:
     device_handler = open_device()
@@ -27,13 +29,15 @@ try:
         s11 = None
 
         ## This condition is just an example. It is v
-        #if NUMPY is not None:
+        # if NUMPY is not None:
         #    s11, s21, s12, s22 = pocketvna.scan_frequencies(device_handler, frequencies, AVERAGE, pocketvna.NetworkParams.S11, CALLBACK)
-        #else:
+        # else:
         #    s11, s21, s12, s22 = pocketvna.scan_frequencies_no_numpy(device_handler, frequencies, AVERAGE, pocketvna.NetworkParams.S11, CALLBACK)
 
         # for simplicity use without NumPy. Thus s11 (and s21, s12, s22) are python list (not numpy's arrays)
-        s11, s21, s12, s22 = pocketvna.scan_frequencies_no_numpy(device_handler, frequencies, AVERAGE, pocketvna.NetworkParams.S11, CALLBACK)
+        s11, s21, s12, s22 = pocketvna.scan_frequencies_no_numpy(
+            device_handler, frequencies, AVERAGE, pocketvna.NetworkParams.S11, CALLBACK
+        )
 
         print("S11: ", s11)
         print("S21: ", s21)

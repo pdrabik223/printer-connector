@@ -23,9 +23,9 @@ import pocketvna
 ## * Click on “Start Application” (with --reset) checked
 
 
-
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
+
 
 def makeDriver():
     try:
@@ -33,6 +33,7 @@ def makeDriver():
     except:
         eprint("Can not create Driver object")
         return None
+
 
 def closeDriver(driver):
     if driver.valid():
@@ -45,13 +46,16 @@ def exit_failure(driver, msg):
     eprint(msg)
     sys.exit(os.EX_SOFTWARE)
 
+
 # Working code
 driver = makeDriver()
 
 if driver and driver.count() > 0 and driver.connect_to(0):
     try:
         driver.dfu_mode()
-        print("Entered. Now you can reprogram device with dfu-programmer or with flip software")
+        print(
+            "Entered. Now you can reprogram device with dfu-programmer or with flip software"
+        )
         closeDriver(driver)
     except:
         exit_failure(driver, "Failed Entering DFU mode")

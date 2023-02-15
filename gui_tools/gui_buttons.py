@@ -237,6 +237,49 @@ class TwoParamInput(QWidget):
         self.input_b.editingFinished.connect(function)
 
 
+class SingleParamInput(QWidget):
+    def __init__(self, label_a: str, val_a: float = 1):
+        super().__init__()
+        self._main_layout = QHBoxLayout()
+        self.input_label_a = QLabel(label_a)
+        self.input_label_a.setMaximumWidth(120)
+        self.input_label_a.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.input_a = QLineEdit()
+        self.input_a.setValidator(QDoubleValidator())
+        self.input_a.setMaxLength(5)
+        self.input_a.setMaximumWidth(50)
+        self.input_a.setText(str(val_a))
+        self.input_a.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.input_label_b = QLabel("GHz")
+        self.input_label_b.setMaximumWidth(80)
+        self.input_label_b.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self._main_layout.addWidget(self.input_label_a)
+        self._main_layout.addWidget(self.input_a)
+        self._main_layout.addWidget(self.input_label_b)
+
+        self.setLayout(self._main_layout)
+        self.setMaximumWidth(360)
+
+    @property
+    def val_a(self):
+        return int(float(self.input_a.text().replace(",", ".")) * 10**9)
+
+    def get_vals(self) -> float:
+        return float(self.input_a.text().replace(",", "."))
+
+    def set_default_from_tuple(self, vals: float):
+        self.input_a.setText(str(vals[0]))
+
+    def set_values(self, val_a):
+        self.input_a.setText(str(val_a))
+
+    def on_editing_finished_connect(self, function: Callable):
+        self.input_a.editingFinished.connect(function)
+
+
 class RecalculatePath(QPushButton):
     def __init__(self):
         super().__init__()
@@ -274,6 +317,7 @@ class SaveData(QPushButton):
 
     def update_background_color(self, color: str = CYAN_BLUE):
         self.setStyleSheet(BUTTON_STYLING + f"background-color: {color};")
+
 
 class LoadData(QPushButton):
     def __init__(self):
@@ -336,6 +380,18 @@ class ScanTypeBtn(QPushButton):
 
     def update_background_color(self, color: str = CYAN_BLUE):
         self.setStyleSheet(BUTTON_STYLING + f"background-color: {color};")
+
+    def set_state(self, text: str):
+        if text == ScanType.ScalarAnalyzer.value:
+            self.setText(ScanType.ScalarAnalyzer.value)
+        elif text == ScanType.ScalarAnalyzerBackground.value:
+            self.setText(ScanType.ScalarAnalyzerBackground.value)
+        elif text == ScanType.VectorAnalyzer.value:
+            self.setText(ScanType.VectorAnalyzer.value)
+        elif text == ScanType.VectorAnalyzerBackground.value:
+            self.setText(ScanType.VectorAnalyzerBackground.value)
+        else:
+            raise "invalid scan type"
 
 
 class SaveConfig(QPushButton):

@@ -11,6 +11,4 @@ try:
     pocketvna.force_unlock()
 
 finally:
-	pocketvna.close_api()
-
-
+    pocketvna.close_api()
