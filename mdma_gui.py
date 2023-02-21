@@ -44,8 +44,8 @@ from hapmd.src.hameg3010.hameg3010device_mock import Hameg3010DeviceMock
 from hapmd.src.hameg_ci import get_level
 from pocket_vna_main import PocketVnaDevice, PocketVnaDeviceMock
 
-PRINTER_DEBUG_MODE = False
-ANALYZER_DEBUG_MODE = False
+PRINTER_DEBUG_MODE = True
+ANALYZER_DEBUG_MODE = True
 
 
 class MainWindow(QMainWindow):
@@ -132,7 +132,7 @@ class MainWindow(QMainWindow):
         self.antenna_offset_btn.set_default_from_tuple((0, 52))
 
         self.pass_heigth_measurement_radius_btn = TwoParamInput(
-            "pass height:", "distance between\nmeasurements:"
+            "measurement\nheight:", "measurement\nradius:"
         )
         self.pass_heigth_measurement_radius_btn.set_default_from_tuple((4, 10))
 
@@ -295,6 +295,7 @@ class MainWindow(QMainWindow):
             print("can not save to file, path is empty")
             return
 
+        print(self.get_plot_title())
         measurement = pd.DataFrame(self.measurement)
 
         fname = QFileDialog.getSaveFileName(
@@ -445,8 +446,11 @@ class MainWindow(QMainWindow):
     def close_thread(self):
         self.printer_head_controller.enable()
         self.recalculate_path.enable()
+
         self.save_data_btn.enable()
+        self.load_data_btn.enable()
         self.scan_type_btn.enable()
+
         self.save_config_btn.enable()
         self.load_config_btn.enable()
         if self.thread is not None:
@@ -470,6 +474,9 @@ class MainWindow(QMainWindow):
                 self.analyzer = PocketVnaDeviceMock()
             else:
                 self.analyzer = PocketVnaDevice()
+
+    def get_plot_title(self):
+        return f"{self.scan_type_btn.text()} resolution {self.pass_heigth_measurement_radius_btn.val_b} {self.measure_freq_btn.val_a / 10 ** 9}GHz"
 
     def start_thread(self):
         if self.thread is not None:
@@ -495,12 +502,14 @@ class MainWindow(QMainWindow):
         self.printer_head_controller.disable()
         self.recalculate_path.disable()
         self.scan_type_btn.disable()
+        self.save_data_btn.disable()
+        self.load_data_btn.disable()
         self.load_config_btn.disable()
         self.save_config_btn.disable()
         self.measurements_plot_canvas.plot_data(
             self.path,
             self.measurement,
-            plot_title=f"{self.scan_type_btn.text()}, {self.measure_freq_btn.val_a / 10 ** 9}GHz",
+            plot_title=self.get_plot_title()
         )
 
         self.path_plot_canvas.draw()
@@ -580,14 +589,14 @@ class MainWindow(QMainWindow):
                     self.measurements_plot_canvas.plot_data(
                         self.path,
                         measurement_copy,
-                        plot_title=f"{self.scan_type_btn.text()},{self.measure_freq_btn.val_a / 10 ** 9}GHz",
+                        plot_title=self.get_plot_title()
                     )
                     break
                 if i == self._right_wing.count() - 1:
                     self.measurements_plot_canvas.plot_data(
                         self.path,
                         self.measurement,
-                        plot_title=f"{self.scan_type_btn.text()},{self.measure_freq_btn.val_a / 10 ** 9}GHz",
+                        plot_title=self.get_plot_title()
                     )
 
             self.measurements_plot_canvas.draw()
