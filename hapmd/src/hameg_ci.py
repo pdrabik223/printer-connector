@@ -90,7 +90,7 @@ def set_up_hamed_device(debug: bool = False):
             )
         print(f"no devices found: {no_devices_found}")
         hameg_device_handle = Hameg3010Device.connect_using_vid_pid(
-            idVendor=0x403, idProduct=0xED72
+            id_vendor=0x403, id_product=0xED72
         )
 
     print(

@@ -1,27 +1,27 @@
-from typing import Any
+from typing import Tuple
 import usb.core
 import usb.util
 import logging
 
 
 class Hameg3010Device:
-    def __init__(self, device: usb.core.Device) -> None:
-        self.device: usb.core.Device = device
-        self.device.set_configuration()
+    def __init__(self, device_handle: usb.core.Device) -> None:
+        self.device_handle: usb.core.Device = device_handle
+        self.device_handle.set_configuration()
 
     @staticmethod
-    def connect_using_vid_pid(idVendor, idProduct):
-        logging.debug(f"connecting do device with pid: {idProduct}, vid: {idVendor}")
+    def connect_using_vid_pid(id_vendor: int, id_product: int) -> "Hameg3010Device":
+        logging.debug(f"connecting do device with pid: {id_product}, vid: {id_vendor}")
 
-        device = usb.core.find(idVendor=idVendor, idProduct=idProduct)
+        device = usb.core.find(idVendor=id_vendor, idProduct=id_product)
         # device = usb.core.
         if device is None:
             raise ValueError(
-                f"Device is not found vid: {hex(idVendor)} pid: {hex(idProduct)}"
+                f"Device is not found vid: {hex(id_vendor)} pid: {hex(id_product)}"
             )
 
         logging.debug(
-            f"connected do device with vid: {hex(idVendor)} pid: {hex(idProduct)}"
+            f"connected do device with vid: {hex(id_vendor)} pid: {hex(id_product)}"
         )
         return Hameg3010Device(device)
 
@@ -39,13 +39,13 @@ class Hameg3010Device:
         logging.debug(f"writing to device, message: {command}")
 
         try:
-            self.device.write(0x2, command)
+            self.device_handle.write(0x2, command)
         except Exception:
             logging.error(f"error occurred while writing to device", exc_info=True)
             raise
 
     def _await_resp(self):
-        resp = self.device.read(0x81, 1_000_000, 1_000)
+        resp = self.device_handle.read(0x81, 1_000_000, 1_000)
 
         # Following lines are hack
         # problem seems to be that after sending message multiple readout are required to get response
@@ -56,7 +56,7 @@ class Hameg3010Device:
 
         counter = 0
         while len(resp) == 2:
-            resp = self.device.read(0x81, 1_000_000, 1_000)
+            resp = self.device_handle.read(0x81, 1_000_000, 1_000)
             # print(resp)
             counter += 1
             if counter > 10:
@@ -68,7 +68,7 @@ class Hameg3010Device:
         except Exception as ex:
             return (resp, f"fail with error message: {str(ex)}")
 
-    def send_await_resp(self, cmd: str) -> Any:
+    def send_await_resp(self, cmd: str) -> Tuple[bytearray, str]:
         # print(f"req:  {cmd}")
         if len(cmd) != 0:
             self._send_str(command=cmd)
