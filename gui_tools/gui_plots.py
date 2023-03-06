@@ -61,11 +61,11 @@ class PathPlotCanvas(FigureCanvas):
         super(PathPlotCanvas, self).__init__(self.fig)
 
     def plot_data(
-        self,
-        path: List[Point],
-        antenna_path: List[Point],
-        antenna_measurement_diameter: float,
-        highlight: Optional[Point] = None,
+            self,
+            path: List[Point],
+            antenna_path: List[Point],
+            antenna_measurement_diameter: float,
+            highlight: Optional[Point] = None,
     ):
         max_x = np.max([point[0] for point in path])
         max_y = np.max([point[1] for point in path])
@@ -87,13 +87,13 @@ class PathPlotCanvas(FigureCanvas):
             antenna_x, antenna_y, self.axes2, antenna_measurement_diameter / 2
         )
 
+        self.axes2.plot(x, y, label="Printer extruder movement path")
+
         self.axes2.plot(
-            x_printer_boundaries, y_printer_boundaries, color="black", alpha=0.6
-        )
+            x_printer_boundaries, y_printer_boundaries, color="black", alpha=0.6,
+            label="Printer extruder movement path boundaries")
 
-        self.axes2.plot(x, y)
-
-        self.axes2.scatter(x, y, color="red")
+        self.axes2.scatter(x, y, color="red", label="Measurement points")
 
         if highlight is not None:
             self.axes2.add_patch(
@@ -105,18 +105,21 @@ class PathPlotCanvas(FigureCanvas):
         self.axes2.set_xlabel("X [millimeters]")
         self.axes2.set_ylabel("Y [millimeters]")
         self.axes2.set_title("Extruder path")
+        self.axes2.legend()
 
     @staticmethod
     def plot_measurement_areas(
-        x_values: List[float],
-        y_values: List[float],
-        ax: plt.Axes,
-        radius: float,
-        color: str = "orange",
-        alpha: float = 0.2,
+            x_values: List[float],
+            y_values: List[float],
+            ax: plt.Axes,
+            radius: float,
+            color: str = "orange",
+            alpha: float = 0.2,
     ) -> None:
-        for x, y in zip(x_values, y_values):
+        for x, y in zip(x_values[:-1], y_values[:-1]):
             ax.add_patch(plt.Circle((x, y), radius, color=color, alpha=alpha))
+
+        ax.add_patch(plt.Circle((x_values[-1], y_values[-1]), radius, color=color, alpha=alpha, label="Measured area"))
 
     def highlight(self, point: Point, point_b: Point):
         pass
@@ -143,10 +146,11 @@ class MeasurementsPlotCanvas(FigureCanvas):
         super(MeasurementsPlotCanvas, self).__init__(self.fig)
 
     def plot_data(
-        self,
-        path: List[Tuple[float, float, float]],
-        measurements: Optional[Dict[str, List[Tuple[float, float, float, float]]]],
-        plot_title: str = "Some Measurement using Unknown analyzer at 69 Hz",
+            self,
+            path: List[Tuple[float, float, float]],
+            measurements: Optional[Dict[str, List[Tuple[float, float, float, float]]]],
+            plot_title: str = "Some Measurement using Unknown analyzer at 69 Hz",
+            color_bar_label="no label"
     ):
         self.axes.cla()
 
@@ -201,7 +205,7 @@ class MeasurementsPlotCanvas(FigureCanvas):
             self.cb.remove()
 
         self.cb = self.fig.colorbar(self.cp, ax=self.axes, extend="both")
-
+        self.cb.ax.set_title(color_bar_label)
         self.axes.set_xticks(np.arange(len(x_labels)), labels=x_labels)
         self.axes.set_yticks(np.arange(len(y_labels)), labels=y_labels)
         self.axes.set_xlabel("X [millimeters]")

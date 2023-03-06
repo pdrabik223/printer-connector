@@ -476,7 +476,21 @@ class MainWindow(QMainWindow):
                 self.analyzer = PocketVnaDevice()
 
     def get_plot_title(self):
-        return f"{self.scan_type_btn.text()} resolution {self.pass_heigth_measurement_radius_btn.val_b} {self.measure_freq_btn.val_a / 10 ** 9}GHz"
+        if self.scan_type_btn.text() in (
+                ScanType.ScalarAnalyzer.value,
+                ScanType.ScalarAnalyzerBackground.value,
+        ):
+            cbar_title = 'Return Loss [dB]'
+
+        elif self.scan_type_btn.text() in (
+                ScanType.VectorAnalyzer.value,
+                ScanType.VectorAnalyzerBackground.value,
+        ):
+            cbar_title = 'S11 Imag [relative units]'
+        else:
+            cbar_title = 'none'
+
+        return f"{self.scan_type_btn.text()} resolution {self.pass_heigth_measurement_radius_btn.val_b} {self.measure_freq_btn.val_a / 10 ** 9}GHz", cbar_title
 
     def start_thread(self):
         if self.thread is not None:
@@ -509,7 +523,8 @@ class MainWindow(QMainWindow):
         self.measurements_plot_canvas.plot_data(
             self.path,
             self.measurement,
-            plot_title=self.get_plot_title()
+            plot_title=self.get_plot_title()[0],
+            color_bar_label=self.get_plot_title()[1]
         )
 
         self.path_plot_canvas.draw()
@@ -589,14 +604,16 @@ class MainWindow(QMainWindow):
                     self.measurements_plot_canvas.plot_data(
                         self.path,
                         measurement_copy,
-                        plot_title=self.get_plot_title()
+                        plot_title=self.get_plot_title()[0],
+                        color_bar_label=self.get_plot_title()[1]
                     )
                     break
                 if i == self._right_wing.count() - 1:
                     self.measurements_plot_canvas.plot_data(
                         self.path,
                         self.measurement,
-                        plot_title=self.get_plot_title()
+                        plot_title=self.get_plot_title()[0],
+                        color_bar_label=self.get_plot_title()[1]
                     )
 
             self.measurements_plot_canvas.draw()
