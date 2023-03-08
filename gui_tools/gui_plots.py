@@ -200,14 +200,55 @@ class MeasurementsPlotCanvas(FigureCanvas):
             interpolation="none",
             origin="lower",
         )
-
         if self.cb != None:
             self.cb.remove()
 
+        max_x_ticks = 13
+        no_tabs = 12
+
+        if len(x_labels) > max_x_ticks:
+            x_labels_shorter = np.linspace(x_labels[0], x_labels[-1], max_x_ticks)
+            no_spaces_between_every_label = (len(x_labels) - len(x_labels_shorter)) // no_tabs
+            total_x_labels = []
+            for i in x_labels_shorter:
+                total_x_labels.append(round(i, 1))
+                if i != x_labels_shorter[-1]:
+                    total_x_labels.extend(['' for _ in range(no_spaces_between_every_label)])
+            left_spaces = len(x_labels) - len(total_x_labels)
+            if left_spaces > 0:
+                for _ in range(left_spaces):
+                    total_x_labels.insert(len(total_x_labels) // 2, '')
+        else:
+            total_x_labels = x_labels
+            total_x_labels = [round(label, 1) for label in total_x_labels]
+
+        max_y_ticks = 30
+        no_tabs = 29
+
+        if len(y_labels) > max_y_ticks:
+            y_labels_shorter = np.linspace(y_labels[0], y_labels[-1], max_y_ticks)
+            no_spaces_between_every_label = (len(y_labels) - len(y_labels_shorter)) // no_tabs
+            total_y_labels = []
+            for i in y_labels_shorter:
+                total_y_labels.append(round(i, 1))
+                if i != y_labels_shorter[-1]:
+                    total_y_labels.extend(['' for _ in range(no_spaces_between_every_label)])
+            left_spaces = len(y_labels) - len(total_y_labels)
+            if left_spaces > 0:
+                for _ in range(left_spaces):
+                    total_y_labels.insert(len(total_y_labels) // 2, '')
+        else:
+            total_y_labels = y_labels
+            total_y_labels = [round(label, 1) for label in total_y_labels]
+
+
+
+
         self.cb = self.fig.colorbar(self.cp, ax=self.axes, extend="both")
         self.cb.ax.set_title(color_bar_label)
-        self.axes.set_xticks(np.arange(len(x_labels)), labels=x_labels)
-        self.axes.set_yticks(np.arange(len(y_labels)), labels=y_labels)
+
+        self.axes.set_xticks(np.arange(len(x_labels)), labels=total_x_labels)
+        self.axes.set_yticks(np.arange(len(y_labels)), labels=total_y_labels)
         self.axes.set_xlabel("X [millimeters]")
         self.axes.set_ylabel("Y [millimeters]")
         self.axes.set_title(plot_title)
