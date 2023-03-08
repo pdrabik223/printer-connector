@@ -21,7 +21,7 @@ def get_level(
 
     level_raw: str = device.send_await_resp("rmode:level?")[1][2:-1]
 
-    level = level_raw[level_raw.find(",") + 1 :]
+    level = level_raw[level_raw.find(",") + 1:]
 
     value = float(level)
 

@@ -44,8 +44,8 @@ from hapmd.src.hameg3010.hameg3010device_mock import Hameg3010DeviceMock
 from hapmd.src.hameg_ci import get_level
 from pocket_vna_main import PocketVnaDevice, PocketVnaDeviceMock
 
-PRINTER_DEBUG_MODE = True
-ANALYZER_DEBUG_MODE = True
+PRINTER_DEBUG_MODE = False
+ANALYZER_DEBUG_MODE = False
 
 
 class MainWindow(QMainWindow):
