@@ -340,10 +340,10 @@ class LoadData(QPushButton):
 
 
 class ScanType(enum.Enum):
-    ScalarAnalyzer = "Scalar Analyzer"
-    ScalarAnalyzerBackground = "Scalar Analyzer Background"
-    VectorAnalyzer = "Vector Analyzer"
-    VectorAnalyzerBackground = "Vector Analyzer Background"
+    ScalarAnalyzer = "HAMEG3010"
+    ScalarAnalyzerBackground = "HAMEG3010 Background"
+    VectorAnalyzer = "Pocket VNA"
+    VectorAnalyzerBackground = "Pocket VNA Background"
 
 
 class ScanTypeBtn(QPushButton):

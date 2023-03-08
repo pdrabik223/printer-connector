@@ -120,19 +120,19 @@ class MainWindow(QMainWindow):
         self.add_plots()
 
         self.path_generation_position = TwoParamInput(
-            "sample\nx offset:", "sample\ny offset:"
+            "sample\nx offset [mm]:", "sample\ny offset [mm]:"
         )
 
-        self.path_generation_size = TwoParamInput("sample\nwidth:", "sample\nheight:")
+        self.path_generation_size = TwoParamInput("sample\nwidth [mm]:", "sample\nheight [mm]:")
 
         self.antenna_offset_btn = TwoParamInput(
-            "antenna\nx offset:", "antenna\ny offset:"
+            "antenna\nx offset [mm]:", "antenna\ny offset [mm]:"
         )
 
         self.antenna_offset_btn.set_default_from_tuple((0, 52))
 
         self.pass_heigth_measurement_radius_btn = TwoParamInput(
-            "measurement\nheight:", "measurement\nradius:"
+            "measurement\nheight [mm]:", "measurement\nradius [mm]:"
         )
         self.pass_heigth_measurement_radius_btn.set_default_from_tuple((4, 10))
 
@@ -490,7 +490,7 @@ class MainWindow(QMainWindow):
         else:
             cbar_title = 'none'
 
-        return f"{self.scan_type_btn.text()} resolution {self.pass_heigth_measurement_radius_btn.val_b} {self.measure_freq_btn.val_a / 10 ** 9}GHz", cbar_title
+        return f"{self.scan_type_btn.text()}, resolution {self.pass_heigth_measurement_radius_btn.val_b} mm, {self.measure_freq_btn.val_a / 10 ** 9}GHz", cbar_title
 
     def start_thread(self):
         if self.thread is not None:
