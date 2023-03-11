@@ -15,12 +15,12 @@ def get_level(
     device.send_await_resp(f"rmode:frequency {frequency}")
 
     if isinstance(device, Hameg3010DeviceMock):
-        time.sleep(2)
+        time.sleep(1)
     else:
         time.sleep(measurement_time)
 
     level_raw: str = device.send_await_resp("rmode:level?")[1][2:-1]
-
+    print(f"level_raw: {level_raw}")
     level = level_raw[level_raw.find(",") + 1:]
 
     value = float(level)

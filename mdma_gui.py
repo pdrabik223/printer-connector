@@ -466,6 +466,7 @@ class MainWindow(QMainWindow):
                 ScanType.ScalarAnalyzerBackground.value,
         ):
             self.analyzer = set_up_hamed_device(debug=ANALYZER_DEBUG_MODE)
+
         elif self.scan_type_btn.text() in (
                 ScanType.VectorAnalyzer.value,
                 ScanType.VectorAnalyzerBackground.value,
@@ -567,12 +568,12 @@ class MainWindow(QMainWindow):
             return self.analyzer.scan(int(self.measure_freq_btn.val_a))
 
         elif isinstance(self.analyzer, (Hameg3010Device, Hameg3010DeviceMock)):
-            scan_val = get_level(self.analyzer, self.measure_freq_btn.val_a, 2)
+            scan_val = get_level(self.analyzer, int(self.measure_freq_btn.val_a), 2)
 
             while scan_val > -17 or scan_val < -22:
                 print(f"\tmeasurement:{scan_val}")
                 print(f"\trepeating measurement")
-                scan_val = get_level(self.analyzer, self.measure_freq_btn.val_a, 2)
+                scan_val = get_level(self.analyzer, int(self.measure_freq_btn.val_a), 2)
 
             return round(scan_val, 4)
         raise Exception("da fuck")
