@@ -242,7 +242,7 @@ class MainWindow(QMainWindow):
 
     def move_extruder(self, direction: PrinterHeadPositionController.Direction):
         print(
-            f"moving extruder: {direction}, current position: {self.printer.current_position.to_tuple()}"
+            f"moving extruder: {direction}, current position: {self.printer.current_position.as_tuple()}"
         )
 
         new_position = self.printer.current_position
@@ -267,7 +267,7 @@ class MainWindow(QMainWindow):
 
         elif direction == PrinterHeadPositionController.Direction.HOME:
             self.printer.send_and_await("G28")
-            print(f"new position: {self.printer.current_position.to_tuple()}")
+            print(f"new position: {self.printer.current_position.as_tuple()}")
             return
 
         elif direction == PrinterHeadPositionController.Direction.CENTER:
@@ -281,14 +281,14 @@ class MainWindow(QMainWindow):
                 f"G1 X {self.printer.x_size / 2} Y {self.printer.y_size / 2} Z {new_position.z}"
             )
 
-            print(f"new position: {self.printer.current_position.to_tuple()}")
+            print(f"new position: {self.printer.current_position.as_tuple()}")
             return
 
         self.printer.send_and_await(
             f"G1 X {new_position.x} Y {new_position.y} Z {new_position.z}"
         )
 
-        print(f"new position: {self.printer.current_position.to_tuple()}")
+        print(f"new position: {self.printer.current_position.as_tuple()}")
 
     def save_data(self):
         if self.measurement is None:

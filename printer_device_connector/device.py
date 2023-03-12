@@ -1,5 +1,6 @@
 import math
 import time
+from abc import abstractmethod
 from typing import Optional, Tuple
 
 import serial.tools.list_ports
@@ -20,7 +21,7 @@ def list_available_serial_ports():
         print("{}: {} [{}]".format(port, desc, hwid))
 
 
-class Position:
+class Point3D:
     def __init__(self, x=0, y=0, z=0):
         self.x: Optional[float] = x
         self.y: Optional[float] = y
@@ -34,7 +35,7 @@ class Position:
         self.y = position[1]
         self.z = position[2]
 
-    def to_tuple(self) -> Optional[Tuple[float, float, float]]:
+    def as_tuple(self) -> Optional[Tuple[float, float, float]]:
         return self.x, self.y, self.z
 
 
@@ -44,12 +45,12 @@ class Device:
     """
 
     def __init__(self):
-        self.current_position: Position = Position()
-        self.x_size = 220
-        self.y_size = 220
-        self.z_size = 200
-        self.speed = 900
-        self.printer_home_time = 20
+        self.current_position: Point3D = Point3D()
+        self.x_size: float = 220
+        self.y_size: float = 220
+        self.z_size: float = 200
+        self.speed: float = 900
+        self.printer_home_time: int = 20
 
     def predict_time_of_execution(self, command):
         constant_connection_time = 0.2
@@ -74,7 +75,7 @@ class Device:
         return 0
 
     def get_current_position(self) -> Optional[Tuple[float, float, float]]:
-        return self.current_position.to_tuple()
+        return self.current_position.as_tuple()
 
     def set_current_position(self, x: float, y: float, z: float):
         self.current_position.from_tuple((x, y, z))
@@ -85,7 +86,7 @@ class Device:
 
     @staticmethod
     def parse_move_command_to_position(
-        command: str,
+            command: str,
     ) -> Optional[Tuple[float, float, float]]:
         # Fuck me, get uot with this weak ass shit
         command = command.casefold() + " "
@@ -98,7 +99,7 @@ class Device:
             x_val_begin += 2
 
             x_val_end = command[x_val_begin:].find(" ")
-            x = float(command[x_val_begin : x_val_end + x_val_begin])
+            x = float(command[x_val_begin: x_val_end + x_val_begin])
 
         else:
             x = None
@@ -111,7 +112,7 @@ class Device:
 
             y_val_begin += 2
             y_val_end = command[y_val_begin:].find(" ")
-            y = float(command[y_val_begin : y_val_end + y_val_begin])
+            y = float(command[y_val_begin: y_val_end + y_val_begin])
 
         else:
             y = None
@@ -123,69 +124,69 @@ class Device:
 
             z_val_begin += 2
             z_val_end = command[z_val_begin:].find(" ")
-            z = float(command[z_val_begin : z_val_end + z_val_begin])
+            z = float(command[z_val_begin: z_val_end + z_val_begin])
 
         else:
             z = None
 
         return x, y, z
+    @abstractmethod
+    def send_and_await(self, command: str) -> str:
+        """
+        **Send command and await response.**
+        Depending on used software, response might be returned as soon as command is acknowledged by the device,
+        or after completion. Function will block thread and wait for response,
+        after predefined tine function will return received message or 'no message received' error.
 
+        Parameters
+        ----------
+        **command : str**
+            Command send to device
 
-def send_and_await(self, command: str) -> str:
-    """
-    **Send command and await response.**
-    Depending on used software, response might be returned as soon as command is acknowledged by the device,
-    or after completion. Function will block thread and wait for response,
-    after predefined tine function will return received message or 'no message received' error.
+        Returns
+        -------
+        **str**
+            Response from device
+        """
+        pass
 
-    Parameters
-    ----------
-    **command : str**
-        Command send to device
+    @staticmethod
+    @abstractmethod
+    def connect_on_port(port: str, baudrate: int = 250000, timeout: int = 5) -> "Device":
+        """
+        **Connects to device on specified port.**
 
-    Returns
-    -------
-    **str**
-        Response from device
-    """
-    pass
+        Parameters
+        ----------
+        **port : str**
+            Port on witch Printer device is connected
 
+        **baudrate : int, optional**
+            Information transfer speed (in bits per second), **by default 250000**
 
-def connect_on_port(port: str, baudrate: int = 250000, timeout: int = 5) -> "Device":
-    """
-    **Connects to device on specified port.**
+        **timeout : int, optional**
+            Await for response time in seconds, **by default 5**
 
-    Parameters
-    ----------
-    **port : str**
-        Port on witch Printer device is connected
+        Returns
+        -------
+        **Device**
+           Correctly set up connector to printer device
+        """
+        pass
 
-    **baudrate : int, optional**
-        Information transfer speed (in bits per second), **by default 250000**
+    @staticmethod
+    @abstractmethod
+    def connect() -> "Device":
+        """
+        **Search for port on which printed device is connected to pc.**
+        If none is found, error is raised.
 
-    **timeout : int, optional**
-        Await for response time in seconds, **by default 5**
-
-    Returns
-    -------
-    **Device**
-       Correctly set up connector to printer device
-    """
-    pass
-
-
-@staticmethod
-def connect() -> "Device":
-    """
-    **Search for port on which printed device is connected to pc.**
-    If none is found, error is raised.
-
-    Returns
-    -------
-    **Device**
-        Correctly set up connector to printer device.
-    """
-    pass
+        Returns
+        -------
+        **Device**
+            Correctly set up connector to printer device.
+        """
+        pass
 
 
 if __name__ == "__main__":

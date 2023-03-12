@@ -185,9 +185,5 @@ class MarlinDevice(Device):
 
         return line
 
-    @staticmethod
-    def _read_printer_info(device: Serial) -> None:
-        resp: Optional[bytes] = None
-
     def startup_procedure(self):
         self.send_and_await("G28")
