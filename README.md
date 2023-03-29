@@ -3,5 +3,5 @@
 Handles connecting to different printers
 
 
-Hameg driovers : **https://www.rohde-schwarz.com/cz/driver/hmp/**
+Hameg drivers: **https://www.rohde-schwarz.com/cz/driver/hmp/**
 also 
