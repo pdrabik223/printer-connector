@@ -1,7 +1,6 @@
 # printer-connector
 
-Handles connecting to different printers
+The version of material defect analyzer software as it appeared on my engineer's degree.
+In order to preserve the state of source code, I'm moving all of the code to new repository. 
 
-
-Hameg drivers: **https://www.rohde-schwarz.com/cz/driver/hmp/**
-also 
+Link to the current version of tool: https://github.com/pdrabik223/MDMA
